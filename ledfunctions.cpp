@@ -72,7 +72,7 @@ const std::vector<leds_template_t> LEDFunctionsClass::hoursTemplate =
 {
   { 0,  0, 12,{ 99, 100, 101, 102, 103, 104 } }, // TWAALF
   { 1,  1, 13,{ 51, 52, 53 } },                  // EEN
-  { 2,  1, 13,{ 52, 52, 53 } },                  // EEN (EINS)
+  { 2,  1, 13,{ 51, 52, 53 } },                  // EEN (EINS)
   { 0,  2, 14,{ 55, 56, 57, 58 } },              // TWEE
   { 0,  3, 15,{ 62, 63, 64, 65 } },              // DRIE
   { 0,  4, 16,{ 66, 67, 68, 69 } },              // VIER
@@ -81,7 +81,7 @@ const std::vector<leds_template_t> LEDFunctionsClass::hoursTemplate =
   { 0,  7, 19,{ 77, 78, 79, 80, 81 } },          // ZEVEN
   { 0,  8, 20,{ 88, 89, 90, 91 } },              // ACHT
   { 0,  9, 21,{ 83, 84, 85, 86, 87 } },          // NEGEN
-  { 0, 10, 22,{ 92, 93, 94, 95 } },              // TIEN
+  { 0, 10, 22,{ 91, 92, 93, 94 } },              // TIEN
   { 0, 11, 23,{ 96, 97, 98 } },                  // ELF
 };
 #endif
