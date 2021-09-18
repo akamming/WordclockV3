@@ -139,10 +139,17 @@ void ConfigClass::reset()
 	this->config->mode = (uint32_t) this->defaultMode;
 	this->timeZone = 0;
 
-	this->config->ntpserver[0] = 129;
-	this->config->ntpserver[1] = 6;
-	this->config->ntpserver[2] = 15;
-	this->config->ntpserver[3] = 28;
+	// this->config->ntpserver[0] = 129;
+	// this->config->ntpserver[1] = 6;
+	// this->config->ntpserver[2] = 15;
+	// this->config->ntpserver[3] = 28;
+
+  // Replaced with ntp.google.com which is much faster
+  this->config->ntpserver[0] = 216;
+  this->config->ntpserver[1] = 239;
+  this->config->ntpserver[2] = 35;
+  this->config->ntpserver[3] = 8;  // For ntp.google.com, 0,4 or 12 will work as well
+  
 	this->ntpserver[0] = this->config->ntpserver[0];
 	this->ntpserver[1] = this->config->ntpserver[1];
 	this->ntpserver[2] = this->config->ntpserver[2];
