@@ -2,22 +2,22 @@
 <html>
 <head>
     <meta name="viewport" content="width=300">
-    <title>WordClock Settings</title>
+    <title>Woordklok Instellingen</title>
     <link rel="stylesheet" href="index.css">
 </head>
 <body onload="loadSettings();">
 
 <script src="jscolor.js"></script>
 
-<div class="header">WordClock Settings</div>
+<div class="header">Woordklok Instellingen</div>
 
 <div class="outer_frame">
-    <p>Farben</p>
+    <p>Kleuren</p>
     <div class="buttondiv">
     <button
         id = "foregroundColorButton"
         class="colorbutton jscolor {width:150,onFineChange:'newForeground=this.toString()',valueElement:null,value:'ffffff'}">
-        wird geladen...
+        wordt geladen...
     </button>
     </div>
 
@@ -25,7 +25,7 @@
     <button
         id = "backgroundColorButton"
         class="colorbutton jscolor {width:150,onFineChange:'newBackground=this.toString()',valueElement:null,value:'000000'}">
-        wird geladen...
+        wordt geladen...
     </button>
     </div>
 
@@ -33,25 +33,25 @@
     <button
         id = "secondsColorButton"
         class="colorbutton jscolor {width:150,onFineChange:'newSeconds=this.toString()',valueElement:null,value:'400020'}">
-        wird geladen...
+        wordt geladen...
     </button>
     </div>
 </div>
 
 <div class="outer_frame">
-    <p>Modus</p>
+    <p>Mode</p>
 	<select name="displaymode" id="displaymode" onchange="displayModeChanged()">
-		<option>Einfach</option>
-		<option>Weiche Übergänge</option>
-		<option>Fliegende Buchstaben aufwärts</option>
-		<option>Fliegende Buchstaben abwärts</option>
-		<option>Explodierende Buchstaben</option>
-		<option>Zufällig</option>
+		<option>Simpel</option>
+		<option>Zachte overgangen</option>
+		<option>Letters die naar boven vliegen</option>
+		<option>Letters die naar beneden vallen</option>
+		<option>Exploderende letters</option>
+		<option>Willekeurig</option>
 	</select>
 </div>
 
 <div class="outer_frame">
-    <p>Zeitzone</p>
+    <p>Tijdzone</p>
 	<select name="timezone" id="timezone" onchange="timeZoneChanged()">
 		<option>UTC-12:00</option>
 		<option>UTC-11:00</option>
@@ -84,15 +84,15 @@
 </div>
 
 <div class="outer_frame">
-    <p>Optionen</p>
-	<label><input type="checkbox" name="heartbeat" id="heartbeat" onchange="heartbeatEnableChanged()">Heartbeat</label>
+    <p>Opties</p>
+	<label><input type="checkbox" name="heartbeat" id="heartbeat" onchange="heartbeatEnableChanged()">Hartslag</label>
 </div>
 
 <div class="outer_frame">
-    <p>Zeitserver</p>
-    <input type="text" class="ntp_input" id="ntpserver" value="wird geladen..." onClick="this.setSelectionRange(0, this.value.length)">
+    <p>NTP Server</p>
+    <input type="text" class="ntp_input" id="ntpserver" value="wordt geladen..." onClick="this.setSelectionRange(0, this.value.length)">
     <div class="buttondiv">
-    <button class="colorbutton" onclick="saveNtpServer()">speichern</button>
+    <button class="colorbutton" onclick="saveNtpServer()">Opslaan</button>
     </div>
 </div>
 
@@ -236,9 +236,9 @@
             {
                 console.log("received " + xhttp.responseText);
                 var c = xhttp.responseText.split(",");
-                newBackground = updateButton('backgroundColorButton', 'Hintergrund', c[0], c[1], c[2]);
-                newForeground = updateButton('foregroundColorButton', 'Vordergrund', c[3], c[4], c[5]);
-                newSeconds = updateButton('secondsColorButton', 'Sekunden', c[6], c[7], c[8]);
+                newBackground = updateButton('backgroundColorButton', 'Achtergrond', c[0], c[1], c[2]);
+                newForeground = updateButton('foregroundColorButton', 'Voorgrond', c[3], c[4], c[5]);
+                newSeconds = updateButton('secondsColorButton', 'Seconden', c[6], c[7], c[8]);
             }
         };
         xhttp.open("GET", "http://" + location.hostname + "/getcolors", true);
