@@ -214,7 +214,7 @@ void setup()
 
 	// LEDs
 	Serial.println("Starting LED module");
-	LED.begin(5);
+	LED.begin(D6);
 	LED.setMode(DisplayMode::yellowHourglass);
 
 	// WiFi

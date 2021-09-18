@@ -44,23 +44,21 @@ uint8_t plasmaBuf[NUM_PIXELS];
 #if 1 // code folding minutes template
 const std::vector<leds_template_t> LEDFunctionsClass::minutesTemplate =
 {
-	{0,  0,  4, {107, 108, 109}},                                  // UHR
-	{0,  5,  9, {7, 8, 9, 10, 40, 41, 42, 43}},                    // F�NF NACH
-	{0, 10, 14, {11, 12, 13, 14, 40, 41, 42, 43}},                 // ZEHN NACH
-	{1, 15, 19, {26, 27, 28, 29, 30, 31, 32}},                     // VIERTEL
-	{1, 20, 24, {11, 12, 13, 14, 18, 19, 20, 33, 34, 35, 36}},     // ZEHN VOR HALB
-	{1, 25, 29, {7, 8, 9, 10, 18, 19, 20, 33, 34, 35, 36}},        // F�NF VOR HALB
-	{1, 30, 34, {33, 34, 35, 36}},                                 // HALB
-	{1, 35, 39, {7, 8, 9, 10, 40, 41, 42, 43, 33, 34, 35, 36}},    // F�NF NACH HALB
-	{1, 35, 39, {7, 8, 9, 10, 40, 41, 42, 43, 33, 34, 35, 36}},    // F�NF NACH HALB
-/*	{1, 35, 39, {11, 12, 13, 14, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 }}, // ZEHN VOR DREIVIERTEL */
-	{1, 40, 44, {11, 12, 13, 14, 40, 41, 42, 43, 33, 34, 35, 36}}, // ZEHN NACH HALB
-/*	{1, 40, 44, {7, 8, 9, 10, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 }}, // F�NF VOR DREIVIERTEL */
-	{1, 45, 49, {22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 }},    // DREIVIERTEL
-	{1, 50, 54, {11, 12, 13, 14, 18, 19, 20}},                     // ZEHN VOR
-	{1, 55, 59, {7, 8, 9, 10, 18, 19, 20}}                         // F�NF VOR
+  { 0,  0,  4,{ 107, 108, 109 } },                                  // UUR
+  { 0,  5,  9,{ 7, 8, 9, 10, 40, 41, 42, 43 } },                    // VIJF OVER
+  { 0, 10, 14,{ 11, 12, 13, 14, 40, 41, 42, 43 } },                 // TIEN OVER
+  { 0, 15, 19,{ 28, 29, 30, 31, 32, 40, 41, 42, 43 } },             // KWART OVER
+  { 1, 20, 24,{ 11, 12, 13, 14, 18, 19, 20, 21, 33, 34, 35, 36 } }, // TIEN VOOR HALF
+  { 1, 25, 29,{ 7, 8, 9, 10, 18, 19, 20, 21, 33, 34, 35, 36 } },    // VIJF VOOR HALF
+  { 1, 30, 34,{ 33, 34, 35, 36 } },                                 // HALF
+  { 1, 35, 39,{ 7, 8, 9, 10, 22, 23, 24, 25, 33, 34, 35, 36} },     // VIJF OVER HALF
+  { 1, 40, 44,{ 11, 12, 13, 14, 22, 23, 24, 25, 33, 34, 35, 36} },  // TIEN OVER HALF
+  { 1, 45, 49,{ 28, 29, 30, 31, 32, 44, 45, 46, 47 } },                  // KWART VOOR
+  { 1, 50, 54,{ 11, 12, 13, 14, 44, 45, 46, 47} },                 // TIEN VOOR
+  { 1, 55, 59,{ 7, 8, 9, 10, 44, 45, 46, 47 } }                     // VIJF VOOR
 };
 #endif
+
 
 // This defines the LED output for different hours
 // param0 deals with special cases:
@@ -72,19 +70,19 @@ const std::vector<leds_template_t> LEDFunctionsClass::minutesTemplate =
 #if 1 // code folding hours template
 const std::vector<leds_template_t> LEDFunctionsClass::hoursTemplate =
 {
-	{0,  0, 12, {99, 100, 101, 102, 103}}, // ZW�LF
-	{1,  1, 13, {44, 45, 46}},             // EIN
-	{2,  1, 13, {44, 45, 46, 47}},         // EINS
-	{0,  2, 14, {51, 52, 53, 54}},         // ZWEI
-	{0,  3, 15, {55, 56, 57, 58}},         // DREI
-	{0,  4, 16, {62, 63, 64, 65}},         // VIER
-	{0,  5, 17, {66, 67, 68, 69}},         // F�NF
-	{0,  6, 18, {72, 73, 74, 75, 76}},     // SECHS
-	{0,  7, 19, {77, 78, 79, 80, 81, 82}}, // SIEBEN
-	{0,  8, 20, {84, 85, 86, 87}},         // ACHT
-	{0,  9, 21, {88, 89, 90, 91}},         // NEUN
-	{0, 10, 22, {92, 93, 94, 95}},         // ZEHN
-	{0, 11, 23, {96, 97, 98}},             // ELF
+  { 0,  0, 12,{ 99, 100, 101, 102, 103, 104 } }, // TWAALF
+  { 1,  1, 13,{ 51, 52, 53 } },                  // EEN
+  { 2,  1, 13,{ 52, 52, 53 } },                  // EEN (EINS)
+  { 0,  2, 14,{ 44, 45, 46, 27 } },              // TWEE
+  { 0,  3, 15,{ 51, 52, 53, 54 } },              // DRIE
+  { 0,  4, 16,{ 66, 67, 68, 69 } },              // VIER
+  { 0,  5, 17,{ 70, 71, 72, 73 } },              // VIJF
+  { 0,  6, 18,{ 74, 75, 76 } },                  // ZES
+  { 0,  7, 19,{ 77, 78, 79, 80, 81 } },          // ZEVEN
+  { 0,  8, 20,{ 88, 89, 90, 91 } },              // ACHT
+  { 0,  9, 21,{ 83, 84, 85, 86, 87 } },          // NEGEN
+  { 0, 10, 22,{ 92, 93, 94, 95 } },              // TIEN
+  { 0, 11, 23,{ 96, 97, 98 } },                  // ELF
 };
 #endif
 
@@ -685,13 +683,15 @@ void LEDFunctionsClass::renderTime(uint8_t *target, int h, int m, int s, int ms)
 {
 	this->fillBackground(s, ms, target);
 
-	// set static LEDs
-	target[0] = 1; // E
-	target[1] = 1; // S
+  // set static LEDs
+  target[0] = 1; // H
+  target[1] = 1; // E
+  target[2] = 1; // T
 
-	target[3] = 1; // I
-	target[4] = 1; // S
-	target[5] = 1; // T
+  target[4] = 1; // I
+  target[5] = 1; // S
+
+
 
 	// minutes 1...4 for the corners
 	for(int i=0; i<=((m%5)-1); i++) target[10 * 11 + i] = 1;

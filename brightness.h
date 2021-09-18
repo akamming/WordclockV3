@@ -27,7 +27,7 @@ public:
 	uint32_t value();
 
 	float avg = 0;
-	uint32_t brightnessOverride = 256;
+	uint32_t brightnessOverride = 255;  // Set to 256 to have ADC control brightness
 
 private:
 	uint32_t getBrightnessForADCValue(uint32_t adcValue);
@@ -37,4 +37,3 @@ private:
 extern BrightnessClass Brightness;
 
 #endif
-
