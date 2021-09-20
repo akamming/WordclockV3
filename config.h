@@ -40,6 +40,7 @@ typedef struct _config_struct
 	bool heartbeat;
 	uint32_t mode;
 	uint32_t timeZone;
+  uint32_t brightnessOverride;
 } config_struct;
 
 #define EEPROM_SIZE 512

@@ -236,6 +236,7 @@ void WebServerClass::handleSetBrightness()
 	if(this->server->hasArg("value"))
 	{
 		Brightness.brightnessOverride = this->server->arg("value").toInt();
+    Config.save();
 		this->server->send(200, "text/plain", "OK");
 	}
 }

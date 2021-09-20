@@ -24,6 +24,7 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 #include "config.h"
+#include "brightness.h"
 
 //---------------------------------------------------------------------------------------
 // global instance
@@ -103,6 +104,7 @@ void ConfigClass::save()
 	this->config->mode = (uint32_t) this->defaultMode;
 	for (int i = 0; i < 4; i++)
 		this->config->ntpserver[i] = this->ntpserver[i];
+  this->config->brightnessOverride=Brightness.brightnessOverride;
 
 	for (int i = 0; i < EEPROM_SIZE; i++)
 		EEPROM.write(i, this->eeprom_data[i]);
@@ -185,4 +187,5 @@ void ConfigClass::load()
 	this->timeZone = this->config->timeZone;
 	for (int i = 0; i < 4; i++)
 		this->ntpserver[i] = this->config->ntpserver[i];
+  Brightness.brightnessOverride=this->config->brightnessOverride; 
 }
