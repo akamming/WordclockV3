@@ -25,6 +25,9 @@
 #include "brightness.h"
 #include "webserver.h"
 #include "ntp.h"
+#include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
+
+
 
 //---------------------------------------------------------------------------------------
 // global instance
@@ -91,7 +94,10 @@ void WebServerClass::begin()
 	this->server->on("/getmode", std::bind(&WebServerClass::handleGetMode, this));
 	this->server->on("/settimezone", std::bind(&WebServerClass::handleSetTimeZone, this));
 	this->server->on("/gettimezone", std::bind(&WebServerClass::handleGetTimeZone, this));
-	this->server->on("/debug", std::bind(&WebServerClass::handleDebug, this));
+  this->server->on("/debug", std::bind(&WebServerClass::handleDebug, this));
+  this->server->on("/resetwificredentials", std::bind(&WebServerClass::handleResetWifiCredentials, this));
+  this->server->on("/factoryreset", std::bind(&WebServerClass::handleFactoryReset, this));
+  
 
 	this->server->onNotFound(std::bind(&WebServerClass::handleNotFound, this));
 	this->server->begin();
@@ -159,6 +165,55 @@ String WebServerClass::contentType(String filename)
 	else if (filename.endsWith(".gz")) return "application/x-gzip";
 	return "text/plain";
 }
+
+//---------------------------------------------------------------------------------------
+// handleFactoryReset
+//
+// Handles the /factoryreset request, reset wifi credentials, reset config and reboot
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleFactoryReset() 
+{
+  Serial.println("Reset Config");
+  Config.reset();
+  Config.save();
+
+  Serial.println("Resetting Wifi Credentials");
+  WiFiManager wifiManager;
+  wifiManager.resetSettings();
+  this->server->send(200, "text/plain", "OK");
+  delay(500);
+
+  Serial.println("Trigger watchdog to reset wemos");
+  wdt_disable();
+  wdt_enable(WDTO_15MS);
+  while (1) {}
+}
+
+//---------------------------------------------------------------------------------------
+// handleResetWifiCredentials
+//
+// Handles the /resetWifiCredentials request, reset wifi credentials and reboot, so wifimanager will take over
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleResetWifiCredentials() 
+{
+  Serial.println("Resetting Wifi Credentials");
+  WiFiManager wifiManager;
+  wifiManager.resetSettings();
+  this->server->send(200, "text/plain", "OK");
+  delay(500);
+
+  Serial.println("Trigger watchdog to reset wemos");
+  wdt_disable();
+  wdt_enable(WDTO_15MS);
+  while (1) {}
+}
+
 
 //---------------------------------------------------------------------------------------
 // handleM

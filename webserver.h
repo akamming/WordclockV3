@@ -59,6 +59,9 @@ private:
 	void handleGetADC();
 	void handleGetNtpServer();
 	void handleSetNtpServer();
+  void handleResetWifiCredentials();
+  void handleFactoryReset();
+  
 	void extractColor(String argName, palette_entry& result);
 };
 
