@@ -519,12 +519,26 @@ void LEDFunctionsClass::set(const uint8_t *buf, palette_entry palette[])
 void LEDFunctionsClass::set(const uint8_t *buf, palette_entry palette[],
 		bool immediately)
 {
-	this->setBuffer(this->targetValues, buf, palette);
-
-	if (immediately)
-	{
-		this->setBuffer(this->currentValues, buf, palette);
-	}
+  // Config.nightmode=false;
+  if (Config.nightmode) {
+    palette_entry nightpalette[] = {
+      {0, 0, 0},
+      {0, 0, 2},
+      {0, 0, 0}
+    };
+    this->setBuffer(this->targetValues, buf, nightpalette);
+    if (immediately)
+    {
+      this->setBuffer(this->currentValues, buf, nightpalette);
+    }
+    
+  } else {
+  	this->setBuffer(this->targetValues, buf, palette);
+    if (immediately)
+    {
+  	  this->setBuffer(this->currentValues, buf, palette);
+    }
+  }
 }
 
 //---------------------------------------------------------------------------------------

@@ -97,7 +97,8 @@ void WebServerClass::begin()
   this->server->on("/debug", std::bind(&WebServerClass::handleDebug, this));
   this->server->on("/resetwificredentials", std::bind(&WebServerClass::handleResetWifiCredentials, this));
   this->server->on("/factoryreset", std::bind(&WebServerClass::handleFactoryReset, this));
-  
+  this->server->on("/setnightmode", std::bind(&WebServerClass::handleSetNightMode, this));
+  this->server->on("/getnightmode", std::bind(&WebServerClass::handleGetNightMode, this));
 
 	this->server->onNotFound(std::bind(&WebServerClass::handleNotFound, this));
 	this->server->begin();
@@ -286,6 +287,14 @@ void WebServerClass::handleB()
 	this->server->send(200, "text/plain", "OK");
 }
 
+//---------------------------------------------------------------------------------------
+// handleSetBrightness
+//
+// Handles the /brightness request, sets LED matrix to selected brightness, 256 = auto
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
 void WebServerClass::handleSetBrightness()
 {
 	if(this->server->hasArg("value"))
@@ -295,6 +304,40 @@ void WebServerClass::handleSetBrightness()
 		this->server->send(200, "text/plain", "OK");
 	}
 }
+
+//---------------------------------------------------------------------------------------
+// handleNightMode
+//
+// Handles the /setnightmode request, sets LED matrix to night mode palette
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleSetNightMode()
+{
+  if(this->server->hasArg("value"))
+  {
+    Config.nightmode = (this->server->hasArg("value") && this->server->arg("value") == "1");
+    Config.save();
+    this->server->send(200, "text/plain", "OK");
+  }
+}
+
+//---------------------------------------------------------------------------------------
+// handleGetNightmode
+//
+// Returns the state of the heartbeat flag.
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleGetNightMode()
+{
+  if(Config.nightmode) this->server->send(200, "text/plain", "1");
+  else this->server->send(200, "text/plain", "0");
+}
+
+
 
 void WebServerClass::handleDebug()
 {

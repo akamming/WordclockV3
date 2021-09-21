@@ -41,6 +41,7 @@ typedef struct _config_struct
 	uint32_t mode;
 	uint32_t timeZone;
   uint32_t brightnessOverride;
+  bool nightmode;
 } config_struct;
 
 #define EEPROM_SIZE 512
@@ -72,6 +73,7 @@ public:
 	IPAddress ntpserver = IPAddress(0, 0, 0, 0);
 	bool heartbeat = true;
 	bool debugMode = false;
+  bool nightmode = false;
 
 	DisplayMode defaultMode = DisplayMode::explode;
 

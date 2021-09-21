@@ -61,6 +61,8 @@ private:
 	void handleSetNtpServer();
   void handleResetWifiCredentials();
   void handleFactoryReset();
+  void handleGetNightMode();
+  void handleSetNightMode();
   
 	void extractColor(String argName, palette_entry& result);
 };

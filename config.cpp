@@ -101,6 +101,7 @@ void ConfigClass::save()
 	this->config->s = this->s;
 	this->config->timeZone = this->timeZone;
 	this->config->heartbeat = this->heartbeat;
+  this->config->nightmode = this->nightmode;
 	this->config->mode = (uint32_t) this->defaultMode;
 	for (int i = 0; i < 4; i++)
 		this->config->ntpserver[i] = this->ntpserver[i];
@@ -136,6 +137,9 @@ void ConfigClass::reset()
 
 	this->config->heartbeat = true;
 	this->heartbeat = this->config->heartbeat;
+  
+  this->config->nightmode= false;
+  this->nightmode= this->config->nightmode;
 
 	this->defaultMode = DisplayMode::explode;
 	this->config->mode = (uint32_t) this->defaultMode;
@@ -183,7 +187,8 @@ void ConfigClass::load()
 	this->fg = this->config->fg;
 	this->s = this->config->s;
 	this->defaultMode = (DisplayMode) this->config->mode;
-	this->heartbeat = this->config->heartbeat;
+  this->heartbeat = this->config->heartbeat;
+  this->nightmode = this->config->nightmode;
 	this->timeZone = this->config->timeZone;
 	for (int i = 0; i < 4; i++)
 		this->ntpserver[i] = this->config->ntpserver[i];
