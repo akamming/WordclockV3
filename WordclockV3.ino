@@ -245,7 +245,7 @@ void setup()
 	Serial.println("Initializing OTA");
 	ArduinoOTA.setPort(8266);
 	ArduinoOTA.setHostname("WordClock" );
-	//ArduinoOTA.setPassword((const char *)"123");
+	ArduinoOTA.setPassword("WordClock");
 	ArduinoOTA.onStart([]()
 	{
 		LED.setMode(DisplayMode::update);
