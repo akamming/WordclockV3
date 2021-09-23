@@ -26,13 +26,14 @@
 #include "webserver.h"
 #include "ntp.h"
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
-
+#include "EspSaveCrash.h"
 
 
 //---------------------------------------------------------------------------------------
 // global instance
 //---------------------------------------------------------------------------------------
 WebServerClass WebServer = WebServerClass();
+EspSaveCrash SaveCrash;
 
 //---------------------------------------------------------------------------------------
 // WebServerClass
@@ -99,6 +100,8 @@ void WebServerClass::begin()
   this->server->on("/factoryreset", std::bind(&WebServerClass::handleFactoryReset, this));
   this->server->on("/setnightmode", std::bind(&WebServerClass::handleSetNightMode, this));
   this->server->on("/getnightmode", std::bind(&WebServerClass::handleGetNightMode, this));
+  this->server->on("/showcrashlog", std::bind(&WebServerClass::handleShowCrashLog, this));
+  this->server->on("/clearcrashlog", std::bind(&WebServerClass::handleClearCrashLog, this));
 
 	this->server->onNotFound(std::bind(&WebServerClass::handleNotFound, this));
 	this->server->begin();
@@ -745,4 +748,34 @@ void WebServerClass::handleGetColors()
 			+ String(Config.s.r) + "," + String(Config.s.g) + ","
 			+ String(Config.s.b);
 	this->server->send(200, "text/plain", message);
+}
+
+//---------------------------------------------------------------------------------------
+// handleCrashLog()
+//
+// Outputs the crashlog
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleShowCrashLog()
+{
+  char buffer[2048]="";
+  SaveCrash.print(buffer,sizeof(buffer));
+  this->server->send(200, "text/plain", String(buffer));
+}
+
+
+//---------------------------------------------------------------------------------------
+// clearCrashLog()
+//
+// clears the crashlog
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleClearCrashLog()
+{
+  SaveCrash.clear();
+  this->server->send(200, "text/plain", "OK");
 }
