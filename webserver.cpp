@@ -26,15 +26,18 @@
 #include "webserver.h"
 #include "ntp.h"
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
-#include "EspSaveCrash.h"
 
+#ifdef DEBUG
+#include "EspSaveCrash.h"
+#endif
 
 //---------------------------------------------------------------------------------------
 // global instance
 //---------------------------------------------------------------------------------------
 WebServerClass WebServer = WebServerClass();
+#ifdef DEBUG
 EspSaveCrash SaveCrash;
-
+#endif
 //---------------------------------------------------------------------------------------
 // WebServerClass
 //
@@ -100,8 +103,10 @@ void WebServerClass::begin()
   this->server->on("/factoryreset", std::bind(&WebServerClass::handleFactoryReset, this));
   this->server->on("/setnightmode", std::bind(&WebServerClass::handleSetNightMode, this));
   this->server->on("/getnightmode", std::bind(&WebServerClass::handleGetNightMode, this));
+#ifdef DEBUG
   this->server->on("/showcrashlog", std::bind(&WebServerClass::handleShowCrashLog, this));
   this->server->on("/clearcrashlog", std::bind(&WebServerClass::handleClearCrashLog, this));
+#endif
 
 	this->server->onNotFound(std::bind(&WebServerClass::handleNotFound, this));
 	this->server->begin();
@@ -750,6 +755,7 @@ void WebServerClass::handleGetColors()
 	this->server->send(200, "text/plain", message);
 }
 
+#ifdef DEBUG
 //---------------------------------------------------------------------------------------
 // handleCrashLog()
 //
@@ -779,3 +785,4 @@ void WebServerClass::handleClearCrashLog()
   SaveCrash.clear();
   this->server->send(200, "text/plain", "OK");
 }
+#endif

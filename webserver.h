@@ -63,9 +63,11 @@ private:
   void handleFactoryReset();
   void handleGetNightMode();
   void handleSetNightMode();
+#ifdef DEBUG
   void handleShowCrashLog();
   void handleClearCrashLog();
-  
+#endif
+
 	void extractColor(String argName, palette_entry& result);
 };
 
