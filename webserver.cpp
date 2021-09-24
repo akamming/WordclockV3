@@ -103,6 +103,8 @@ void WebServerClass::begin()
   this->server->on("/factoryreset", std::bind(&WebServerClass::handleFactoryReset, this));
   this->server->on("/setnightmode", std::bind(&WebServerClass::handleSetNightMode, this));
   this->server->on("/getnightmode", std::bind(&WebServerClass::handleGetNightMode, this));
+  this->server->on("/getconfig", std::bind(&WebServerClass::handleGetConfig, this));
+  
 #ifdef DEBUG
   this->server->on("/showcrashlog", std::bind(&WebServerClass::handleShowCrashLog, this));
   this->server->on("/clearcrashlog", std::bind(&WebServerClass::handleClearCrashLog, this));
@@ -747,12 +749,53 @@ void WebServerClass::handleGetHeartbeat()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetColors()
 {
-	String message = String(Config.bg.r) + "," + String(Config.bg.g) + ","
-			+ String(Config.bg.b) + "," + String(Config.fg.r) + ","
-			+ String(Config.fg.g) + "," + String(Config.fg.b) + ","
-			+ String(Config.s.r) + "," + String(Config.s.g) + ","
-			+ String(Config.s.b);
-	this->server->send(200, "text/plain", message);
+  String message = String(Config.bg.r) + "," + String(Config.bg.g) + ","
+      + String(Config.bg.b) + "," + String(Config.fg.r) + ","
+      + String(Config.fg.g) + "," + String(Config.fg.b) + ","
+      + String(Config.s.r) + "," + String(Config.s.g) + ","
+      + String(Config.s.b);
+  this->server->send(200, "text/plain", message);
+}
+
+//---------------------------------------------------------------------------------------
+// handleGetConfig
+//
+// Outputs the currently active config in JSON
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleGetConfig()
+{
+  int mode = 0;
+  switch(Config.defaultMode)
+  {
+  case DisplayMode::plain:
+    mode = 0; break;
+  case DisplayMode::fade:
+    mode = 1; break;
+  case DisplayMode::flyingLettersVerticalUp:
+    mode = 2; break;
+  case DisplayMode::flyingLettersVerticalDown:
+    mode = 3; break;
+  case DisplayMode::explode:
+    mode = 4; break;
+  default:
+    mode = 0; break;
+  }
+
+  String message = "{\n";
+  message += "  \"backgroundcolor\": {\"r\" : " + String(Config.bg.r)+",\"g\" : "+String(Config.bg.g)+",\"b\" : "+String(Config.bg.b)+ "},\n";
+  message += "  \"foregroundcolor\": {\"r\" : " + String(Config.fg.r)+",\"g\" : "+String(Config.fg.g)+",\"b\" : "+String(Config.fg.b)+ "},\n";
+  message += "  \"secondscolor\": {\"r\" : " + String(Config.s.r)+",\"g\" : "+String(Config.s.g)+",\"b\" : "+String(Config.s.b)+ "},\n";
+  message += "  \"displaymode\": " + String(mode)+ ",\n";
+  message += "  \"timezone\": " + String(Config.timeZone) + ",\n";
+  message += "  \"nightmode\": " + String(Config.nightmode ? "\"on\"" : "\"off\"") + ",\n";
+  message += "  \"heartbeat\": " + String((Config.heartbeat==1) ? "\"on\"" : "\"off\"") + ",\n";
+  message += "  \"NTPServer\": \"" + Config.ntpserver.toString()+ "\",\n";
+  message += "  \"Brightness\": " + String(Brightness.brightnessOverride) + "\n";
+  message +="}";
+  this->server->send(200, "text/plain", message);
 }
 
 #ifdef DEBUG

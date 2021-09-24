@@ -29,7 +29,7 @@
 //---------------------------------------------------------------------------------------
 LEDFunctionsClass LED = LEDFunctionsClass();
 
-uint8_t fireBuf[NUM_PIXELS];
+uint8_t __attribute__((aligned(4))) fireBuf[NUM_PIXELS];
 uint8_t plasmaBuf[NUM_PIXELS];
 
 //---------------------------------------------------------------------------------------
