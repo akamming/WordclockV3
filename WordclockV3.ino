@@ -337,7 +337,7 @@ void loop()
 	else if(h == 13 && m == 37) LED.setMode(DisplayMode::matrix);
 	else if(h == 19 && m == 00) LED.setMode(DisplayMode::matrix);
 	else if(h == 20 && m == 00) LED.setMode(DisplayMode::plasma);
-	else if(h == 19 && m == 34) LED.setMode(DisplayMode::fire);
+	else if(h == 21 && m == 00) LED.setMode(DisplayMode::fire);
 	else if(h == 22 && m == 00) LED.setMode(DisplayMode::heart);
 	else if(h == 23 && m == 00) LED.setMode(DisplayMode::stars);
 	else LED.setMode(Config.defaultMode);
