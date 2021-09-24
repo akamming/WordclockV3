@@ -250,6 +250,7 @@ void setup()
 	{
 		LED.setMode(DisplayMode::update);
 		Config.updateProgress = 0;
+    Config.nightmode=false;
 		OTA_in_progress = 1;
 		Serial.println("OTA Start");
 	});
@@ -261,7 +262,7 @@ void setup()
 	ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
 	{
 		LED.setMode(DisplayMode::update);
-		Config.updateProgress = progress * 110 / total;
+		Config.updateProgress = (progress) * 110 / total;
 		Serial.printf("OTA Progress: %u%%\r\n", (progress / (total / 100)));
 	});
 	ArduinoOTA.onError([](ota_error_t error)
@@ -332,7 +333,8 @@ void loop()
 	}
 
 	// set mode depending on current time
-	if(h == 13 && m == 37) LED.setMode(DisplayMode::matrix);
+	if (Config.nightmode) LED.setMode(Config.defaultMode);
+	else if(h == 13 && m == 37) LED.setMode(DisplayMode::matrix);
 	else if(h == 19 && m == 00) LED.setMode(DisplayMode::matrix);
 	else if(h == 20 && m == 00) LED.setMode(DisplayMode::plasma);
 	else if(h == 21 && m == 00) LED.setMode(DisplayMode::fire);

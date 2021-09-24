@@ -523,7 +523,7 @@ void LEDFunctionsClass::set(const uint8_t *buf, palette_entry palette[],
   if (Config.nightmode) {
     palette_entry nightpalette[] = {
       {0, 0, 0},
-      {0, 0, 2},
+      {0, 0, 2*(255/this->brightness)},
       {0, 0, 0}
     };
     this->setBuffer(this->targetValues, buf, nightpalette);
@@ -625,18 +625,14 @@ void LEDFunctionsClass::show()
 {
 	uint8_t *data = this->currentValues;
 	int ofs = 0;
-  int brightness=this->brightness;
-  if (Config.nightmode){
-    brightness=255; // Correct, otherwise nightmode not visible
-  }
 
 	// copy current color values to LED object and display it
 	for (int i = 0; i < NUM_PIXELS; i++)
 	{
 		this->pixels->setPixelColor(i,
-				pixels->Color(((int) data[ofs + 0] * brightness) >> 8,
-						      ((int) data[ofs + 1] * brightness) >> 8,
-						      ((int) data[ofs + 2] * brightness) >> 8));
+				pixels->Color(((int) data[ofs + 0] * this->brightness) >> 8,
+						      ((int) data[ofs + 1] * this->brightness) >> 8,
+						      ((int) data[ofs + 2] * this->brightness) >> 8));
 		ofs += 3;
 	}
 	this->pixels->show();
