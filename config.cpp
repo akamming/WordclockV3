@@ -85,6 +85,20 @@ void ConfigClass::saveDelayed()
 }
 
 //---------------------------------------------------------------------------------------
+// Configsize
+//
+// retrieves the config size.
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+String ConfigClass::Configsize()
+{
+  return String(sizeof(_config_struct));
+}
+
+
+//---------------------------------------------------------------------------------------
 // save
 //
 // Copies the current class member values to EEPROM buffer and writes it to the EEPROM.

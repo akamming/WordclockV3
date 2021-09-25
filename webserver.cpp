@@ -600,6 +600,7 @@ void WebServerClass::handleInfo()
 	json["flashsize"] = ESP.getFlashChipRealSize();
 	json["resetreason"] = ESP.getResetReason();
 	json["resetinfo"] = ESP.getResetInfo();
+  json["configsize"] = Config.Configsize();
 //	switch(LED.getMode())
 //	{
 //	case DisplayMode::plain:
@@ -840,7 +841,7 @@ void WebServerClass::handleGetConfig()
   message += "  \"NTPServer\": \"" + Config.ntpserver.toString()+ "\",\n";
   message += "  \"Brightness\": " + String(Brightness.brightnessOverride) + ",\n";
   message += "  \"Alarm\":[{\n";
-  for (int i=0;i<5;i++) {
+  for (int i=0;i<10;i++) {
     String alarmmode;
   
     switch(Config.alarm[i].mode)
@@ -864,7 +865,7 @@ void WebServerClass::handleGetConfig()
     message += "    \"m\": "+String(Config.alarm[i].m)+",\n";  
     message += "    \"mode\": \""+alarmmode+"\",\n";  
     message += "    \"enabled\": "+String(Config.alarm[i].enabled ? "\"on\"" : "\"off\"")+"\n";  
-    if (i<4)
+    if (i<9)
       message += "  }, {\n";
   }
   message += "  }]\n";
