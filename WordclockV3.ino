@@ -333,14 +333,26 @@ void loop()
 	}
 
 	// set mode depending on current time
-	if (Config.nightmode) LED.setMode(Config.defaultMode);
+	/*if (Config.nightmode) LED.setMode(Config.defaultMode);
 	else if(h == 13 && m == 37) LED.setMode(DisplayMode::matrix);
 	else if(h == 19 && m == 00) LED.setMode(DisplayMode::matrix);
 	else if(h == 20 && m == 00) LED.setMode(DisplayMode::plasma);
 	else if(h == 21 && m == 00) LED.setMode(DisplayMode::fire);
 	else if(h == 22 && m == 00) LED.setMode(DisplayMode::heart);
 	else if(h == 23 && m == 00) LED.setMode(DisplayMode::stars);
-	else LED.setMode(Config.defaultMode);
+	else LED.setMode(Config.defaultMode);*/
+
+  LED.setMode(Config.defaultMode);
+  bool AlarmInProgress = false;
+  for (int i=0;i<5;i++)
+  {
+    if (Config.alarm[i].enabled) {
+      if (h==Config.alarm[i].h && m==Config.alarm[i].m) {
+        Config.nightmode=false;
+        LED.setMode(Config.alarm[i].mode);
+      }
+    }
+  }
 
 	// do web server stuff
 	WebServer.process();

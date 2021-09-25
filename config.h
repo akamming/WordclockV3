@@ -24,11 +24,26 @@
 #define HOURGLASS_ANIMATION_FRAMES 8
 #define DEBUG 1
 
+enum class DisplayMode
+{
+  plain, fade, flyingLettersVerticalUp, flyingLettersVerticalDown, explode,
+  random, matrix, heart, fire, plasma, stars, red, green, blue,
+  yellowHourglass, greenHourglass, update, updateComplete, updateError,
+  wifiManager, invalid
+};
+
 // structure to encapsulate a color value with red, green and blue values
 typedef struct _palette_entry
 {
 	uint8_t r, g, b;
 } palette_entry;
+
+typedef struct _alarm
+{
+  uint8_t h,m;
+  DisplayMode mode;
+  bool enabled;
+} t_alarm;
 
 // structure with configuration data to be stored in EEPROM
 typedef struct _config_struct
@@ -43,17 +58,11 @@ typedef struct _config_struct
 	uint32_t timeZone;
   uint32_t brightnessOverride;
   bool nightmode;
+  t_alarm alarm[10];
 } config_struct;
 
 #define EEPROM_SIZE 512
 
-enum class DisplayMode
-{
-	plain, fade, flyingLettersVerticalUp, flyingLettersVerticalDown, explode,
-	random, matrix, heart, fire, plasma, stars, red, green, blue,
-	yellowHourglass, greenHourglass, update, updateComplete, updateError,
-	wifiManager, invalid
-};
 
 class ConfigClass
 {
@@ -76,7 +85,8 @@ public:
 	bool debugMode = false;
   bool nightmode = false;
 
-	DisplayMode defaultMode = DisplayMode::explode;
+	// DisplayMode defaultMode = DisplayMode::explode;
+  DisplayMode defaultMode = DisplayMode::fade;
 
 	int updateProgress = 0;
 	int hourglassState = 0;
@@ -84,6 +94,8 @@ public:
 
 	int delayedWriteTimer = 0;
 	bool delayedWriteFlag = false;
+
+  t_alarm alarm[10];
 
 private:
 	// copy of EEPROM content

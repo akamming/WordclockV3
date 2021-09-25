@@ -104,6 +104,7 @@ void WebServerClass::begin()
   this->server->on("/setnightmode", std::bind(&WebServerClass::handleSetNightMode, this));
   this->server->on("/getnightmode", std::bind(&WebServerClass::handleGetNightMode, this));
   this->server->on("/getconfig", std::bind(&WebServerClass::handleGetConfig, this));
+  this->server->on("/setalarm", std::bind(&WebServerClass::handleSetAlarm, this));
   
 #ifdef DEBUG
   this->server->on("/showcrashlog", std::bind(&WebServerClass::handleShowCrashLog, this));
@@ -191,10 +192,11 @@ void WebServerClass::handleFactoryReset()
   Config.reset();
   Config.save();
 
-  Serial.println("Resetting Wifi Credentials");
+  /* Serial.println("Resetting Wifi Credentials");
   WiFiManager wifiManager;
   wifiManager.resetSettings();
-  this->server->send(200, "text/plain", "OK");
+  this->server->send(200, "text/plain", "OK"); */
+  
   delay(500);
 
   Serial.println("Trigger watchdog to reset wemos");
@@ -758,6 +760,49 @@ void WebServerClass::handleGetColors()
 }
 
 //---------------------------------------------------------------------------------------
+// handleSetAlarm
+//
+// Sets an alarm
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleSetAlarm()
+{
+  if (this->server->hasArg("number") && this->server->hasArg("h") &&this->server->hasArg("m") && this->server->hasArg("mode") && this->server->hasArg("enabled")) {
+    int i = this->server->arg("number").toInt();
+    Config.alarm[i].h=this->server->arg("h").toInt();
+    Config.alarm[i].m=this->server->arg("m").toInt();
+
+    if (this->server->arg("enabled").equalsIgnoreCase("On")) {
+      Config.alarm[i].enabled=true;
+    } else {
+      Config.alarm[i].enabled=false;
+    }
+
+    if (this->server->arg("mode").equalsIgnoreCase("matrix")) 
+      Config.alarm[i].mode = DisplayMode::matrix; 
+    else if (this->server->arg("mode").equalsIgnoreCase("plasma"))
+      Config.alarm[i].mode = DisplayMode::plasma; 
+    else if (this->server->arg("mode").equalsIgnoreCase("fire"))
+      Config.alarm[i].mode = DisplayMode::fire; 
+    else if (this->server->arg("mode").equalsIgnoreCase("heart"))
+      Config.alarm[i].mode = DisplayMode::heart;
+    else if (this->server->arg("mode").equalsIgnoreCase("stars"))
+      Config.alarm[i].mode = DisplayMode::stars;
+    else
+      Config.alarm[i].mode = DisplayMode::plasma;  // default
+    
+    this->server->send(200, "text/plain", "OK");
+  } else {
+    this->server->send(200, "text/plain", "invalid arg");
+  }
+
+  Config.save();
+}
+
+
+//---------------------------------------------------------------------------------------
 // handleGetConfig
 //
 // Outputs the currently active config in JSON
@@ -767,33 +812,62 @@ void WebServerClass::handleGetColors()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetConfig()
 {
-  int mode = 0;
+  int displaymode = 0;
   switch(Config.defaultMode)
   {
   case DisplayMode::plain:
-    mode = 0; break;
+    displaymode = 0; break;
   case DisplayMode::fade:
-    mode = 1; break;
+    displaymode = 1; break;
   case DisplayMode::flyingLettersVerticalUp:
-    mode = 2; break;
+    displaymode = 2; break;
   case DisplayMode::flyingLettersVerticalDown:
-    mode = 3; break;
+    displaymode = 3; break;
   case DisplayMode::explode:
-    mode = 4; break;
+    displaymode = 4; break;
   default:
-    mode = 0; break;
+    displaymode = 0; break;
   }
 
   String message = "{\n";
-  message += "  \"backgroundcolor\": {\"r\" : " + String(Config.bg.r)+",\"g\" : "+String(Config.bg.g)+",\"b\" : "+String(Config.bg.b)+ "},\n";
-  message += "  \"foregroundcolor\": {\"r\" : " + String(Config.fg.r)+",\"g\" : "+String(Config.fg.g)+",\"b\" : "+String(Config.fg.b)+ "},\n";
-  message += "  \"secondscolor\": {\"r\" : " + String(Config.s.r)+",\"g\" : "+String(Config.s.g)+",\"b\" : "+String(Config.s.b)+ "},\n";
-  message += "  \"displaymode\": " + String(mode)+ ",\n";
+  message += "  \"backgroundcolor\": {\n    \"r\" : " + String(Config.bg.r)+",\n    \"g\" : "+String(Config.bg.g)+",\n    \"b\" : "+String(Config.bg.b)+ "\n  },\n";
+  message += "  \"foregroundcolor\": {\n    \"r\" : " + String(Config.fg.r)+",\n    \"g\" : "+String(Config.fg.g)+",\n    \"b\" : "+String(Config.fg.b)+ "},\n";
+  message += "  \"secondscolor\": {\n    \"r\" : " + String(Config.s.r)+",\n    \"g\" : "+String(Config.s.g)+",\n    \"b\" : "+String(Config.s.b)+ "},\n";
+  message += "  \"displaymode\": " + String(displaymode)+ ",\n";
   message += "  \"timezone\": " + String(Config.timeZone) + ",\n";
   message += "  \"nightmode\": " + String(Config.nightmode ? "\"on\"" : "\"off\"") + ",\n";
   message += "  \"heartbeat\": " + String((Config.heartbeat==1) ? "\"on\"" : "\"off\"") + ",\n";
   message += "  \"NTPServer\": \"" + Config.ntpserver.toString()+ "\",\n";
-  message += "  \"Brightness\": " + String(Brightness.brightnessOverride) + "\n";
+  message += "  \"Brightness\": " + String(Brightness.brightnessOverride) + ",\n";
+  message += "  \"Alarm\":[{\n";
+  for (int i=0;i<5;i++) {
+    String alarmmode;
+  
+    switch(Config.alarm[i].mode)
+    {
+    case DisplayMode::matrix:
+      alarmmode = "matrix"; break;
+    case DisplayMode::plasma:
+      alarmmode = "plasma"; break;
+    case DisplayMode::fire:
+      alarmmode  = "fire"; break;
+    case DisplayMode::heart:
+      alarmmode = "heart"; break;
+    case DisplayMode::stars:
+      alarmmode = "stars"; break;
+    default:
+      alarmmode = "unknown"; break;
+    }
+
+    
+    message += "    \"h\": "+String(Config.alarm[i].h)+",\n";  
+    message += "    \"m\": "+String(Config.alarm[i].m)+",\n";  
+    message += "    \"mode\": \""+alarmmode+"\",\n";  
+    message += "    \"enabled\": "+String(Config.alarm[i].enabled ? "\"on\"" : "\"off\"")+"\n";  
+    if (i<4)
+      message += "  }, {\n";
+  }
+  message += "  }]\n";
   message +="}";
   this->server->send(200, "text/plain", message);
 }

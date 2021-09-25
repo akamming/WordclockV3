@@ -106,6 +106,8 @@ void ConfigClass::save()
 	for (int i = 0; i < 4; i++)
 		this->config->ntpserver[i] = this->ntpserver[i];
   this->config->brightnessOverride=Brightness.brightnessOverride;
+  for (int i=0; i<10;i++)
+    this->config->alarm[i]=this->alarm[i];
 
 	for (int i = 0; i < EEPROM_SIZE; i++)
 		EEPROM.write(i, this->eeprom_data[i]);
@@ -160,6 +162,23 @@ void ConfigClass::reset()
 	this->ntpserver[1] = this->config->ntpserver[1];
 	this->ntpserver[2] = this->config->ntpserver[2];
 	this->ntpserver[3] = this->config->ntpserver[3];
+
+  // reset all alarms
+  for (int i=0;i<10;i++) {
+    this->alarm[i].h=0;
+    this->alarm[i].m=0;
+    this->alarm[i].mode=DisplayMode::plasma;
+    this->alarm[i].enabled=false;
+  }
+
+  // Default times
+  this->alarm[0]={ 13, 37, DisplayMode::matrix, true};
+  this->alarm[1]={ 19, 00, DisplayMode::matrix, true};
+  this->alarm[2]={ 20, 00, DisplayMode::plasma, true};
+  this->alarm[3]={ 21, 00, DisplayMode::fire, true};
+  this->alarm[4]={ 22, 00, DisplayMode::heart, true};
+  this->alarm[5]={ 23, 00, DisplayMode::stars, true};
+
 }
 
 //---------------------------------------------------------------------------------------
@@ -193,4 +212,7 @@ void ConfigClass::load()
 	for (int i = 0; i < 4; i++)
 		this->ntpserver[i] = this->config->ntpserver[i];
   Brightness.brightnessOverride=this->config->brightnessOverride; 
+  for (int i=0; i<10;i++)
+    this->alarm[i]=this->config->alarm[i];
+  
 }
