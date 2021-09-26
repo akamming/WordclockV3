@@ -186,12 +186,11 @@ void ConfigClass::reset()
   }
 
   // Default times
-  this->alarm[0]={ 13, 37, DisplayMode::matrix, true};
-  this->alarm[1]={ 19, 00, DisplayMode::matrix, true};
-  this->alarm[2]={ 20, 00, DisplayMode::plasma, true};
-  this->alarm[3]={ 21, 00, DisplayMode::fire, true};
-  this->alarm[4]={ 22, 00, DisplayMode::heart, true};
-  this->alarm[5]={ 23, 00, DisplayMode::stars, true};
+  this->alarm[0]={ 19, 00, DisplayMode::matrix, false};
+  this->alarm[1]={ 20, 00, DisplayMode::plasma, false};
+  this->alarm[2]={ 21, 00, DisplayMode::fire, false};
+  this->alarm[3]={ 22, 00, DisplayMode::heart, false};
+  this->alarm[4]={ 23, 00, DisplayMode::stars, false};
 
 }
 
