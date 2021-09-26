@@ -519,7 +519,6 @@ void LEDFunctionsClass::set(const uint8_t *buf, palette_entry palette[])
 void LEDFunctionsClass::set(const uint8_t *buf, palette_entry palette[],
 		bool immediately)
 {
-  // Config.nightmode=false;
   if (Config.nightmode) {
     palette_entry nightpalette[] = {
       {0, 0, 0},

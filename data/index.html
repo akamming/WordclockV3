@@ -497,12 +497,15 @@
         xhttp.send();
         }
 
-        function alarmChanged(slidevalue)
+        function alarmChanged(index)
         {
-
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", "http://" + location.hostname + "/setbrightness?value=" + slidevalue, true);
-        xhttp.send();
+            var xhttp = new XMLHttpRequest();
+            var time = document.getElementById('a'+index.toString()+'time').value;
+            var mode = document.getElementById('a'+index.toString()+'mode').value;
+            var enabled = "off";
+            if(document.getElementById('a'+index.toString()+'enabled').checked == true) enabled = "on";
+            xhttp.open("GET", "http://" + location.hostname + "/setalarm?number=" + index.toString() + "&time="+time+"&mode="+mode+"&enabled="+enabled, true);
+            xhttp.send();
         }
 
         function loadAlarms()
