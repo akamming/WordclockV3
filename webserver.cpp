@@ -105,6 +105,7 @@ void WebServerClass::begin()
   this->server->on("/setnightmode", std::bind(&WebServerClass::handleSetNightMode, this));
   this->server->on("/getnightmode", std::bind(&WebServerClass::handleGetNightMode, this));
   this->server->on("/getconfig", std::bind(&WebServerClass::handleGetConfig, this));
+  this->server->on("/getalarms", std::bind(&WebServerClass::handleGetAlarms, this));
   this->server->on("/setalarm", std::bind(&WebServerClass::handleSetAlarm, this));
   
 #ifdef DEBUG
@@ -776,6 +777,51 @@ void WebServerClass::handleGetColors()
 }
 
 //---------------------------------------------------------------------------------------
+// handleGetAlarms
+//
+// gets the alarms
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleGetAlarms()
+{
+  String alarmmode;
+  String message = "";
+
+  for (int i=0;i<5;i++) {
+    //append the hour of the alarm, append a zero in case of h < 10
+    if (Config.alarm[i].h<10) message += "0";
+    message += String(Config.alarm[i].h) + ":";
+    // append the second of the alarm
+    if (Config.alarm[i].m<10) message += "0";
+    message += String(Config.alarm[i].m) + ",";
+
+  
+    switch(Config.alarm[i].mode)
+    {
+    case DisplayMode::matrix:
+      alarmmode = "matrix"; break;
+    case DisplayMode::plasma:
+      alarmmode = "plasma"; break;
+    case DisplayMode::fire:
+      alarmmode  = "fire"; break;
+    case DisplayMode::heart:
+      alarmmode = "heart"; break;
+    case DisplayMode::stars:
+      alarmmode = "stars"; break;
+    default:
+      alarmmode = "unknown"; break;
+    }
+
+    // add alarmmode and enabled
+    message += alarmmode + "," + String(Config.alarm[i].enabled ? "on" : "off") + ",";
+  }
+  this->server->send(200, "text/plain", message);
+
+}
+
+//---------------------------------------------------------------------------------------
 // handleSetAlarm
 //
 // Sets an alarm
@@ -785,29 +831,38 @@ void WebServerClass::handleGetColors()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSetAlarm()
 {
-  if (this->server->hasArg("number") && this->server->hasArg("h") &&this->server->hasArg("m") && this->server->hasArg("mode") && this->server->hasArg("enabled")) {
+  if (this->server->hasArg("number")) {
+    
     int i = this->server->arg("number").toInt();
-    Config.alarm[i].h=this->server->arg("h").toInt();
-    Config.alarm[i].m=this->server->arg("m").toInt();
 
-    if (this->server->arg("enabled").equalsIgnoreCase("On")) {
+    if (this->server->hasArg("time")) {
+      // set time
+      int index=this->server->arg("time").indexOf(":");
+      int length=this->server->arg("time").length();
+      Config.alarm[i].h=this->server->arg("time").substring(0,index).toInt();
+      Config.alarm[i].m=this->server->arg("time").substring(index+1,length).toInt();
+    }
+
+    if (this->server->hasArg("enabled") && this->server->arg("enabled").equalsIgnoreCase("On")) {
       Config.alarm[i].enabled=true;
     } else {
       Config.alarm[i].enabled=false;
     }
 
-    if (this->server->arg("mode").equalsIgnoreCase("matrix")) 
-      Config.alarm[i].mode = DisplayMode::matrix; 
-    else if (this->server->arg("mode").equalsIgnoreCase("plasma"))
-      Config.alarm[i].mode = DisplayMode::plasma; 
-    else if (this->server->arg("mode").equalsIgnoreCase("fire"))
-      Config.alarm[i].mode = DisplayMode::fire; 
-    else if (this->server->arg("mode").equalsIgnoreCase("heart"))
-      Config.alarm[i].mode = DisplayMode::heart;
-    else if (this->server->arg("mode").equalsIgnoreCase("stars"))
-      Config.alarm[i].mode = DisplayMode::stars;
-    else
-      Config.alarm[i].mode = DisplayMode::plasma;  // default
+    if (this->server->hasArg("mode")) {
+      if (this->server->arg("mode").equalsIgnoreCase("matrix")) 
+        Config.alarm[i].mode = DisplayMode::matrix; 
+      else if (this->server->arg("mode").equalsIgnoreCase("plasma"))
+        Config.alarm[i].mode = DisplayMode::plasma; 
+      else if (this->server->arg("mode").equalsIgnoreCase("fire"))
+        Config.alarm[i].mode = DisplayMode::fire; 
+      else if (this->server->arg("mode").equalsIgnoreCase("heart"))
+        Config.alarm[i].mode = DisplayMode::heart;
+      else if (this->server->arg("mode").equalsIgnoreCase("stars"))
+        Config.alarm[i].mode = DisplayMode::stars;
+      else
+        Config.alarm[i].mode = DisplayMode::plasma;  // default
+    }
     
     this->server->send(200, "text/plain", "OK");
   } else {

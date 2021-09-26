@@ -8,7 +8,7 @@
 <body onload="loadSettings();">
 
     <script src="jscolor.js"></script>
-    
+
     <div class="header">Woordklok Instellingen</div>
 
     <div class="outer_frame">
@@ -34,14 +34,15 @@
             </button>
         </div>
 
-        Helderheid
-        <div class="slidediv">
-            <input type="range" min="0" max="255" value="125" name="brightness" id="brightness" onchange="brightnessChanged(this.value)">
-        </div>
     </div>
 
     <div class="outer_frame">
-        <p>Mode</p>
+        <p>Weergave</p><br />
+        
+        <div class="slidediv">
+            Helderheid  <input type="range" min="0" max="255" value="125" name="brightness" id="brightness" onchange="brightnessChanged(this.value)" />
+        </div>
+        <br />Overgangen
         <select name="displaymode" id="displaymode" onchange="displayModeChanged()">
             <option>Simpel</option>
             <option>Zachte overgangen</option>
@@ -49,11 +50,69 @@
             <option>Letters die naar beneden vallen</option>
             <option>Exploderende letters</option>
             <option>Willekeurig</option>
-        </select>
+        </select><br /><br />
+        <label><input type="checkbox" name="nachtmodus" id="nightmode" onchange="nightmodeEnableChanged()">Nachtstand</label>
     </div>
 
     <div class="outer_frame">
-        <p>Tijdzone</p>
+        Wakeup lights<br />
+        <input type="time" value="12:00" name="a0time" id="a0time" onchange="alarmChanged(0)" />
+        <select name="a0mode" id="a0mode" onchange="alarmChanged(0)">
+            <option>stars</option>
+            <option>matrix</option>
+            <option>plasma</option>
+            <option>fire</option>
+            <option>heart</option>
+        </select>
+        <input type="checkbox" name="a0enabled" id="a0enabled" onchange="alarmChanged(0)">
+        <br />
+        <input type="time" value="12:00" name="a1time" id="a1time" onchange="alarmChanged(1)" />
+        <select name="a1mode" id="a1mode" onchange="alarmChanged(1)">
+            <option>stars</option>
+            <option>matrix</option>
+            <option>plasma</option>
+            <option>fire</option>
+            <option>heart</option>
+        </select>
+        <input type="checkbox" name="a1enabled" id="a1enabled" onchange="alarmChanged(1)">
+        <br />
+        <input type="time" value="12:00" name="a2time" id="a2time" onchange="alarmChanged(2)" />
+        <select name="a2mode" id="a2mode" onchange="alarmChanged(2)">
+            <option>stars</option>
+            <option>matrix</option>
+            <option>plasma</option>
+            <option>fire</option>
+            <option>heart</option>
+        </select>
+        <input type="checkbox" name="a2enabled" id="a2enabled" onchange="alarmChanged(2)">
+        <br />
+        <input type="time" value="12:00" name="a3time" id="a3time" onchange="alarmChanged(3)" />
+        <select name="a3mode" id="a3mode" onchange="alarmChanged(3)">
+            <option>stars</option>
+            <option>matrix</option>
+            <option>plasma</option>
+            <option>fire</option>
+            <option>heart</option>
+        </select>
+        <input type="checkbox" name="a3enabled" id="a3enabled" onchange="alarmChanged(3)">
+        <br />
+        <input type="time" value="12:00" name="a4time" id="a4time" onchange="alarmChanged(4)" />
+        <select name="a4mode" id="a4mode" onchange="alarmChanged(4)">
+            <option>stars</option>
+            <option>matrix</option>
+            <option>plasma</option>
+            <option>fire</option>
+            <option>heart</option>
+        </select>
+        <input type="checkbox" name="a4enabled" id="a4enabled" onchange="alarmChanged(4)">
+        <br />
+
+    </div>
+
+
+    <div class="outer_frame">
+        <p>Opties</p>
+        <br />Tijdzone
         <select name="timezone" id="timezone" onchange="timeZoneChanged()">
             <option>UTC-12:00</option>
             <option>UTC-11:00</option>
@@ -82,23 +141,19 @@
             <option>UTC+12:00</option>
             <option>UTC+13:00</option>
             <option>UTC+14:00</option>
-        </select>
-    </div>
+        </select><br /><br />
 
-    <div class="outer_frame">
-        <p>Opties</p>
-        <label><input type="checkbox" name="heartbeat" id="heartbeat" onchange="heartbeatEnableChanged()">Hartslag</label><br />
-        <label><input type="checkbox" name="nachtmodus" id="nightmode" onchange="nightmodeEnableChanged()">Nachtmodus</label>
-    </div>
-
-
-
-    <div class="outer_frame">
-        <p>NTP Server</p>
+        <label><input type="checkbox" name="heartbeat" id="heartbeat" onchange="heartbeatEnableChanged()">Hartslag</label><br /><br />
+        NTP Server
         <input type="text" class="ntp_input" id="ntpserver" value="wordt geladen..." onClick="this.setSelectionRange(0, this.value.length)">
         <div class="buttondiv">
             <button class="colorbutton" onclick="saveNtpServer()">Opslaan</button>
         </div>
+    </div>
+
+
+
+    <div class="outer_frame">
     </div>
 
     <script>
@@ -442,7 +497,41 @@
         xhttp.send();
         }
 
+        function alarmChanged(slidevalue)
+        {
 
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "http://" + location.hostname + "/setbrightness?value=" + slidevalue, true);
+        xhttp.send();
+        }
+
+        function loadAlarms()
+        {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function()
+            {
+                if(xhttp.readyState == 4 && xhttp.status == 200)
+                {
+
+                    console.log("received " + xhttp.responseText);
+                    var c = xhttp.responseText.split(",");
+                    for (let i = 0; i < 5; i++) {
+                        document.getElementById('a'+i.toString()+'time').value = c[i*3];
+                        document.getElementById('a'+i.toString()+'mode').value = c[i*3+1];
+                        if(c[i*3+2] == "on")
+                        {
+                            document.getElementById('a'+i.toString()+'enabled').checked = true;
+                        }
+                        else
+                        {
+                            document.getElementById('a'+i.toString()+'enabled').checked = false;
+                        }
+                    }
+                }
+            };
+            xhttp.open("GET", "http://" + location.hostname + "/getalarms", true);
+            xhttp.send();
+        }
 
 
         function loadSettings()
@@ -453,7 +542,8 @@
         loadHeartbeat();
         loadNightMode();
         loadTimeZone();
-        loadBrightness()
+        loadBrightness();
+        loadAlarms();
         }
 
     </script>

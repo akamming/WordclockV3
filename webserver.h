@@ -65,6 +65,7 @@ private:
   void handleGetNightMode();
   void handleSetNightMode();
   void handleGetConfig();
+  void handleGetAlarms();
   void handleSetAlarm();
 #ifdef DEBUG
   void handleShowCrashLog();
