@@ -55,7 +55,8 @@ private:
 	void handleG();
 	void handleB();
 	void handleDebug();
-	void handleSetBrightness();
+  void handleGetBrightness();
+  void handleSetBrightness();
 	void handleGetADC();
 	void handleGetNtpServer();
 	void handleSetNtpServer();

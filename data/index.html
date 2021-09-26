@@ -8,7 +8,7 @@
 <body onload="loadSettings();">
 
     <script src="jscolor.js"></script>
-
+    
     <div class="header">Woordklok Instellingen</div>
 
     <div class="outer_frame">
@@ -32,6 +32,11 @@
                     class="colorbutton jscolor {width:150,onFineChange:'newSeconds=this.toString()',valueElement:null,value:'400020'}">
                 wordt geladen...
             </button>
+        </div>
+
+        Helderheid
+        <div class="slidediv">
+            <input type="range" min="0" max="255" value="125" name="brightness" id="brightness" onchange="brightnessChanged(this.value)">
         </div>
     </div>
 
@@ -329,7 +334,7 @@
         var server = document.getElementById('ntpserver').value;
         if(!isValidIP(server))
         {
-        alert("Die IP ist ungültig.");
+        alert("Ongeldig IP Adres!");
         return;
         }
 
@@ -414,6 +419,30 @@
         xhttp.send();
         }
 
+        function loadBrightness()
+        {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function()
+        {
+        if(xhttp.readyState == 4 && xhttp.status == 200)
+        {
+        console.log("received " + xhttp.responseText);
+        document.getElementById('brightness').value = xhttp.responseText;
+        }
+        };
+        xhttp.open("GET", "http://" + location.hostname + "/getbrightness", true);
+        xhttp.send();
+        }
+
+        function brightnessChanged(slidevalue)
+        {
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "http://" + location.hostname + "/setbrightness?value=" + slidevalue, true);
+        xhttp.send();
+        }
+
+
 
 
         function loadSettings()
@@ -424,6 +453,7 @@
         loadHeartbeat();
         loadNightMode();
         loadTimeZone();
+        loadBrightness()
         }
 
     </script>

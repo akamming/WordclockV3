@@ -92,7 +92,8 @@ void WebServerClass::begin()
 	this->server->on("/r", std::bind(&WebServerClass::handleR, this));
 	this->server->on("/g", std::bind(&WebServerClass::handleG, this));
 	this->server->on("/b", std::bind(&WebServerClass::handleB, this));
-	this->server->on("/brightness", std::bind(&WebServerClass::handleSetBrightness, this));
+  this->server->on("/getbrightness", std::bind(&WebServerClass::handleGetBrightness, this));
+  this->server->on("/setbrightness", std::bind(&WebServerClass::handleSetBrightness, this));
 	this->server->on("/getadc", std::bind(&WebServerClass::handleGetADC, this));
 	this->server->on("/setmode", std::bind(&WebServerClass::handleSetMode, this));
 	this->server->on("/getmode", std::bind(&WebServerClass::handleGetMode, this));
@@ -300,9 +301,23 @@ void WebServerClass::handleB()
 }
 
 //---------------------------------------------------------------------------------------
+// handleGetBrightness
+//
+// Handles the /getbrightness request, returns the brightness value
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleGetBrightness()
+{
+    this->server->send(200, "text/plain", String(Brightness.brightnessOverride));
+}
+
+
+//---------------------------------------------------------------------------------------
 // handleSetBrightness
 //
-// Handles the /brightness request, sets LED matrix to selected brightness, 256 = auto
+// Handles the /setbrightness request, sets LED matrix to selected brightness, 256 = auto
 //
 // -> --
 // <- --
