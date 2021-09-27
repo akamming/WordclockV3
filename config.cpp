@@ -157,7 +157,7 @@ void ConfigClass::reset()
   this->config->nightmode= false;
   this->nightmode= this->config->nightmode;
 
-	this->defaultMode = DisplayMode::explode;
+	this->defaultMode = DisplayMode::fade;
 	this->config->mode = (uint32_t) this->defaultMode;
 	this->timeZone = 0;
 
