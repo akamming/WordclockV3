@@ -196,15 +196,10 @@ void WebServerClass::handleFactoryReset()
 
   /* Serial.println("Resetting Wifi Credentials");
   WiFiManager wifiManager;
-  wifiManager.resetSettings();
-  this->server->send(200, "text/plain", "OK"); */
+  wifiManager.resetSettings(); */
+  this->server->send(200, "text/plain", "OK"); 
   
-  delay(500);
-
-  Serial.println("Trigger watchdog to reset wemos");
-  wdt_disable();
-  wdt_enable(WDTO_15MS);
-  while (1) {}
+  ESP.reset();
 }
 
 //---------------------------------------------------------------------------------------
@@ -221,12 +216,7 @@ void WebServerClass::handleResetWifiCredentials()
   WiFiManager wifiManager;
   wifiManager.resetSettings();
   this->server->send(200, "text/plain", "OK");
-  delay(500);
-
-  Serial.println("Trigger watchdog to reset wemos");
-  wdt_disable();
-  wdt_enable(WDTO_15MS);
-  while (1) {}
+  ESP.reset();
 }
 
 
