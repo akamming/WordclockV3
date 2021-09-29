@@ -22,7 +22,7 @@
 
 #define NUM_PIXELS 114
 #define HOURGLASS_ANIMATION_FRAMES 8
-#define DEBUG 1
+// #define DEBUG 1
 
 enum class DisplayMode
 {
