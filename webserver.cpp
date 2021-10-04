@@ -231,6 +231,7 @@ void WebServerClass::handleResetWifiCredentials()
 extern int h, m;
 void WebServerClass::handleM()
 {
+  Serial.println("Increase one minute");
 	if(++m>59) m = 0;
 	this->server->send(200, "text/plain", "OK");
 }
@@ -245,6 +246,7 @@ void WebServerClass::handleM()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleH()
 {
+  Serial.println("Increase one hour");
 	if(++h>23) h = 0;
 	this->server->send(200, "text/plain", "OK");
 }
@@ -259,6 +261,7 @@ void WebServerClass::handleH()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleR()
 {
+  Serial.println("Displaymode red");
 	LED.setMode(DisplayMode::red);
 	this->server->send(200, "text/plain", "OK");
 }
@@ -273,6 +276,7 @@ void WebServerClass::handleR()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleG()
 {
+  Serial.println("Displaymode green");
 	LED.setMode(DisplayMode::green);
 	this->server->send(200, "text/plain", "OK");
 }
@@ -287,6 +291,7 @@ void WebServerClass::handleG()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleB()
 {
+  Serial.println("Displaymode Blue");
 	LED.setMode(DisplayMode::blue);
 	this->server->send(200, "text/plain", "OK");
 }
@@ -301,6 +306,7 @@ void WebServerClass::handleB()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetBrightness()
 {
+    Serial.println("GetBrightness");
     this->server->send(200, "text/plain", String(Brightness.brightnessOverride));
 }
 
@@ -317,6 +323,7 @@ void WebServerClass::handleSetBrightness()
 {
 	if(this->server->hasArg("value"))
 	{
+    Serial.println("SetBrightness");
 		Brightness.brightnessOverride = this->server->arg("value").toInt();
     Config.save();
 		this->server->send(200, "text/plain", "OK");
@@ -333,10 +340,11 @@ void WebServerClass::handleSetBrightness()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSetNightMode()
 {
+  Serial.println("SetNightMode");
   if(this->server->hasArg("value"))
   {
     Config.nightmode = (this->server->hasArg("value") && this->server->arg("value") == "1");
-    Config.save();
+    Config.saveDelayed();
     this->server->send(200, "text/plain", "OK");
   }
 }
@@ -351,6 +359,7 @@ void WebServerClass::handleSetNightMode()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetNightMode()
 {
+  Serial.println("GetNightMode");
   if(Config.nightmode) this->server->send(200, "text/plain", "1");
   else this->server->send(200, "text/plain", "0");
 }
@@ -359,6 +368,7 @@ void WebServerClass::handleGetNightMode()
 
 void WebServerClass::handleDebug()
 {
+  Serial.println("Debug");
 	if(this->server->hasArg("led") &&
 			   this->server->hasArg("r") &&
 			   this->server->hasArg("g") &&
@@ -399,6 +409,7 @@ void WebServerClass::handleDebug()
 
 void WebServerClass::handleGetADC()
 {
+  Serial.println("GetADC");
 	int __attribute__ ((unused)) temp = Brightness.value(); // to trigger A/D conversion
 	this->server->send(200, "text/plain", String(Brightness.avg));
 }
@@ -413,7 +424,8 @@ void WebServerClass::handleGetADC()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSetTimeZone()
 {
-	int newTimeZone = -999;
+  Serial.println("SetTimeZone");	
+  int newTimeZone = -999;
 	if(this->server->hasArg("value"))
 	{
 		newTimeZone = this->server->arg("value").toInt();
@@ -441,6 +453,7 @@ void WebServerClass::handleSetTimeZone()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetTimeZone()
 {
+  Serial.println("GetTimeZone");
 	this->server->send(200, "text/plain", String(Config.timeZone));
 }
 
@@ -455,6 +468,7 @@ void WebServerClass::handleGetTimeZone()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSetMode()
 {
+  Serial.println("SetMode");
 	DisplayMode mode = DisplayMode::invalid;
 
 	if(this->server->hasArg("value"))
@@ -490,6 +504,7 @@ void WebServerClass::handleSetMode()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetMode()
 {
+  Serial.println("GetMode");
 	int mode = 0;
 	switch(Config.defaultMode)
 	{
@@ -520,6 +535,7 @@ void WebServerClass::handleGetMode()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleNotFound()
 {
+  Serial.println("HandleNotFound");
 	// first, try to serve the requested file from flash
 	if (!serveFile(this->server->uri()))
 	{
@@ -551,6 +567,7 @@ void WebServerClass::handleNotFound()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetNtpServer()
 {
+  Serial.println("GetNTPServer");
 	this->server->send(200, "application/json", Config.ntpserver.toString());
 }
 
@@ -564,6 +581,7 @@ void WebServerClass::handleGetNtpServer()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSetNtpServer()
 {
+  Serial.println("SetNTPServer");
 	if (this->server->hasArg("ip"))
 	{
 		IPAddress ip;
@@ -590,6 +608,7 @@ void WebServerClass::handleSetNtpServer()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleInfo()
 {
+  Serial.println("GetInfo");
 	StaticJsonBuffer<512> jsonBuffer;
 	char buf[512];
 	JsonObject& json = jsonBuffer.createObject();
@@ -683,6 +702,7 @@ void WebServerClass::extractColor(String argName, palette_entry& result)
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSetColor()
 {
+  Serial.println("SetColor");
 	this->extractColor("fg", Config.fg);
 	this->extractColor("bg", Config.bg);
 	this->extractColor("s", Config.s);
@@ -700,6 +720,7 @@ void WebServerClass::handleSetColor()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSaveConfig()
 {
+  Serial.println("SaveConfig");
 	Config.save();
 	this->server->send(200, "text/plain", "OK");
 }
@@ -714,6 +735,7 @@ void WebServerClass::handleSaveConfig()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleLoadConfig()
 {
+  Serial.println("LoadConfig");
 	Config.load();
 	this->server->send(200, "text/plain", "OK");
 }
@@ -728,6 +750,7 @@ void WebServerClass::handleLoadConfig()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSetHeartbeat()
 {
+  Serial.println("SetHeartBeat");
 	Config.heartbeat = (this->server->hasArg("value") && this->server->arg("value") == "1");
 	Config.save();
 	this->server->send(200, "text/plain", "OK");
@@ -743,6 +766,7 @@ void WebServerClass::handleSetHeartbeat()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetHeartbeat()
 {
+  Serial.println("GetHeartBeat");
 	if(Config.heartbeat) this->server->send(200, "text/plain", "1");
 	else this->server->send(200, "text/plain", "0");
 }
@@ -758,6 +782,7 @@ void WebServerClass::handleGetHeartbeat()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetColors()
 {
+  Serial.println("GetColors");
   String message = String(Config.bg.r) + "," + String(Config.bg.g) + ","
       + String(Config.bg.b) + "," + String(Config.fg.r) + ","
       + String(Config.fg.g) + "," + String(Config.fg.b) + ","
@@ -776,6 +801,7 @@ void WebServerClass::handleGetColors()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetAlarms()
 {
+  Serial.println("GetAlarms");
   String alarmmode;
   String message = "";
 
@@ -821,6 +847,7 @@ void WebServerClass::handleGetAlarms()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSetAlarm()
 {
+  Serial.println("SetAlarm");
   if (this->server->hasArg("number")) {
     
     int i = this->server->arg("number").toInt();
@@ -859,7 +886,7 @@ void WebServerClass::handleSetAlarm()
     this->server->send(200, "text/plain", "invalid arg");
   }
 
-  Config.save();
+  Config.saveDelayed();
 }
 
 
@@ -873,6 +900,7 @@ void WebServerClass::handleSetAlarm()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetConfig()
 {
+  Serial.println("GetConfig");
   int displaymode = 0;
   switch(Config.defaultMode)
   {
@@ -944,6 +972,7 @@ void WebServerClass::handleGetConfig()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleShowCrashLog()
 {
+  Serial.println("ShowCrashLog");
   char buffer[2048]="";
   SaveCrash.print(buffer,sizeof(buffer));
   this->server->send(200, "text/plain", String(buffer));
@@ -960,6 +989,7 @@ void WebServerClass::handleShowCrashLog()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleClearCrashLog()
 {
+  Serial.println("ClearCrashLog");
   SaveCrash.clear();
   this->server->send(200, "text/plain", "OK");
 }

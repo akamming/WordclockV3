@@ -151,7 +151,7 @@ void ConfigClass::reset()
 	{	32, 0, 21};
 	this->s = this->config->s;
 
-	this->config->heartbeat = true;
+	this->config->heartbeat = false;
 	this->heartbeat = this->config->heartbeat;
   
   this->config->nightmode= false;

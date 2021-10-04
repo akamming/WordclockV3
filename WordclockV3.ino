@@ -67,7 +67,10 @@ bool startup = true;
 int hourglassState = 0;
 int hourglassPrescaler = 0;
 
-int updateCountdown = 25;
+// int updateCountdown = 25;
+int updateCountdown = 0;
+
+bool NTPTimeAcquired=false;
 
 //---------------------------------------------------------------------------------------
 // timerCallback
@@ -151,6 +154,7 @@ void configModeCallback(WiFiManager *myWiFiManager)
 void NtpCallback(uint8_t _h, uint8_t _m, uint8_t _s, uint8_t _ms)
 {
 	Serial.println("NtpCallback()");
+  NTPTimeAcquired=true;
 
 	// wait if timer variable lock is set
 	while (timeVarLock) delay(1);
@@ -314,7 +318,8 @@ void loop()
 	if (OTA_in_progress)
 		return;
 
-	// show the hourglass animation with green corners for the first 2.5 seconds
+  
+	// show the hourglass animation with green corners for configured time
 	// after boot to be able to reflash with OTA during that time window if
 	// the firmware hangs afterwards
 	if(updateCountdown)
@@ -330,19 +335,16 @@ void loop()
 			setLED(0, 0, 0);
 		}
 		return;
-	}
+	} 
 
-	// set mode depending on current time
-	/*if (Config.nightmode) LED.setMode(Config.defaultMode);
-	else if(h == 13 && m == 37) LED.setMode(DisplayMode::matrix);
-	else if(h == 19 && m == 00) LED.setMode(DisplayMode::matrix);
-	else if(h == 20 && m == 00) LED.setMode(DisplayMode::plasma);
-	else if(h == 21 && m == 00) LED.setMode(DisplayMode::fire);
-	else if(h == 22 && m == 00) LED.setMode(DisplayMode::heart);
-	else if(h == 23 && m == 00) LED.setMode(DisplayMode::stars);
-	else LED.setMode(Config.defaultMode);*/
+  // display hourglass until time acquired from NTP Server
+  if (NTPTimeAcquired){  
+    LED.setMode(Config.defaultMode);
+  } else {
+    LED.setMode(DisplayMode::greenHourglass);
+  }
 
-  LED.setMode(Config.defaultMode);
+  // overrule any of the above in case of configured alarms
   bool AlarmInProgress = false;
   for (int i=0;i<5;i++)
   {

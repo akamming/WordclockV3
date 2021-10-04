@@ -120,10 +120,10 @@ void NtpClass::begin(IPAddress ip, TNtpCallback callback, int timezone, bool DST
 
 	this->udp.begin(LOCAL_PORT);
 
-	// wait 2 seconds before starting first request
-	Serial.println("NtpClass::begin() Waiting 2 seconds");
+	// don't wait 2 seconds before starting first request
+	Serial.println("NtpClass::begin()"); // Waiting 2 seconds");
 	this->state = NtpState::waitingForReload;
-	this->timer = NTP_RELOAD_INTERVAL - 2000;
+	this->timer = NTP_RELOAD_INTERVAL; // - 2000;
 }
 
 //---------------------------------------------------------------------------------------
