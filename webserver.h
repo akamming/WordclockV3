@@ -62,6 +62,7 @@ private:
 	void handleSetNtpServer();
   void handleResetWifiCredentials();
   void handleFactoryReset();
+  void handleReset();
   void handleGetNightMode();
   void handleSetNightMode();
   void handleGetConfig();

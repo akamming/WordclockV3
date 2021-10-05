@@ -1424,7 +1424,7 @@ void LEDFunctionsClass::renderUpdate()
 	palette_entry p[] = {{0, 0, 0}, {255, 0, 0}, {42, 21, 0}, {255, 85, 0}};
 	for(int i=0; i<110; i++)
 	{
-		if(i<Config.updateProgress)
+		if(i<=Config.updateProgress)
 		{
 			if(update[i] == 0) update[i] = 2;
 			else update[i] = 3;

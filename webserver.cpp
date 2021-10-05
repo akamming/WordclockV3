@@ -102,6 +102,7 @@ void WebServerClass::begin()
   this->server->on("/debug", std::bind(&WebServerClass::handleDebug, this));
   this->server->on("/resetwificredentials", std::bind(&WebServerClass::handleResetWifiCredentials, this));
   this->server->on("/factoryreset", std::bind(&WebServerClass::handleFactoryReset, this));
+  this->server->on("/reset", std::bind(&WebServerClass::handleReset, this));
   this->server->on("/setnightmode", std::bind(&WebServerClass::handleSetNightMode, this));
   this->server->on("/getnightmode", std::bind(&WebServerClass::handleGetNightMode, this));
   this->server->on("/getconfig", std::bind(&WebServerClass::handleGetConfig, this));
@@ -194,13 +195,34 @@ void WebServerClass::handleFactoryReset()
   Config.reset();
   Config.save();
 
-  /* Serial.println("Resetting Wifi Credentials");
+  Serial.println("Resetting Wifi Credentials");
   WiFiManager wifiManager;
-  wifiManager.resetSettings(); */
+  wifiManager.resetSettings(); 
   this->server->send(200, "text/plain", "OK"); 
-  
+
+  delay(500); // wait half a second, then reset
+
   ESP.reset();
 }
+
+//---------------------------------------------------------------------------------------
+// handleReset
+//
+// Handles the /reset request, just reboot the device
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleReset() 
+{
+  Serial.println("Manual reboot");
+
+  this->server->send(200, "text/plain", "OK"); 
+  
+  delay(500); // wait half a second, then reset
+  ESP.reset();
+}
+
 
 //---------------------------------------------------------------------------------------
 // handleResetWifiCredentials

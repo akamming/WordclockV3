@@ -55,6 +55,8 @@ int OTA_in_progress = 0;
 //---------------------------------------------------------------------------------------
 #define TIMER_RESOLUTION 10
 #define HOURGLASS_ANIMATION_PERIOD 100
+#define TICKTIME 20
+
 Ticker timer;
 int h = 0;
 int m = 0;
@@ -71,6 +73,8 @@ int hourglassPrescaler = 0;
 int updateCountdown = 0;
 
 bool NTPTimeAcquired=false;
+
+unsigned long NextTick = 0;
 
 //---------------------------------------------------------------------------------------
 // timerCallback
@@ -294,6 +298,9 @@ void setup()
 
 	startup = false;
 	Serial.println("Startup complete.");
+
+  // Set NextTick to now
+  NextTick=millis();
 }
 
 //-----------------------------------------------------------------------------------
@@ -301,7 +308,7 @@ void setup()
 //-----------------------------------------------------------------------------------
 void loop()
 {
-	delay(10);
+	// delay(10);
 
 	// do OTA update stuff
 	ArduinoOTA.handle();
@@ -335,23 +342,37 @@ void loop()
 			setLED(0, 0, 0);
 		}
 		return;
-	} 
+	}
 
-  // display hourglass until time acquired from NTP Server
-  if (NTPTimeAcquired){  
-    LED.setMode(Config.defaultMode);
-  } else {
-    LED.setMode(DisplayMode::greenHourglass);
-  }
+  // Only process LED functions every TICKTIME mseconds 
+  if (millis()>=NextTick) {
+    // increase Next Tick
+    NextTick += TICKTIME;
+    while (NextTick<=millis()){ // if for some reason there was a delay, make sure next tick is increased more than once, just as long until there is a wait time again
+      Serial.println("Correcting with another tick");  // if this line appears a lot in the log, code should be optimized
+      NextTick += TICKTIME;
+    }
+    
+    // overrule any of the above in case of configured alarms
+    bool AlarmInProgress = false;
+    for (int i=0;i<5;i++)
+    {
+      if (Config.alarm[i].enabled) {
+        if (h==Config.alarm[i].h && m==Config.alarm[i].m) {
+          Config.nightmode=false;
+          LED.setMode(Config.alarm[i].mode);
+          AlarmInProgress = true;
+        }
+      }
+    }
 
-  // overrule any of the above in case of configured alarms
-  bool AlarmInProgress = false;
-  for (int i=0;i<5;i++)
-  {
-    if (Config.alarm[i].enabled) {
-      if (h==Config.alarm[i].h && m==Config.alarm[i].m) {
-        Config.nightmode=false;
-        LED.setMode(Config.alarm[i].mode);
+    // display hourglass until time acquired from NTP Server
+    if (not AlarmInProgress)
+    {
+      if (NTPTimeAcquired){  
+        LED.setMode(Config.defaultMode);
+      } else {
+        LED.setMode(DisplayMode::greenHourglass);
       }
     }
   }
@@ -371,9 +392,9 @@ void loop()
 	if (s != lastSecond)
 	{
 		lastSecond = s;
-		DEBUG("%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, brightness=%i\r\n",
+		DEBUG("%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, brightness=%i\r\n",
 			  h, m, s, (int)Brightness.avg, (int)(Brightness.avg*100)%100,
-			  ESP.getFreeHeap(), Brightness.value());
+			  ESP.getFreeHeap(), ESP.getHeapFragmentation(), Brightness.value());
 	}
 
 	if (Serial.available())
