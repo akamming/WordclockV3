@@ -55,7 +55,7 @@ int OTA_in_progress = 0;
 //---------------------------------------------------------------------------------------
 #define TIMER_RESOLUTION 10
 #define HOURGLASS_ANIMATION_PERIOD 100
-#define TICKTIME 20
+#define TICKTIME 50
 
 Ticker timer;
 int h = 0;
@@ -65,6 +65,7 @@ int ms = 0;
 int lastSecond = -1;
 bool timeVarLock = false;
 bool startup = true;
+bool RecoverFromException = false;
 
 int hourglassState = 0;
 int hourglassPrescaler = 0;
@@ -126,7 +127,7 @@ void timerCallback()
 			Config.hourglassState = 0;
 
 		// trigger LED processing for hourglass during startup
-		if(startup) LED.process();
+		if(startup && not RecoverFromException) LED.process();
 	}
 }
 
@@ -141,6 +142,7 @@ void timerCallback()
 void configModeCallback(WiFiManager *myWiFiManager)
 {
 	LED.setMode(DisplayMode::wifiManager);
+  LED.process();
 	Serial.println("Entered config mode");
 	Serial.println(WiFi.softAPIP());
 	Serial.println(myWiFiManager->getConfigPortalSSID());
@@ -208,7 +210,21 @@ void setup()
 	Serial.print("ESP.getResetInfo(): ");
 	Serial.println(ESP.getResetInfo());
 
-	system_set_os_print(0);
+  rst_info* rtc_info = ESP.getResetInfoPtr();
+  Serial.println(rtc_info->reason);
+
+  if  (rtc_info->reason ==  REASON_WDT_RST  ||
+       rtc_info->reason ==  REASON_EXCEPTION_RST  ||
+       rtc_info->reason ==  REASON_SOFT_WDT_RST)  
+  {
+     RecoverFromException = true; // Let the program know we are recovering
+     if (rtc_info->reason ==  REASON_EXCEPTION_RST) 
+     {
+       Serial.printf("Fatal exception (%d):\n", rtc_info->exccause);
+     }
+     Serial.printf("epc1=0x%08x,  epc2=0x%08x,  epc3=0x%08x,  excvaddr=0x%08x,  depc=0x%08x\n",
+                     rtc_info->epc1,  rtc_info->epc2, rtc_info->epc3, rtc_info->excvaddr,  rtc_info->depc);//The address of  the last  crash is  printed,  which is  used  to debug garbled output.
+  }
 
 	// timer
 	Serial.println("Starting timer");
@@ -217,13 +233,15 @@ void setup()
 	// configuration
 	Serial.println("Loading configuration");
 	Config.begin();
-//	Config.reset();
-//	Config.save();
 
 	// LEDs
 	Serial.println("Starting LED module");
 	LED.begin(D6);
-	LED.setMode(DisplayMode::yellowHourglass);
+  if (not RecoverFromException) 
+  { 
+    LED.setMode(DisplayMode::yellowHourglass);
+    LED.process();
+  }
 
 	// WiFi
 	Serial.println("Initializing WiFi");
@@ -260,22 +278,26 @@ void setup()
 		Config.updateProgress = 0;
     Config.nightmode=false;
 		OTA_in_progress = 1;
+    LED.process();
 		Serial.println("OTA Start");
 	});
 	ArduinoOTA.onEnd([]()
 	{
 		LED.setMode(DisplayMode::updateComplete);
+    LED.process();
 		Serial.println("\nOTA End");
 	});
 	ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
 	{
 		LED.setMode(DisplayMode::update);
 		Config.updateProgress = (progress) * 110 / total;
+    LED.process();
 		Serial.printf("OTA Progress: %u%%\r\n", (progress / (total / 100)));
 	});
 	ArduinoOTA.onError([](ota_error_t error)
 	{
 		LED.setMode(DisplayMode::updateError);
+    LED.process();
 		Serial.printf("OTA Error[%u]: ", error);
 		if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
 		else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
@@ -313,10 +335,6 @@ void loop()
 	// do OTA update stuff
 	ArduinoOTA.handle();
 
-	// update LEDs
-	LED.setBrightness(Brightness.value());
-	LED.setTime(h, m, s, ms);
-	LED.process();
 
 	// do not continue if OTA update is in progress
 	// OTA callbacks drive the LED display mode and OTA progress
@@ -329,20 +347,24 @@ void loop()
 	// show the hourglass animation with green corners for configured time
 	// after boot to be able to reflash with OTA during that time window if
 	// the firmware hangs afterwards
-	if(updateCountdown)
-	{
-		setLED(0, 1, 0);
-		LED.setMode(DisplayMode::greenHourglass);
-		Serial.print(".");
-		delay(100);
-		updateCountdown--;
-		if(updateCountdown == 0)
-		{
-			LED.setMode(Config.defaultMode);
-			setLED(0, 0, 0);
-		}
-		return;
-	}
+	if (not RecoverFromException)
+  {
+	  if(updateCountdown)
+  	{
+  		setLED(0, 1, 0);
+  		LED.setMode(DisplayMode::greenHourglass);
+  		Serial.print(".");
+  		delay(100);
+  		updateCountdown--;
+  		if(updateCountdown == 0)
+  		{
+  			LED.setMode(Config.defaultMode);
+  			setLED(0, 0, 0);
+  		}
+      LED.process();
+  		return;
+  	}
+  }
 
   // Only process LED functions every TICKTIME mseconds 
   if (millis()>=NextTick) {
@@ -369,12 +391,23 @@ void loop()
     // display hourglass until time acquired from NTP Server
     if (not AlarmInProgress)
     {
-      if (NTPTimeAcquired){  
-        LED.setMode(Config.defaultMode);
+      if (NTPTimeAcquired){
+        if (RecoverFromException) {
+          RecoverFromException=false;
+          LED.setMode(DisplayMode::plain);
+        } else {
+          LED.setMode(Config.defaultMode);
+        }
       } else {
-        LED.setMode(DisplayMode::greenHourglass);
+        if (not RecoverFromException) LED.setMode(DisplayMode::greenHourglass);
       }
     }
+
+    // update LEDs
+    LED.setBrightness(Brightness.value());
+    LED.setTime(h, m, s, ms);
+    if (not RecoverFromException) LED.process();
+
   }
 
 	// do web server stuff
@@ -410,6 +443,21 @@ void loop()
 			WiFi.disconnect();
 			ESP.reset();
 			break;
+
+    case 'E':
+      Serial.println("Startin exception");
+      int a;
+      a=5/0;
+      Serial.println("5/0"+String(a));
+      break;
+
+    case 'W':
+      Serial.println("Trigger watchdog to reset wemos");
+      wdt_disable();
+      wdt_enable(WDTO_15MS);
+      while (1) {}
+      break;
+
 
 		default:
 			Serial.printf("Unknown command '%c'\r\n", incoming);

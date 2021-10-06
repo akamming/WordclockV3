@@ -481,7 +481,7 @@ void LEDFunctionsClass::setMode(DisplayMode newMode)
 		this->prepareExplosion(buf);
 	}
 
-	this->process();
+	// this->process();
 }
 
 //---------------------------------------------------------------------------------------
