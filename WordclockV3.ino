@@ -55,7 +55,7 @@ int OTA_in_progress = 0;
 //---------------------------------------------------------------------------------------
 #define TIMER_RESOLUTION 10
 #define HOURGLASS_ANIMATION_PERIOD 100
-#define TICKTIME 50
+#define TICKTIME 25 // no millisecs between clock display updates
 
 Ticker timer;
 int h = 0;
