@@ -224,7 +224,8 @@ void ConfigClass::load()
 	this->timeZone = this->config->timeZone;
 	for (int i = 0; i < 4; i++)
 		this->ntpserver[i] = this->config->ntpserver[i];
-  Brightness.brightnessOverride=this->config->brightnessOverride; 
+  Brightness.brightnessOverride=this->config->brightnessOverride;
+  
   for (int i=0; i<10;i++)
     this->alarm[i]=this->config->alarm[i];
   

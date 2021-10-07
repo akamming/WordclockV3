@@ -428,7 +428,11 @@ void LEDFunctionsClass::process()
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::setBrightness(int brightness)
 {
-	this->brightness = brightness;
+  if (brightness>0) 	{
+    this->brightness = brightness;
+  }else {
+    this->brightness=1;
+  }
 }
 
 //---------------------------------------------------------------------------------------
