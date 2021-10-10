@@ -191,6 +191,9 @@ void setLED(unsigned char r, unsigned char g, unsigned char b)
 //---------------------------------------------------------------------------------------
 void setup()
 {
+  // enable watchdog
+  wdt_enable(WDTO_8S);
+
 	// ESP8266 LED
 	pinMode(LED_BUILTIN, OUTPUT);
 	pinMode(LED_RED, OUTPUT);
@@ -255,14 +258,6 @@ void setup()
 		delay(1000);
 		ESP.reset();
 	}
-/*	WiFi.mode(WIFI_STA);
-	WiFi.begin("Funkturm", "*******");
-	while (WiFi.status() != WL_CONNECTED)
-	{
-		delay(500);
-		Serial.print(".");
-	}
-	Serial.println("");*/
 	Serial.println("WiFi connected");
 	Serial.println("IP address: ");
 	Serial.println(WiFi.localIP());
@@ -448,15 +443,21 @@ void loop()
 
     case 'E':
       Serial.println("Startin exception");
-      int a;
-      a=5/0;
-      Serial.println("5/0"+String(a));
+      int *test;
+      *test=5;
+      Serial.println("test = "+String(*test));
       break;
 
-    case 'W':
-      Serial.println("Trigger watchdog to reset wemos");
+    case 'S':
+      Serial.println("Trigger software watchdog");
       wdt_disable();
       wdt_enable(WDTO_15MS);
+      while (1) {}
+      break;
+
+    case 'H':
+      Serial.println("Trigger hardware watchdog");
+      wdt_disable();
       while (1) {}
       break;
 
