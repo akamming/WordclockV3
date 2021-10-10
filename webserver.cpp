@@ -77,7 +77,6 @@ void WebServerClass::begin()
 	SPIFFS.begin();
 
 	this->server = new ESP8266WebServer(80);
-
 	this->server->on("/setcolor", std::bind(&WebServerClass::handleSetColor, this));
 	this->server->on("/info", std::bind(&WebServerClass::handleInfo, this));
 	this->server->on("/saveconfig", std::bind(&WebServerClass::handleSaveConfig, this));
@@ -647,6 +646,7 @@ void WebServerClass::handleInfo()
 	json["flashsize"] = ESP.getFlashChipRealSize();
 	json["resetreason"] = ESP.getResetReason();
 	json["resetinfo"] = ESP.getResetInfo();
+  json["freeheap"] = ESP.getFreeHeap();
   json["configsize"] = Config.Configsize();
   
   long seconds=millis()/1000;
