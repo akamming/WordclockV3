@@ -648,13 +648,20 @@ void WebServerClass::handleInfo()
 	json["resetinfo"] = ESP.getResetInfo();
   json["freeheap"] = ESP.getFreeHeap();
   json["configsize"] = Config.Configsize();
-  
-  long seconds=millis()/1000;
+
+  int milliseconds  = millis();
+  long seconds=milliseconds/1000;
+  int msecs = milliseconds % 1000;
   int secs = seconds % 60;
   int mins = (seconds/60) % 60;
   int hrs = (seconds/3600) % 24;
   int days = (seconds/(3600*24));
-  json["uptime"] = String(days)+" days, "+String(hrs)+" hours, "+String(mins)+" minutes, "+String(secs)+" seconds";
+
+  char buffer[50];
+  sprintf(buffer, "%i days, %i hours, %i mins, %i seconds, %i milliseconds", days, hrs, mins, secs, msecs);
+  json["uptime"] = buffer;
+  
+  // json["uptime"] = String(days)+" days, "+String(hrs)+" hours, "+String(mins)+" minutes, "+String(secs)+" seconds";
 
   
 //	switch(LED.getMode())
@@ -833,36 +840,32 @@ void WebServerClass::handleGetColors()
 void WebServerClass::handleGetAlarms()
 {
   Serial.println("GetAlarms");
-  String alarmmode;
-  String message = "";
+  char alarmmode[10];
+  char message[256]="";
 
   for (int i=0;i<5;i++) {
-    //append the hour of the alarm, append a zero in case of h < 10
-    if (Config.alarm[i].h<10) message += "0";
-    message += String(Config.alarm[i].h) + ":";
-    // append the second of the alarm
-    if (Config.alarm[i].m<10) message += "0";
-    message += String(Config.alarm[i].m) + ",";
-
-  
+    char displaymode[20];
+    
     switch(Config.alarm[i].mode)
     {
     case DisplayMode::matrix:
-      alarmmode = "matrix"; break;
+      strcpy(displaymode,"matrix"); break;
     case DisplayMode::plasma:
-      alarmmode = "plasma"; break;
+      strcpy(displaymode,"plasma"); break;
     case DisplayMode::fire:
-      alarmmode  = "fire"; break;
+      strcpy(displaymode,"fire"); break;
     case DisplayMode::heart:
-      alarmmode = "heart"; break;
+      strcpy(displaymode,"heart"); break;
     case DisplayMode::stars:
-      alarmmode = "stars"; break;
+      strcpy(displaymode,"stars"); break;
     default:
-      alarmmode = "unknown"; break;
+      strcpy(displaymode,"unknown"); break;
     }
 
-    // add alarmmode and enabled
-    message += alarmmode + "," + String(Config.alarm[i].enabled ? "on" : "off") + ",";
+    // buildup string
+    char buffer[20];
+    sprintf(buffer,"%02d:%02d,%s,%s",Config.alarm[i].h,Config.alarm[i].m,displaymode,Config.alarm[i].enabled ? "on," : "off,");
+    strcat(message,buffer); 
   }
   this->server->send(200, "text/plain", message);
 
@@ -1001,7 +1004,7 @@ void WebServerClass::handleGetConfig()
     alarmobject["h"]=String(Config.alarm[i].h);  
     alarmobject["m"]=String(Config.alarm[i].m);  
     alarmobject["mode"]=alarmmode;  
-    alarmobject["enabled"]=String(Config.alarm[i].enabled ? "\"on\"" : "\"off\"");  
+    alarmobject["enabled"]=Config.alarm[i].enabled ? "\"on\"" : "\"off\"";  
 
   }
 

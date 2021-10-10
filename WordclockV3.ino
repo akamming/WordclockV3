@@ -245,6 +245,8 @@ void setup()
 
 	// WiFi
 	Serial.println("Initializing WiFi");
+  WiFi.setAutoReconnect(true);
+  WiFi.persistent(true);
 	WiFiManager wifiManager;
 	wifiManager.setAPCallback(configModeCallback);
 	if (!wifiManager.autoConnect("WordClock"))
@@ -425,9 +427,9 @@ void loop()
 	if (s != lastSecond)
 	{
 		lastSecond = s;
-		DEBUG("%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, brightness=%i\r\n",
+		DEBUG("%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, brightness=%i\r\n",
 			  h, m, s, (int)Brightness.avg, (int)(Brightness.avg*100)%100,
-			  ESP.getFreeHeap(), ESP.getHeapFragmentation(), Brightness.value());
+			  ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getMaxFreeBlockSize(), Brightness.value());
 	}
 
 	if (Serial.available())
