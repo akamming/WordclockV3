@@ -932,6 +932,11 @@ void WebServerClass::handleSetAlarm()
 void WebServerClass::handleGetConfig()
 {
   Serial.println("GetConfig");
+
+  StaticJsonBuffer<1024> jsonBuffer;
+  char buf[1024];
+  JsonObject& json = jsonBuffer.createObject();
+
   int displaymode = 0;
   switch(Config.defaultMode)
   {
@@ -948,18 +953,31 @@ void WebServerClass::handleGetConfig()
   default:
     displaymode = 0; break;
   }
+  JsonObject& background = json.createNestedObject("backgroundcolor");
+  background["r"] = String(Config.bg.r);
+  background["g"] = String(Config.bg.g);
+  background["b"] = String(Config.bg.b);
 
-  String message = "{\n";
-  message += "  \"backgroundcolor\": {\n    \"r\" : " + String(Config.bg.r)+",\n    \"g\" : "+String(Config.bg.g)+",\n    \"b\" : "+String(Config.bg.b)+ "\n  },\n";
-  message += "  \"foregroundcolor\": {\n    \"r\" : " + String(Config.fg.r)+",\n    \"g\" : "+String(Config.fg.g)+",\n    \"b\" : "+String(Config.fg.b)+ "},\n";
-  message += "  \"secondscolor\": {\n    \"r\" : " + String(Config.s.r)+",\n    \"g\" : "+String(Config.s.g)+",\n    \"b\" : "+String(Config.s.b)+ "},\n";
-  message += "  \"displaymode\": " + String(displaymode)+ ",\n";
-  message += "  \"timezone\": " + String(Config.timeZone) + ",\n";
-  message += "  \"nightmode\": " + String(Config.nightmode ? "\"on\"" : "\"off\"") + ",\n";
-  message += "  \"heartbeat\": " + String((Config.heartbeat==1) ? "\"on\"" : "\"off\"") + ",\n";
-  message += "  \"NTPServer\": \"" + Config.ntpserver.toString()+ "\",\n";
-  message += "  \"Brightness\": " + String(Brightness.brightnessOverride) + ",\n";
-  message += "  \"Alarm\":[{\n";
+  JsonObject& foreground = json.createNestedObject("foregroundcolor");
+  foreground["r"] = String(Config.fg.r);
+  foreground["g"] = String(Config.fg.g);
+  foreground["b"] = String(Config.fg.b);
+
+  JsonObject& seconds = json.createNestedObject("secondscolor");
+  seconds["r"] = String(Config.s.r);
+  seconds["g"] = String(Config.s.g);
+  seconds["b"] = String(Config.s.b);
+
+
+  json["displaymode"] =  String(displaymode);
+  json["timezone"] = String(Config.timeZone);
+  json["nightmode"] = String(Config.nightmode ? "\"on\"" : "\"off\"");
+  json["heartbeat"] = String((Config.heartbeat==1) ? "\"on\"" : "\"off\"");
+  json["NTPServer"] = Config.ntpserver.toString();
+  json["Brightness"] = String(Brightness.brightnessOverride);
+
+  JsonArray& Alarm = json.createNestedArray("Alarm");
+  
   for (int i=0;i<5;i++) {
     String alarmmode;
   
@@ -979,17 +997,17 @@ void WebServerClass::handleGetConfig()
       alarmmode = "unknown"; break;
     }
 
-    
-    message += "    \"h\": "+String(Config.alarm[i].h)+",\n";  
-    message += "    \"m\": "+String(Config.alarm[i].m)+",\n";  
-    message += "    \"mode\": \""+alarmmode+"\",\n";  
-    message += "    \"enabled\": "+String(Config.alarm[i].enabled ? "\"on\"" : "\"off\"")+"\n";  
-    if (i<4)
-      message += "  }, {\n";
+    JsonObject& alarmobject = Alarm.createNestedObject();
+    alarmobject["h"]=String(Config.alarm[i].h);  
+    alarmobject["m"]=String(Config.alarm[i].m);  
+    alarmobject["mode"]=alarmmode;  
+    alarmobject["enabled"]=String(Config.alarm[i].enabled ? "\"on\"" : "\"off\"");  
+
   }
-  message += "  }]\n";
-  message +="}";
-  this->server->send(200, "text/plain", message);
+
+  
+  json.printTo(buf, sizeof(buf));
+  this->server->send(200, "application/json", buf);
 }
 
 #ifdef DEBUG
