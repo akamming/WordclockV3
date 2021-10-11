@@ -118,6 +118,25 @@ void WebServerClass::begin()
 }
 
 //---------------------------------------------------------------------------------------
+// endsWith
+//
+// checks if strings ends with another string
+//
+// -> filename: name of the file
+// <- HTML content type matching file extension
+//---------------------------------------------------------------------------------------
+bool WebServerClass::endsWith(const char* what, const char* withwhat)
+{
+    int l1 = strlen(withwhat);
+    int l2 = strlen(what);
+    if (l1 > l2)
+        return 0;
+
+    return strcmp(withwhat, what + (l2 - l1)) == 0;
+}
+
+
+//---------------------------------------------------------------------------------------
 // process
 //
 // Must be called repeatedly from main loop
@@ -139,52 +158,36 @@ void WebServerClass::process()
 // <- true: file was found and served to client
 //	false: file not found
 //---------------------------------------------------------------------------------------
-bool WebServerClass::serveFile(String url)
+bool WebServerClass::serveFile(const char url[])
 {
-	Serial.printf("WebServerClass::serveFile(): %s\n",url.c_str());
+	Serial.printf("WebServerClass::serveFile(): %s\n",url);
 
   char path[50];
   
-	if (url.endsWith("/")) {
-		sprintf (path,"%sindex.html",url.c_str());
+	if (url[strlen(url)-1]=='/') {
+		sprintf (path,"%sindex.html",url);
 	} else {
-    sprintf(path,"%s",url.c_str());
+    sprintf(path,"%s",url);
 	}
 	if (SPIFFS.exists(path))
 	{
 		File file = SPIFFS.open(path, "r");
-		this->server->streamFile(file, this->contentType(String(path)));
+    if (this->server->hasArg("download")) this->server->streamFile(file, "application/octet-stream");
+		else if (this->endsWith(path,".htm") or this->endsWith(path,".html")) this->server->streamFile(file, "text/html");
+    else if (this->endsWith(path,".css") ) this->server->streamFile(file, "text/css");
+    else if (this->endsWith(path,".png") ) this->server->streamFile(file, "image/png");
+    else if (this->endsWith(path,".gif") ) this->server->streamFile(file, "image/gif");
+    else if (this->endsWith(path,".jpg") ) this->server->streamFile(file, "image/jpeg");
+    else if (this->endsWith(path,".ico") ) this->server->streamFile(file, "image/x-icon");
+    else if (this->endsWith(path,".xml") ) this->server->streamFile(file, "text/xml");
+    else if (this->endsWith(path,".pdf") ) this->server->streamFile(file, "application./x-pdf");
+    else if (this->endsWith(path,".zip") ) this->server->streamFile(file, "application./x-zip");
+    else if (this->endsWith(path,".gz") ) this->server->streamFile(file, "application./x-gzip");
+    else this->server->streamFile(file, "text/plain");
 		file.close();
 		return true;
 	}
 	return false;
-}
-
-
-//---------------------------------------------------------------------------------------
-// contentType
-//
-// Returns an HTML content type based on a given file name extension
-//
-// -> filename: name of the file
-// <- HTML content type matching file extension
-//---------------------------------------------------------------------------------------
-String WebServerClass::contentType(String filename)
-{
-	if (this->server->hasArg("download")) return "application/octet-stream";
-	else if (filename.endsWith(".htm")) return "text/html";
-	else if (filename.endsWith(".html")) return "text/html";
-	else if (filename.endsWith(".css")) return "text/css";
-	else if (filename.endsWith(".js")) return "application/javascript";
-	else if (filename.endsWith(".png")) return "image/png";
-	else if (filename.endsWith(".gif")) return "image/gif";
-	else if (filename.endsWith(".jpg")) return "image/jpeg";
-	else if (filename.endsWith(".ico")) return "image/x-icon";
-	else if (filename.endsWith(".xml")) return "text/xml";
-	else if (filename.endsWith(".pdf")) return "application/x-pdf";
-	else if (filename.endsWith(".zip")) return "application/x-zip";
-	else if (filename.endsWith(".gz")) return "application/x-gzip";
-	return "text/plain";
 }
 
 //---------------------------------------------------------------------------------------
@@ -565,9 +568,8 @@ void WebServerClass::handleNotFound()
 {
   Serial.println("HandleNotFound");
 
-  
 	// first, try to serve the requested file from flash
-	if (!serveFile(this->server->uri()))
+	if (!serveFile(this->server->uri().c_str()))
 	{
     // create 404 message if no file was found for this URI
     char message[1000];

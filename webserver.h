@@ -35,8 +35,8 @@ public:
 private:
 	ESP8266WebServer *server = NULL;
 
-	String contentType(String filename);
-	bool serveFile(String path);
+	bool serveFile(const char url[]);
+  bool endsWith(const char* what, const char* withwhat);
 	void handleSaveConfig();
 	void handleLoadConfig();
 	void handleGetColors();
