@@ -437,7 +437,7 @@ void loop()
 			break;
 
 		case 'X':
-			WiFi.disconnect();
+			// WiFi.disconnect();
 			ESP.reset();
 			break;
 
