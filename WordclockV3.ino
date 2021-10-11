@@ -22,6 +22,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#include <Pinger.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <ArduinoOTA.h>
@@ -38,12 +39,23 @@
 #include "config.h"
 #include "osapi.h"
 
+// needed for pinger.h
+extern "C"
+{
+  #include <lwip/icmp.h> // needed for icmp packet definitions
+}
+
+// Set global to avoid object removing after setup() routine
+Pinger pinger;
+
 #define DEBUG(...) Serial.printf(__VA_ARGS__);
 
 #define LED_RED		15
 #define LED_GREEN	12
 #define LED_BLUE	13
 #define LED_BUILTIN	2
+
+#define MAXPINGERRORS 5 // Reset ESP after this number of ping errors occured
 
 //---------------------------------------------------------------------------------------
 // Network related variables
@@ -56,6 +68,7 @@ int OTA_in_progress = 0;
 #define TIMER_RESOLUTION 10
 #define HOURGLASS_ANIMATION_PERIOD 100
 #define TICKTIME 15 // no millisecs between clock display updates
+#define PINGTIME 500  // no millisecs between router pings
 
 Ticker timer;
 int h = 0;
@@ -76,6 +89,9 @@ int updateCountdown = 0;
 bool NTPTimeAcquired=false;
 
 unsigned long NextTick = 0;
+unsigned long NextPing = 0;
+int PingErrorCount = 0; // remember no errors after last succesful ping
+bool NetworkConnectionLost = false;
 
 //---------------------------------------------------------------------------------------
 // timerCallback
@@ -218,7 +234,8 @@ void setup()
 
   if  (rtc_info->reason ==  REASON_WDT_RST  ||
        rtc_info->reason ==  REASON_EXCEPTION_RST  ||
-       rtc_info->reason ==  REASON_SOFT_WDT_RST)  
+       rtc_info->reason ==  REASON_SOFT_WDT_RST ||
+       rtc_info->reason ==  REASON_SOFT_RESTART)
   {
      RecoverFromException = true; // Let the program know we are recovering
      if (rtc_info->reason ==  REASON_EXCEPTION_RST) 
@@ -304,7 +321,36 @@ void setup()
 	});
 	ArduinoOTA.begin();
 
-	// NTP
+  // Setup Pingercallback
+  pinger.OnReceive([](const PingerResponse& response)
+  {
+    if (response.ReceivedResponse)
+    {
+      // Serial.printf("Reply from %s: bytes=%d time=%lums TTL=%d",response.DestIPAddress.toString().c_str(),response.EchoMessageSize - sizeof(struct icmp_echo_hdr),response.ResponseTime,response.TimeToLive);
+
+      if (PingErrorCount>0) {
+        Serial.println("Resetting Ping Error Count");
+        PingErrorCount=0;  // Reset Ping Error Count every succesful ping
+      }
+    }
+    else
+    {
+      Serial.printf("Ping Request to router timed out.\n");
+      PingErrorCount++;
+
+      // Check if we have to reset
+      if (PingErrorCount>MAXPINGERRORS) {
+        Serial.printf ("Network connection lost: %d Ping Errors occurred after last succesful ping, restarting ESP\n",PingErrorCount);
+        NetworkConnectionLost = true;
+      }
+    }
+
+    // Return true to continue the ping sequence.
+    // If current event returns false, the ping sequence is interrupted.
+    return true;
+  });
+  
+  // NTP
 	Serial.println("Starting NTP module");
 	NTP.begin(Config.ntpserver, NtpCallback, 1, true);
 
@@ -318,8 +364,9 @@ void setup()
 	startup = false;
 	Serial.println("Startup complete.");
 
-  // Set NextTick to now
+  // Set NextTick and NextPing to now
   NextTick=millis();
+  NextPing=millis();
 }
 
 //-----------------------------------------------------------------------------------
@@ -327,7 +374,10 @@ void setup()
 //-----------------------------------------------------------------------------------
 void loop()
 {
-	// delay(10);
+	if (NetworkConnectionLost) {
+    Serial.println("Lost the network, reboot");
+    ESP.reset();
+	}
 
 	// do OTA update stuff
 	ArduinoOTA.handle();
@@ -337,7 +387,7 @@ void loop()
 	// OTA callbacks drive the LED display mode and OTA progress
 	// in the background, the above call to LED.process() ensures
 	// the OTA status is output to the LEDs
-	if (OTA_in_progress)
+	if (OTA_in_progress==1)
 		return;
 
   
@@ -363,14 +413,23 @@ void loop()
   	}
   }
 
+  // only Ping every PINGTIME mseconds
+  if (millis()>=NextPing and OTA_in_progress==0) {
+    NextPing=millis()+PINGTIME;
+    /* while (NextPing<=millis()){ // if for some reason there was a delay, make sure next ping is increased more than once, just as long until there is a wait time again
+      Serial.println("Correcting with another pingtick\r");  // if this line appears a lot in the log, code should be optimized
+      NextTick += PINGTIME;
+    } */
+
+    // Ping default gateway
+    // Serial.printf("Pinging default gateway with IP %s\n\r",WiFi.gatewayIP().toString().c_str());
+    pinger.Ping(WiFi.gatewayIP());
+  }
+
   // Only process LED functions every TICKTIME mseconds 
   if (millis()>=NextTick) {
     // increase Next Tick
-    NextTick += TICKTIME;
-    while (NextTick<=millis()){ // if for some reason there was a delay, make sure next tick is increased more than once, just as long until there is a wait time again
-      Serial.println("Correcting with another tick");  // if this line appears a lot in the log, code should be optimized
-      NextTick += TICKTIME;
-    }
+    NextTick = millis()+TICKTIME;
     
     // overrule any of the above in case of configured alarms
     bool AlarmInProgress = false;
@@ -435,6 +494,11 @@ void loop()
 		case 'i':
 			Serial.println("WordClock ESP8266 ready.");
 			break;
+
+    case 'L':
+      Serial.println("Simulate lost network connection");
+      NetworkConnectionLost=true;
+      break;
 
 		case 'X':
 			// WiFi.disconnect();

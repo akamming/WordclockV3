@@ -160,7 +160,7 @@ void WebServerClass::process()
 //---------------------------------------------------------------------------------------
 bool WebServerClass::serveFile(const char url[])
 {
-	Serial.printf("WebServerClass::serveFile(): %s\n",url);
+	Serial.printf("WebServerClass::serveFile(): %s\n\rE",url);
 
   char path[50];
   
@@ -338,7 +338,9 @@ void WebServerClass::handleB()
 void WebServerClass::handleGetBrightness()
 {
     Serial.println("GetBrightness");
-    this->server->send(200, "text/plain", String(Brightness.brightnessOverride));
+    char buf[5];
+    sprintf(buf,"%d",Brightness.brightnessOverride);
+    this->server->send(200, "text/plain", buf);
 }
 
 
@@ -441,8 +443,12 @@ void WebServerClass::handleDebug()
 void WebServerClass::handleGetADC()
 {
   Serial.println("GetADC");
+  
 	int __attribute__ ((unused)) temp = Brightness.value(); // to trigger A/D conversion
-	this->server->send(200, "text/plain", String(Brightness.avg));
+
+  char buf[5];
+  sprintf(buf,"%s",Brightness.avg);
+	this->server->send(200, "text/plain", buf);
 }
 
 //---------------------------------------------------------------------------------------
@@ -485,7 +491,10 @@ void WebServerClass::handleSetTimeZone()
 void WebServerClass::handleGetTimeZone()
 {
   Serial.println("GetTimeZone");
-	this->server->send(200, "text/plain", String(Config.timeZone));
+
+  char buf[3];
+  sprintf(buf,"%u",Config.timeZone);
+	this->server->send(200, "text/plain", buf);
 }
 
 //---------------------------------------------------------------------------------------
@@ -536,23 +545,23 @@ void WebServerClass::handleSetMode()
 void WebServerClass::handleGetMode()
 {
   Serial.println("GetMode");
-	int mode = 0;
+	char mode[5] = "";
 	switch(Config.defaultMode)
 	{
 	case DisplayMode::plain:
-		mode = 0; break;
+		strcat(mode,"0"); break;
 	case DisplayMode::fade:
-		mode = 1; break;
+		strcat(mode,"1"); break;
 	case DisplayMode::flyingLettersVerticalUp:
-		mode = 2; break;
+		strcat(mode,"2"); break;
 	case DisplayMode::flyingLettersVerticalDown:
-		mode = 3; break;
+		strcat(mode,"3"); break;
 	case DisplayMode::explode:
-		mode = 4; break;
+		strcat(mode,"4"); break;
 	default:
-		mode = 0; break;
+		strcat(mode,"0"); break;
 	}
-	this->server->send(200, "text/plain", String(mode));
+	this->server->send(200, "text/plain", mode);
 }
 
 //---------------------------------------------------------------------------------------
@@ -579,7 +588,7 @@ void WebServerClass::handleNotFound()
 		for (uint8_t i = 0; i < this->server->args(); i++)
 		{
       char buf[100];
-      sprintf(buf," %s,%s\n",this->server->argName(i).c_str(),this->server->arg(i).c_str());
+      sprintf(buf," %s,%s\n\r",this->server->argName(i).c_str(),this->server->arg(i).c_str());
       strcat (message,buf);
 		}
 		this->server->send(404, "text/plain", message);
@@ -597,7 +606,12 @@ void WebServerClass::handleNotFound()
 void WebServerClass::handleGetNtpServer()
 {
   Serial.println("GetNTPServer");
-	this->server->send(200, "application/json", Config.ntpserver.toString());
+
+  char NTPServer[20];
+  sprintf(NTPServer,"%u.%u.%u.%u",Config.ntpserver[0],Config.ntpserver[1],Config.ntpserver[2],Config.ntpserver[3]);
+
+  // this->server->send(200, "application/json", Config.ntpserver.toString());
+  this->server->send(200, "application/json", NTPServer);
 }
 
 //---------------------------------------------------------------------------------------
@@ -945,7 +959,11 @@ void WebServerClass::handleGetConfig()
   json["timezone"] = Config.timeZone;
   json["nightmode"] = Config.nightmode ? "\"on\"" : "\"off\"";
   json["heartbeat"] = (Config.heartbeat==1) ? "\"on\"" : "\"off\"";
-  json["NTPServer"] = Config.ntpserver.toString();
+  char NTPServer[20];
+  sprintf(NTPServer,"%u.%u.%u.%u",Config.ntpserver[0],Config.ntpserver[1],Config.ntpserver[2],Config.ntpserver[3]);
+
+  // json["NTPServer"] = Config.ntpserver.toString();
+  json["NTPServer"] = NTPServer;
   json["Brightness"] = Brightness.brightnessOverride;
 
   JsonArray& Alarm = json.createNestedArray("Alarm");
