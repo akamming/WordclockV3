@@ -75,7 +75,7 @@ public:
 	void saveDelayed();
 	void load();
 	void reset();
-  String Configsize();
+  int Configsize();
 
 	// public configuration variables
 	palette_entry fg;

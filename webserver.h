@@ -73,7 +73,7 @@ private:
   void handleClearCrashLog();
 #endif
 
-	void extractColor(String argName, palette_entry& result);
+	void extractColor(char argName[], palette_entry& result);
 };
 
 extern WebServerClass WebServer;

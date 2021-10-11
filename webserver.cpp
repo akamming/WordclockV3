@@ -139,20 +139,27 @@ void WebServerClass::process()
 // <- true: file was found and served to client
 //	false: file not found
 //---------------------------------------------------------------------------------------
-bool WebServerClass::serveFile(String path)
+bool WebServerClass::serveFile(String url)
 {
-	Serial.println("WebServerClass::serveFile(): " + path);
-	if (path.endsWith("/"))
-		path += "index.html";
+	Serial.printf("WebServerClass::serveFile(): %s\n",url.c_str());
+
+  char path[50];
+  
+	if (url.endsWith("/")) {
+		sprintf (path,"%sindex.html",url.c_str());
+	} else {
+    sprintf(path,"%s",url.c_str());
+	}
 	if (SPIFFS.exists(path))
 	{
 		File file = SPIFFS.open(path, "r");
-		this->server->streamFile(file, this->contentType(path));
+		this->server->streamFile(file, this->contentType(String(path)));
 		file.close();
 		return true;
 	}
 	return false;
 }
+
 
 //---------------------------------------------------------------------------------------
 // contentType
@@ -557,22 +564,21 @@ void WebServerClass::handleGetMode()
 void WebServerClass::handleNotFound()
 {
   Serial.println("HandleNotFound");
+
+  
 	// first, try to serve the requested file from flash
 	if (!serveFile(this->server->uri()))
 	{
-		// create 404 message if no file was found for this URI
-		String message = "File Not Found\n\n";
-		message += "URI: ";
-		message += this->server->uri();
-		message += "\nMethod: ";
-		message += (this->server->method() == HTTP_GET) ? "GET" : "POST";
-		message += "\nArguments: ";
-		message += this->server->args();
-		message += "\n";
+    // create 404 message if no file was found for this URI
+    char message[1000];
+    sprintf(message,"File Not Found\n\nURI: %s\nMethod: %s\nArguments %d\n",
+        this->server->uri().c_str(), this->server->method() == HTTP_GET ? "GET" : "POST",
+        this->server->args());
 		for (uint8_t i = 0; i < this->server->args(); i++)
 		{
-			message += " " + this->server->argName(i) + ": "
-					+ this->server->arg(i) + "\n";
+      char buf[100];
+      sprintf(buf," %s,%s\n",this->server->argName(i).c_str(),this->server->arg(i).c_str());
+      strcat (message,buf);
 		}
 		this->server->send(404, "text/plain", message);
 	}
@@ -661,45 +667,6 @@ void WebServerClass::handleInfo()
   sprintf(buffer, "%i days, %i hours, %i mins, %i seconds, %i milliseconds", days, hrs, mins, secs, msecs);
   json["uptime"] = buffer;
   
-  // json["uptime"] = String(days)+" days, "+String(hrs)+" hours, "+String(mins)+" minutes, "+String(secs)+" seconds";
-
-  
-//	switch(LED.getMode())
-//	{
-//	case DisplayMode::plain:
-//		json["mode"] = "plain"; break;
-//	case DisplayMode::fade:
-//		json["mode"] = "fade"; break;
-//	case DisplayMode::flyingLettersVertical:
-//		json["mode"] = "flyingLettersVertical"; break;
-//	case DisplayMode::matrix:
-//		json["mode"] = "matrix"; break;
-//	case DisplayMode::heart:
-//		json["mode"] = "heart"; break;
-//	case DisplayMode::stars:
-//		json["mode"] = "stars"; break;
-//	case DisplayMode::red:
-//		json["mode"] = "red"; break;
-//	case DisplayMode::green:
-//		json["mode"] = "green"; break;
-//	case DisplayMode::blue:
-//		json["mode"] = "blue"; break;
-//	case DisplayMode::yellowHourglass:
-//		json["mode"] = "yellowHourglass"; break;
-//	case DisplayMode::greenHourglass:
-//		json["mode"] = "greenHourglass"; break;
-//	case DisplayMode::update:
-//		json["mode"] = "update"; break;
-//	case DisplayMode::updateComplete:
-//		json["mode"] = "updateComplete"; break;
-//	case DisplayMode::updateError:
-//		json["mode"] = "updateError"; break;
-//	case DisplayMode::wifiManager:
-//		json["mode"] = "wifiManager"; break;
-//	default:
-//		json["mode"] = "unknown"; break;
-//	}
-
 	json.printTo(buf, sizeof(buf));
 	this->server->send(200, "application/json", buf);
 }
@@ -712,7 +679,7 @@ void WebServerClass::handleInfo()
 //	result: Pointer to palette_entry struct to receive result
 // <- --
 //---------------------------------------------------------------------------------------
-void WebServerClass::extractColor(String argName, palette_entry& result)
+void WebServerClass::extractColor(char argName[], palette_entry& result)
 {
 	char c[3];
 
@@ -821,11 +788,11 @@ void WebServerClass::handleGetHeartbeat()
 void WebServerClass::handleGetColors()
 {
   Serial.println("GetColors");
-  String message = String(Config.bg.r) + "," + String(Config.bg.g) + ","
-      + String(Config.bg.b) + "," + String(Config.fg.r) + ","
-      + String(Config.fg.g) + "," + String(Config.fg.b) + ","
-      + String(Config.s.r) + "," + String(Config.s.g) + ","
-      + String(Config.s.b);
+
+  char message[50];
+  sprintf(message,"%u,%u,%u,%u,%u,%u,%u,%u,%u",Config.bg.r,Config.bg.g,Config.bg.b,
+                                               Config.fg.r,Config.fg.g,Config.fg.b,
+                                               Config.s.r, Config.s.g, Config.s.b);
   this->server->send(200, "text/plain", message);
 }
 
@@ -862,7 +829,7 @@ void WebServerClass::handleGetAlarms()
       strcpy(displaymode,"unknown"); break;
     }
 
-    // buildup string
+    // buildup alarmchararray
     char buffer[20];
     sprintf(buffer,"%02d:%02d,%s,%s",Config.alarm[i].h,Config.alarm[i].m,displaymode,Config.alarm[i].enabled ? "on," : "off,");
     strcat(message,buffer); 
@@ -957,27 +924,27 @@ void WebServerClass::handleGetConfig()
     displaymode = 0; break;
   }
   JsonObject& background = json.createNestedObject("backgroundcolor");
-  background["r"] = String(Config.bg.r);
-  background["g"] = String(Config.bg.g);
-  background["b"] = String(Config.bg.b);
+  background["r"] = Config.bg.r;
+  background["g"] = Config.bg.g;
+  background["b"] = Config.bg.b;
 
   JsonObject& foreground = json.createNestedObject("foregroundcolor");
-  foreground["r"] = String(Config.fg.r);
-  foreground["g"] = String(Config.fg.g);
-  foreground["b"] = String(Config.fg.b);
+  foreground["r"] = Config.fg.r;
+  foreground["g"] = Config.fg.g;
+  foreground["b"] = Config.fg.b;
 
   JsonObject& seconds = json.createNestedObject("secondscolor");
-  seconds["r"] = String(Config.s.r);
-  seconds["g"] = String(Config.s.g);
-  seconds["b"] = String(Config.s.b);
+  seconds["r"] = Config.s.r;
+  seconds["g"] = Config.s.g;
+  seconds["b"] = Config.s.b;
 
 
-  json["displaymode"] =  String(displaymode);
-  json["timezone"] = String(Config.timeZone);
-  json["nightmode"] = String(Config.nightmode ? "\"on\"" : "\"off\"");
-  json["heartbeat"] = String((Config.heartbeat==1) ? "\"on\"" : "\"off\"");
+  json["displaymode"] =  displaymode;
+  json["timezone"] = Config.timeZone;
+  json["nightmode"] = Config.nightmode ? "\"on\"" : "\"off\"";
+  json["heartbeat"] = (Config.heartbeat==1) ? "\"on\"" : "\"off\"";
   json["NTPServer"] = Config.ntpserver.toString();
-  json["Brightness"] = String(Brightness.brightnessOverride);
+  json["Brightness"] = Brightness.brightnessOverride;
 
   JsonArray& Alarm = json.createNestedArray("Alarm");
   
@@ -1027,7 +994,7 @@ void WebServerClass::handleShowCrashLog()
   Serial.println("ShowCrashLog");
   char buffer[2048]="";
   SaveCrash.print(buffer,sizeof(buffer));
-  this->server->send(200, "text/plain", String(buffer));
+  this->server->send(200, "text/plain", buffer);
 }
 
 

@@ -92,9 +92,9 @@ void ConfigClass::saveDelayed()
 // -> --
 // <- --
 //---------------------------------------------------------------------------------------
-String ConfigClass::Configsize()
+int ConfigClass::Configsize()
 {
-  return String(sizeof(_config_struct));
+  return int(sizeof(_config_struct));
 }
 
 
