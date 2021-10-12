@@ -995,7 +995,6 @@ void WebServerClass::handleGetConfig()
 
   }
 
-  
   json.printTo(buf, sizeof(buf));
   this->server->send(200, "application/json", buf);
 }

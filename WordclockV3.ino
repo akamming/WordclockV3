@@ -55,7 +55,6 @@ Pinger pinger;
 #define LED_BLUE	13
 #define LED_BUILTIN	2
 
-#define MAXPINGERRORS 5 // Reset ESP after this number of ping errors occured
 
 //---------------------------------------------------------------------------------------
 // Network related variables
@@ -69,6 +68,7 @@ int OTA_in_progress = 0;
 #define HOURGLASS_ANIMATION_PERIOD 100
 #define TICKTIME 15 // no millisecs between clock display updates
 #define PINGTIME 5000  // no millisecs between router pings
+#define MAXPINGERRORS 5 // Reset ESP after this number of consecutive ping failures (every succesful ping counter = reset)
 
 Ticker timer;
 int h = 0;
@@ -328,7 +328,7 @@ void setup()
   {
     if (response.ReceivedResponse)
     {
-      // Serial.printf("Reply from %s: bytes=%d time=%lums TTL=%d",response.DestIPAddress.toString().c_str(),response.EchoMessageSize - sizeof(struct icmp_echo_hdr),response.ResponseTime,response.TimeToLive);
+      Serial.printf("Reply from %s: bytes=%d time=%lums TTL=%d\n\r",response.DestIPAddress.toString().c_str(),response.EchoMessageSize - sizeof(struct icmp_echo_hdr),response.ResponseTime,response.TimeToLive);
 
       if (PingErrorCount>0) {
         Serial.println("Resetting Ping Error Count");
@@ -337,12 +337,12 @@ void setup()
     }
     else
     {
-      Serial.printf("Ping Request to router timed out.\n");
+      Serial.println("Ping Request to router timed out.");
       PingErrorCount++;
 
       // Check if we have to reset
       if (PingErrorCount>MAXPINGERRORS) {
-        Serial.printf ("Network connection lost: %d Ping Errors occurred after last succesful ping, restarting ESP\n",PingErrorCount);
+        Serial.printf ("Network connection lost: %d Ping Errors occurred after last succesful ping, restarting ESP\n\r",PingErrorCount);
         NetworkConnectionLost = true;
       }
     }
@@ -428,7 +428,7 @@ void loop()
 
     // Ping default gateway
     // Serial.printf("Pinging default gateway with IP %s\n\r",WiFi.gatewayIP().toString().c_str());
-    pinger.Ping(WiFi.gatewayIP());
+    pinger.Ping(WiFi.gatewayIP(),1);
   }
 
   // Only process LED functions every TICKTIME mseconds 
