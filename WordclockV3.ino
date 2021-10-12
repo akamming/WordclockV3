@@ -68,7 +68,7 @@ int OTA_in_progress = 0;
 #define TIMER_RESOLUTION 10
 #define HOURGLASS_ANIMATION_PERIOD 100
 #define TICKTIME 15 // no millisecs between clock display updates
-#define PINGTIME 500  // no millisecs between router pings
+#define PINGTIME 5000  // no millisecs between router pings
 
 Ticker timer;
 int h = 0;
@@ -234,8 +234,8 @@ void setup()
 
   if  (rtc_info->reason ==  REASON_WDT_RST  ||
        rtc_info->reason ==  REASON_EXCEPTION_RST  ||
-       rtc_info->reason ==  REASON_SOFT_WDT_RST ||
-       rtc_info->reason ==  REASON_SOFT_RESTART)
+       rtc_info->reason ==  REASON_SOFT_WDT_RST)
+       // rtc_info->reason ==  REASON_SOFT_RESTART)
   {
      RecoverFromException = true; // Let the program know we are recovering
      if (rtc_info->reason ==  REASON_EXCEPTION_RST) 
@@ -266,6 +266,8 @@ void setup()
 	// WiFi
 	Serial.println("Initializing WiFi");
   WiFi.setAutoReconnect(true);
+  WiFi.mode(WIFI_STA); //WiFi mode station (connect to wifi router only)
+  WiFi.setSleepMode(WIFI_NONE_SLEEP);
   WiFi.persistent(true);
 	WiFiManager wifiManager;
 	wifiManager.setAPCallback(configModeCallback);
@@ -375,8 +377,11 @@ void setup()
 void loop()
 {
 	if (NetworkConnectionLost) {
-    Serial.println("Lost the network, reboot");
-    ESP.reset();
+    Serial.println("Lost the network, reboot by causing exception (so startup hourglass is not shown)");
+    int *test;
+    *test=5;
+    Serial.println("test = "+String(*test));
+    // ESP.reset();
 	}
 
 	// do OTA update stuff
@@ -481,9 +486,21 @@ void loop()
 	if (s != lastSecond)
 	{
 		lastSecond = s;
-		DEBUG("%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, brightness=%i\r\n",
+
+    // calc uptime
+    int milliseconds  = millis();
+    long seconds=milliseconds/1000;
+    int msecs = milliseconds % 1000;
+    int secs = seconds % 60;
+    int mins = (seconds/60) % 60;
+    int hrs = (seconds/3600) % 24;
+    int days = (seconds/(3600*24));
+
+
+		DEBUG("%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
 			  h, m, s, (int)Brightness.avg, (int)(Brightness.avg*100)%100,
-			  ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getMaxFreeBlockSize(), Brightness.value());
+			  ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getMaxFreeBlockSize(), Brightness.value(),
+			  days,hrs,mins,secs,msecs);
 	}
 
 	if (Serial.available())
