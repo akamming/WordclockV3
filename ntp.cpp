@@ -26,6 +26,8 @@
 #include <Arduino.h>
 #include <limits.h>
 #include "ntp.h"
+#include "ledfunctions.h"
+
 
 //---------------------------------------------------------------------------------------
 // CONSTANTS
@@ -33,7 +35,7 @@
 #define NTP_PACKET_SIZE 48
 #define LOCAL_PORT 2390
 #define NTP_TIMEOUT 5000
-#define TIMER_RESOLUTION 10
+#define TIMER_RESOLUTION 100
 #define NTP_RELOAD_INTERVAL (59*60*1000)
 
 //---------------------------------------------------------------------------------------
@@ -66,7 +68,7 @@ void NtpClass::tickerFunctionWrapper(NtpClass *obj)
 NtpClass::NtpClass()
 {
 	this->ticker.attach_ms(TIMER_RESOLUTION, NtpClass::tickerFunctionWrapper,
-			this);
+			 this);
 }
 
 //---------------------------------------------------------------------------------------
@@ -136,6 +138,8 @@ void NtpClass::begin(IPAddress ip, TNtpCallback callback, int timezone, bool DST
 //---------------------------------------------------------------------------------------
 void NtpClass::tickerFunction()
 {
+  if (LED.inprogress) Serial.println("NTP Ticker called during pixel-Show");
+  
 	// increment timer variable
 	this->timer += TIMER_RESOLUTION;
 

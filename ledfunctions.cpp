@@ -415,6 +415,7 @@ void LEDFunctionsClass::process()
 
 	// transfer this->currentValues to LEDs
 	this->show();
+
 }
 
 //---------------------------------------------------------------------------------------
@@ -603,6 +604,7 @@ void LEDFunctionsClass::fade()
 	if(++prescaler<2) return;
 	prescaler = 0;
 
+
 	int delta;
 	for (int i = 0; i < NUM_PIXELS * 3; i++)
 	{
@@ -638,7 +640,9 @@ void LEDFunctionsClass::show()
 						      ((int) data[ofs + 2] * this->brightness) >> 8));
 		ofs += 3;
 	}
+  this->inprogress=true;
 	this->pixels->show();
+  this->inprogress=false;
 }
 
 //---------------------------------------------------------------------------------------

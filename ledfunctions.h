@@ -58,6 +58,7 @@ public:
 	static const int width = 11;
 	static const int height = 10;
 	uint8_t currentValues[NUM_PIXELS * 3];
+  bool inprogress=false;
 
 private:
 	static const std::vector<leds_template_t> hoursTemplate;

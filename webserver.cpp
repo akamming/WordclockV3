@@ -652,9 +652,8 @@ void WebServerClass::handleSetNtpServer()
 void WebServerClass::handleInfo()
 {
   Serial.println("GetInfo");
-	StaticJsonBuffer<512> jsonBuffer;
+	StaticJsonDocument<512> json;
 	char buf[512];
-	JsonObject& json = jsonBuffer.createObject();
 	json["heap"] = ESP.getFreeHeap();
 	json["sketchsize"] = ESP.getSketchSize();
 	json["sketchspace"] = ESP.getFreeSketchSpace();
@@ -683,7 +682,7 @@ void WebServerClass::handleInfo()
   sprintf(buffer, "%i days, %i hours, %i mins, %i seconds, %i milliseconds", days, hrs, mins, secs, msecs);
   json["uptime"] = buffer;
   
-	json.printTo(buf, sizeof(buf));
+  serializeJson(json,buf);
 	this->server->send(200, "application/json", buf);
 }
 
@@ -919,9 +918,8 @@ void WebServerClass::handleGetConfig()
 {
   Serial.println("GetConfig");
 
-  StaticJsonBuffer<1024> jsonBuffer;
+  StaticJsonDocument<1024> json;
   char buf[1024];
-  JsonObject& json = jsonBuffer.createObject();
 
   int displaymode = 0;
   switch(Config.defaultMode)
@@ -939,17 +937,17 @@ void WebServerClass::handleGetConfig()
   default:
     displaymode = 0; break;
   }
-  JsonObject& background = json.createNestedObject("backgroundcolor");
+  JsonObject background = json.createNestedObject("backgroundcolor");
   background["r"] = Config.bg.r;
   background["g"] = Config.bg.g;
   background["b"] = Config.bg.b;
 
-  JsonObject& foreground = json.createNestedObject("foregroundcolor");
+  JsonObject foreground = json.createNestedObject("foregroundcolor");
   foreground["r"] = Config.fg.r;
   foreground["g"] = Config.fg.g;
   foreground["b"] = Config.fg.b;
 
-  JsonObject& seconds = json.createNestedObject("secondscolor");
+  JsonObject seconds = json.createNestedObject("secondscolor");
   seconds["r"] = Config.s.r;
   seconds["g"] = Config.s.g;
   seconds["b"] = Config.s.b;
@@ -962,15 +960,14 @@ void WebServerClass::handleGetConfig()
   char NTPServer[20];
   sprintf(NTPServer,"%u.%u.%u.%u",Config.ntpserver[0],Config.ntpserver[1],Config.ntpserver[2],Config.ntpserver[3]);
 
-  // json["NTPServer"] = Config.ntpserver.toString();
   json["NTPServer"] = NTPServer;
   json["Brightness"] = Brightness.brightnessOverride;
 
-  JsonArray& Alarm = json.createNestedArray("Alarm");
   
   for (int i=0;i<5;i++) {
     String alarmmode;
   
+    JsonArray Alarm = json.createNestedArray("Alarm");
     switch(Config.alarm[i].mode)
     {
     case DisplayMode::matrix:
@@ -987,16 +984,15 @@ void WebServerClass::handleGetConfig()
       alarmmode = "unknown"; break;
     }
 
-    JsonObject& alarmobject = Alarm.createNestedObject();
+    JsonObject alarmobject = Alarm.createNestedObject();
     alarmobject["h"]=String(Config.alarm[i].h);  
     alarmobject["m"]=String(Config.alarm[i].m);  
     alarmobject["mode"]=alarmmode;  
     alarmobject["enabled"]=Config.alarm[i].enabled ? "\"on\"" : "\"off\"";  
 
   }
-
-  json.printTo(buf, sizeof(buf));
-  this->server->send(200, "application/json", buf);
+  serializeJson(json,buf);
+  this->server->send(200, "application/json", buf); 
 }
 
 #ifdef DEBUG
