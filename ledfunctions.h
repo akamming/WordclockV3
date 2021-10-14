@@ -18,7 +18,14 @@
 #ifndef _LEDFUNCTIONS_H_
 #define _LEDFUNCTIONS_H_
 
+#define FASTLED 
+
+#ifdef FASTLED
+#include <FastLED.h> // FastLED
+#else
 #include <Adafruit_NeoPixel.h>
+#endif
+
 #include <stdint.h>
 #include <vector>
 
@@ -68,14 +75,18 @@ private:
 
 	DisplayMode mode = DisplayMode::plain;
 
-
 	std::vector<Particle*> particles;
 	std::vector<xy_t> arrivingLetters;
 	std::vector<xy_t> leavingLetters;
 	std::vector<MatrixObject> matrix;
 	std::vector<StarObject> stars;
 	uint8_t targetValues[NUM_PIXELS * 3];
+#ifdef FASTLED
+  CRGB leds[NUM_PIXELS]; // FastLed
+#else
 	Adafruit_NeoPixel *pixels = NULL;
+#endif
+  
 	int heartBrightness = 0;
 	int heartState = 0;
 	int brightness = 96;

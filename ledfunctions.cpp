@@ -318,8 +318,12 @@ LEDFunctionsClass::LEDFunctionsClass()
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::begin(int pin)
 {
+#ifdef FASTLED
+  FastLED.addLeds<NEOPIXEL, D6>(this->leds, NUM_PIXELS);  // GRB ordering is assumed
+#else
 	this->pixels = new Adafruit_NeoPixel(NUM_PIXELS, pin, NEO_GRB + NEO_KHZ800);
-	this->pixels->begin();
+  this->pixels->begin();
+#endif
 }
 
 //---------------------------------------------------------------------------------------
@@ -634,14 +638,24 @@ void LEDFunctionsClass::show()
 	// copy current color values to LED object and display it
 	for (int i = 0; i < NUM_PIXELS; i++)
 	{
-		this->pixels->setPixelColor(i,
-				pixels->Color(((int) data[ofs + 0] * this->brightness) >> 8,
-						      ((int) data[ofs + 1] * this->brightness) >> 8,
-						      ((int) data[ofs + 2] * this->brightness) >> 8));
-		ofs += 3;
+#ifdef FASTLED
+    this->leds[i]=CRGB( ((int) data[ofs + 0] * this->brightness) >> 8,
+                        ((int) data[ofs + 1] * this->brightness) >> 8,  
+                        ((int)data[ofs + 2] * this->brightness) >> 8);  
+#else
+    this->pixels->setPixelColor(i,
+        pixels->Color(((int) data[ofs + 0] * this->brightness) >> 8,
+                  ((int) data[ofs + 1] * this->brightness) >> 8,
+                  ((int) data[ofs + 2] * this->brightness) >> 8)); 
+#endif
+    ofs += 3;
 	}
   this->inprogress=true;
-	this->pixels->show();
+#ifdef FASTLED
+  FastLED.show();
+#else
+  this->pixels->show();
+#endif
   this->inprogress=false;
 }
 

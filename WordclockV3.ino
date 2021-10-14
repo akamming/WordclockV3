@@ -66,9 +66,10 @@ int OTA_in_progress = 0;
 //---------------------------------------------------------------------------------------
 #define TIMER_RESOLUTION 100
 #define HOURGLASS_ANIMATION_PERIOD 100
-#define TICKTIME 10 // no millisecs between clock display updates
+#define TICKTIME 15 // no millisecs between clock display updates
 #define PINGTIME 5000  // no millisecs between router pings
 #define MAXPINGERRORS 5 // Reset ESP after this number of consecutive ping failures (every succesful ping counter = reset)
+#define DBG
 
 Ticker timer;
 int h = 0;
@@ -217,6 +218,18 @@ void setup()
 
 	setLED(1, 0, 0);
 
+  // configuration
+  // Serial.println("Loading configuration");
+  Config.begin();
+
+  // LEDs
+  // Serial.println("Starting LED module");
+  LED.begin(D6);
+  if (not RecoverFromException) 
+  { 
+    LED.setMode(DisplayMode::yellowHourglass);
+    LED.process();
+  }
 	// serial port
 	Serial.begin(115200);
 	Serial.println();
@@ -248,26 +261,13 @@ void setup()
 	// timer
 	Serial.println("Starting timer");
 	timer.attach(TIMER_RESOLUTION / 1000.0, timerCallback);
-
-	// configuration
-	Serial.println("Loading configuration");
-	Config.begin();
-
-	// LEDs
-	Serial.println("Starting LED module");
-	LED.begin(D6);
-  if (not RecoverFromException) 
-  { 
-    LED.setMode(DisplayMode::yellowHourglass);
-    LED.process();
-  }
-
+  
 	// WiFi
 	Serial.println("Initializing WiFi");
   WiFi.setAutoReconnect(true);
-  WiFi.mode(WIFI_STA); //WiFi mode station (connect to wifi router only)
-  WiFi.setSleepMode(WIFI_NONE_SLEEP);
-  WiFi.persistent(true);
+  // WiFi.mode(WIFI_STA); //WiFi mode station (connect to wifi router only)
+  // WiFi.setSleepMode(WIFI_NONE_SLEEP);
+  // WiFi.persistent(true);
 	WiFiManager wifiManager;
 	wifiManager.setAPCallback(configModeCallback);
 	if (!wifiManager.autoConnect("WordClock"))
@@ -375,19 +375,42 @@ void setup()
 //-----------------------------------------------------------------------------------
 void loop()
 {
+  // do OTA update stuff
+  ArduinoOTA.handle();
+
+  // do web server stuff
+  WebServer.process();
+
+  // save configuration to EEPROM if necessary
+  if(Config.delayedWriteFlag)
+  {
+    DEBUG("Config timer expired, writing configuration.\r\n");
+    Config.delayedWriteFlag = false;
+    Config.save();
+  }
+
+  // only Ping every PINGTIME mseconds
+  if (millis()>=NextPing and OTA_in_progress==0) {
+    NextPing=millis()+PINGTIME;
+
+    // Ping default gateway
+    // Serial.printf("Pinging default gateway with IP %s\n\r",WiFi.gatewayIP().toString().c_str());
+    // pinger.Ping(WiFi.gatewayIP(),1);
+  }
+  
   // Only process LED functions every TICKTIME mseconds 
   if (millis()>=NextTick) 
   {
-    if (NetworkConnectionLost) {
+    // increase Next Tick
+    NextTick = millis()+TICKTIME;
+
+    // if (NetworkConnectionLost) {
       // Serial.println("Lost the network, reboot by causing exception (so startup hourglass is not shown)");
       // int *test;
       // *test=5;
       // Serial.println("test = "+String(*test));
       // ESP.reset();
-  	}
-  
-  	// do OTA update stuff
-  	ArduinoOTA.handle();
+  	// }
   
   
   	// do not continue if OTA update is in progress
@@ -400,62 +423,48 @@ void loop()
     	// show the hourglass animation with green corners for configured time
     	// after boot to be able to reflash with OTA during that time window if
     	// the firmware hangs afterwards
-    	if (not RecoverFromException)
-      {
-    	  if(updateCountdown)
-      	{
-      		setLED(0, 1, 0);
-      		LED.setMode(DisplayMode::greenHourglass);
-      		Serial.print(".");
-      		delay(100);
-      		updateCountdown--;
-      		if(updateCountdown == 0)
-      		{
-      			LED.setMode(Config.defaultMode);
-      			setLED(0, 0, 0);
-      		}
-          LED.process();
-      		return;
-      	}
-      }
-    
-      // only Ping every PINGTIME mseconds
-      if (millis()>=NextPing and OTA_in_progress==0) {
-        NextPing=millis()+PINGTIME;
-    
-        // Ping default gateway
-        // Serial.printf("Pinging default gateway with IP %s\n\r",WiFi.gatewayIP().toString().c_str());
-        // pinger.Ping(WiFi.gatewayIP(),1);
-      }
-    
+  	  if(updateCountdown)
+    	{
+    		setLED(0, 1, 0);
+    		LED.setMode(DisplayMode::greenHourglass);
+    		Serial.print(".");
+    		delay(100);
+    		updateCountdown--;
+    		if(updateCountdown == 0)
+    		{
+    			LED.setMode(Config.defaultMode);
+    			setLED(0, 0, 0);
+    		}
+    	} else {    
        
-      // overrule any of the above in case of configured alarms
-      bool AlarmInProgress = false;
-      for (int i=0;i<5;i++)
-      {
-        if (Config.alarm[i].enabled) {
-          if (h==Config.alarm[i].h && m==Config.alarm[i].m) {
-            Config.nightmode=false;
-            LED.setMode(Config.alarm[i].mode);
-            AlarmInProgress = true;
+        // overrule any of the above in case of configured alarms
+        bool AlarmInProgress = false;
+        for (int i=0;i<5;i++)
+        {
+          if (Config.alarm[i].enabled) {
+            if (h==Config.alarm[i].h && m==Config.alarm[i].m) {
+              Config.nightmode=false;
+              LED.setMode(Config.alarm[i].mode);
+              AlarmInProgress = true;
+            }
           }
         }
-      }
-    
-      // display hourglass until time acquired from NTP Server
-      if (not AlarmInProgress)
-      {
-        if (NTPTimeAcquired){
-          if (RecoverFromException) {
-            RecoverFromException=false;
-            LED.setMode(DisplayMode::plain);
+      
+        // display hourglass until time acquired from NTP Server
+        if (not AlarmInProgress)
+        {
+          if (NTPTimeAcquired){
+            if (RecoverFromException) {
+              RecoverFromException=false;
+              LED.setMode(DisplayMode::plain);
+            } else {
+              LED.setMode(Config.defaultMode);
+            }
           } else {
-            LED.setMode(Config.defaultMode);
+            LED.setMode(DisplayMode::greenHourglass);
           }
-        } else {
-          if (not RecoverFromException) LED.setMode(DisplayMode::greenHourglass);
         }
-      }
+    	}
     
       // update LEDs
       LED.setBrightness(Brightness.value());
@@ -465,17 +474,6 @@ void loop()
         LED.process();
       }
         
-    	// do web server stuff
-    	WebServer.process();
-    
-    	// save configuration to EEPROM if necessary
-    	if(Config.delayedWriteFlag)
-    	{
-    		DEBUG("Config timer expired, writing configuration.\r\n");
-    		Config.delayedWriteFlag = false;
-    		Config.save();
-    	}
-    
     	// output current time if seconds value has changed
     	if (s != lastSecond)
     	{
@@ -549,8 +547,6 @@ void loop()
     		}
     	}
     }
-    // increase Next Tick
-    NextTick = millis()+TICKTIME;
   } 
 }
 // ./esptool.py --port /dev/tty.usbserial --baud 460800 write_flash --flash_size=8m 0 /var/folders/yh/bv744591099f3x24xbkc22zw0000gn/T/build006b1a55228a1b90dda210fcddb62452.tmp/test.ino.bin
