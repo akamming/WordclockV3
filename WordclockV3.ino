@@ -66,10 +66,10 @@ int OTA_in_progress = 0;
 //---------------------------------------------------------------------------------------
 #define TIMER_RESOLUTION 100
 #define HOURGLASS_ANIMATION_PERIOD 100
-#define TICKTIME 15 // no millisecs between clock display updates
+#define TICKTIME 20 // no of millisecs between clock display updates
 #define PINGTIME 5000  // no millisecs between router pings
 #define MAXPINGERRORS 5 // Reset ESP after this number of consecutive ping failures (every succesful ping counter = reset)
-#define DBG
+#define WEBSERVERTIMEOUT 0000 // no of msec to wait after last Webserver action to start updating the LED's again (prevent timer issues)
 
 Ticker timer;
 int h = 0;
@@ -222,14 +222,7 @@ void setup()
   // Serial.println("Loading configuration");
   Config.begin();
 
-  // LEDs
-  // Serial.println("Starting LED module");
-  LED.begin(D6);
-  if (not RecoverFromException) 
-  { 
-    LED.setMode(DisplayMode::yellowHourglass);
-    LED.process();
-  }
+  
 	// serial port
 	Serial.begin(115200);
 	Serial.println();
@@ -240,6 +233,8 @@ void setup()
 	Serial.println(ESP.getResetReason());
 	Serial.print("ESP.getResetInfo(): ");
 	Serial.println(ESP.getResetInfo());
+
+ 
 
   rst_info* rtc_info = ESP.getResetInfoPtr();
   Serial.println(rtc_info->reason);
@@ -258,7 +253,16 @@ void setup()
                      rtc_info->epc1,  rtc_info->epc2, rtc_info->epc3, rtc_info->excvaddr,  rtc_info->depc);//The address of  the last  crash is  printed,  which is  used  to debug garbled output.
   }
 
-	// timer
+	// LEDs
+  // Serial.println("Starting LED module");
+  LED.begin(D6);
+  if (not RecoverFromException) 
+  { 
+    LED.setMode(DisplayMode::yellowHourglass);
+    LED.process();
+  }
+  
+  // timer
 	Serial.println("Starting timer");
 	timer.attach(TIMER_RESOLUTION / 1000.0, timerCallback);
   
@@ -471,7 +475,10 @@ void loop()
       LED.setTime(h, m, s, ms);
       if (not RecoverFromException) 
       {
-        LED.process();
+        if ((long) millis()>(WebServer.lastAction+WEBSERVERTIMEOUT)) 
+        {
+          LED.process();
+        }
       }
         
     	// output current time if seconds value has changed

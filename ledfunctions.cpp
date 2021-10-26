@@ -319,7 +319,12 @@ LEDFunctionsClass::LEDFunctionsClass()
 void LEDFunctionsClass::begin(int pin)
 {
 #ifdef FASTLED
-  FastLED.addLeds<NEOPIXEL, D6>(this->leds, NUM_PIXELS);  // GRB ordering is assumed
+  FastLED.addLeds<NEOPIXEL, pin>(this->leds, NUM_PIXELS);  // GRB ordering is assumed
+#elif defined(NEOPIXELBUS)
+  // this->strip = new NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod>(NUM_PIXELS,D6);
+  this->strip = new NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod>(NUM_PIXELS);
+  this->strip->Begin();
+  this->strip->Show();
 #else
 	this->pixels = new Adafruit_NeoPixel(NUM_PIXELS, pin, NEO_GRB + NEO_KHZ800);
   this->pixels->begin();
@@ -641,7 +646,11 @@ void LEDFunctionsClass::show()
 #ifdef FASTLED
     this->leds[i]=CRGB( ((int) data[ofs + 0] * this->brightness) >> 8,
                         ((int) data[ofs + 1] * this->brightness) >> 8,  
-                        ((int)data[ofs + 2] * this->brightness) >> 8);  
+                        ((int) data[ofs + 2] * this->brightness) >> 8);  
+#elif defined(NEOPIXELBUS)
+  this->strip->SetPixelColor(i,RgbColor(((int) data[ofs + 0] * this->brightness) >> 8,
+                                        ((int) data[ofs + 1] * this->brightness) >> 8,  
+                                        ((int) data[ofs + 2] * this->brightness) >> 8));
 #else
     this->pixels->setPixelColor(i,
         pixels->Color(((int) data[ofs + 0] * this->brightness) >> 8,
@@ -653,6 +662,8 @@ void LEDFunctionsClass::show()
   this->inprogress=true;
 #ifdef FASTLED
   FastLED.show();
+#elif defined(NEOPIXELBUS)
+  this->strip->Show();
 #else
   this->pixels->show();
 #endif

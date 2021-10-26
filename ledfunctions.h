@@ -18,10 +18,15 @@
 #ifndef _LEDFUNCTIONS_H_
 #define _LEDFUNCTIONS_H_
 
-#define FASTLED 
+
+// #define FASTLED
+#define NEOPIXELBUS 
 
 #ifdef FASTLED
+#define FASTLED_INTERRUPT_RETRY_COUNT 1
 #include <FastLED.h> // FastLED
+#elif defined(NEOPIXELBUS)
+#include <NeoPixelBus.h>
 #else
 #include <Adafruit_NeoPixel.h>
 #endif
@@ -83,6 +88,9 @@ private:
 	uint8_t targetValues[NUM_PIXELS * 3];
 #ifdef FASTLED
   CRGB leds[NUM_PIXELS]; // FastLed
+#elif defined(NEOPIXELBUS)
+  NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod> *strip = NULL;
+  // NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> *strip = NULL;
 #else
 	Adafruit_NeoPixel *pixels = NULL;
 #endif

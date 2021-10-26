@@ -114,6 +114,20 @@ void WebServerClass::begin()
 #endif
 
 	this->server->onNotFound(std::bind(&WebServerClass::handleNotFound, this));
+
+  // Generic code which passess all webrequeststs.
+  this->server->addHook([](const String & method, const String & url, WiFiClient * client, ESP8266WebServer::ContentTypeFunction contentType) {
+    /* (void)method;      // GET, PUT, ...
+    (void)url;         // example: /root/myfile.html
+    (void)client;      // the webserver tcp client connection
+    (void)contentType; // contentType(".html") => "text/html" */
+
+    Serial.printf("%s called\n\r",url.c_str());
+    WebServer.lastAction=millis();
+    
+    return ESP8266WebServer::CLIENT_REQUEST_CAN_CONTINUE;
+  });
+ 
 	this->server->begin();
 }
 
@@ -262,7 +276,6 @@ void WebServerClass::handleResetWifiCredentials()
 extern int h, m;
 void WebServerClass::handleM()
 {
-  Serial.println("Increase one minute");
 	if(++m>59) m = 0;
 	this->server->send(200, "text/plain", "OK");
 }
@@ -277,7 +290,6 @@ void WebServerClass::handleM()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleH()
 {
-  Serial.println("Increase one hour");
 	if(++h>23) h = 0;
 	this->server->send(200, "text/plain", "OK");
 }
@@ -292,7 +304,6 @@ void WebServerClass::handleH()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleR()
 {
-  Serial.println("Displaymode red");
 	LED.setMode(DisplayMode::red);
 	this->server->send(200, "text/plain", "OK");
 }
@@ -307,7 +318,6 @@ void WebServerClass::handleR()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleG()
 {
-  Serial.println("Displaymode green");
 	LED.setMode(DisplayMode::green);
 	this->server->send(200, "text/plain", "OK");
 }
@@ -322,7 +332,6 @@ void WebServerClass::handleG()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleB()
 {
-  Serial.println("Displaymode Blue");
 	LED.setMode(DisplayMode::blue);
 	this->server->send(200, "text/plain", "OK");
 }
@@ -337,10 +346,9 @@ void WebServerClass::handleB()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetBrightness()
 {
-    Serial.println("GetBrightness");
-    char buf[5];
-    sprintf(buf,"%d",Brightness.brightnessOverride);
-    this->server->send(200, "text/plain", buf);
+  char buf[5];
+  sprintf(buf,"%d",Brightness.brightnessOverride);
+  this->server->send(200, "text/plain", buf);
 }
 
 
@@ -392,7 +400,6 @@ void WebServerClass::handleSetNightMode()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetNightMode()
 {
-  Serial.println("GetNightMode");
   if(Config.nightmode) this->server->send(200, "text/plain", "1");
   else this->server->send(200, "text/plain", "0");
 }
@@ -401,7 +408,6 @@ void WebServerClass::handleGetNightMode()
 
 void WebServerClass::handleDebug()
 {
-  Serial.println("Debug");
 	if(this->server->hasArg("led") &&
 			   this->server->hasArg("r") &&
 			   this->server->hasArg("g") &&
@@ -442,7 +448,6 @@ void WebServerClass::handleDebug()
 
 void WebServerClass::handleGetADC()
 {
-  Serial.println("GetADC");
   
 	int __attribute__ ((unused)) temp = Brightness.value(); // to trigger A/D conversion
 
@@ -461,7 +466,6 @@ void WebServerClass::handleGetADC()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSetTimeZone()
 {
-  Serial.println("SetTimeZone");	
   int newTimeZone = -999;
 	if(this->server->hasArg("value"))
 	{
@@ -490,7 +494,6 @@ void WebServerClass::handleSetTimeZone()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetTimeZone()
 {
-  Serial.println("GetTimeZone");
 
   char buf[3];
   sprintf(buf,"%u",Config.timeZone);
@@ -508,7 +511,6 @@ void WebServerClass::handleGetTimeZone()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSetMode()
 {
-  Serial.println("SetMode");
 	DisplayMode mode = DisplayMode::invalid;
 
 	if(this->server->hasArg("value"))
@@ -544,7 +546,6 @@ void WebServerClass::handleSetMode()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetMode()
 {
-  Serial.println("GetMode");
 	char mode[5] = "";
 	switch(Config.defaultMode)
 	{
@@ -575,7 +576,6 @@ void WebServerClass::handleGetMode()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleNotFound()
 {
-  Serial.println("HandleNotFound");
 
 	// first, try to serve the requested file from flash
 	if (!serveFile(this->server->uri().c_str()))
@@ -605,7 +605,6 @@ void WebServerClass::handleNotFound()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetNtpServer()
 {
-  Serial.println("GetNTPServer");
 
   char NTPServer[20];
   sprintf(NTPServer,"%u.%u.%u.%u",Config.ntpserver[0],Config.ntpserver[1],Config.ntpserver[2],Config.ntpserver[3]);
@@ -624,7 +623,6 @@ void WebServerClass::handleGetNtpServer()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSetNtpServer()
 {
-  Serial.println("SetNTPServer");
 	if (this->server->hasArg("ip"))
 	{
 		IPAddress ip;
@@ -651,7 +649,6 @@ void WebServerClass::handleSetNtpServer()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleInfo()
 {
-  Serial.println("GetInfo");
 	StaticJsonDocument<512> json;
 	char buf[512];
 	json["heap"] = ESP.getFreeHeap();
@@ -698,6 +695,7 @@ void WebServerClass::extractColor(char argName[], palette_entry& result)
 {
 	char c[3];
 
+
 	if (this->server->hasArg(argName) && this->server->arg(argName).length() == 6)
 	{
 		String color = this->server->arg(argName);
@@ -722,8 +720,7 @@ void WebServerClass::extractColor(char argName[], palette_entry& result)
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSetColor()
 {
-  Serial.println("SetColor");
-	this->extractColor("fg", Config.fg);
+  this->extractColor("fg", Config.fg);
 	this->extractColor("bg", Config.bg);
 	this->extractColor("s", Config.s);
 	this->server->send(200, "text/plain", "OK");
@@ -740,7 +737,6 @@ void WebServerClass::handleSetColor()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSaveConfig()
 {
-  Serial.println("SaveConfig");
 	Config.save();
 	this->server->send(200, "text/plain", "OK");
 }
@@ -755,7 +751,6 @@ void WebServerClass::handleSaveConfig()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleLoadConfig()
 {
-  Serial.println("LoadConfig");
 	Config.load();
 	this->server->send(200, "text/plain", "OK");
 }
@@ -770,7 +765,6 @@ void WebServerClass::handleLoadConfig()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSetHeartbeat()
 {
-  Serial.println("SetHeartBeat");
 	Config.heartbeat = (this->server->hasArg("value") && this->server->arg("value") == "1");
 	Config.save();
 	this->server->send(200, "text/plain", "OK");
@@ -786,7 +780,6 @@ void WebServerClass::handleSetHeartbeat()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetHeartbeat()
 {
-  Serial.println("GetHeartBeat");
 	if(Config.heartbeat) this->server->send(200, "text/plain", "1");
 	else this->server->send(200, "text/plain", "0");
 }
@@ -802,8 +795,6 @@ void WebServerClass::handleGetHeartbeat()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetColors()
 {
-  Serial.println("GetColors");
-
   char message[50];
   sprintf(message,"%u,%u,%u,%u,%u,%u,%u,%u,%u",Config.bg.r,Config.bg.g,Config.bg.b,
                                                Config.fg.r,Config.fg.g,Config.fg.b,
@@ -821,7 +812,6 @@ void WebServerClass::handleGetColors()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetAlarms()
 {
-  Serial.println("GetAlarms");
   char alarmmode[10];
   char message[256]="";
 
@@ -863,7 +853,6 @@ void WebServerClass::handleGetAlarms()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSetAlarm()
 {
-  Serial.println("SetAlarm");
   if (this->server->hasArg("number")) {
     
     int i = this->server->arg("number").toInt();
@@ -916,7 +905,6 @@ void WebServerClass::handleSetAlarm()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetConfig()
 {
-  Serial.println("GetConfig");
 
   StaticJsonDocument<1024> json;
   char buf[1024];
@@ -1006,7 +994,6 @@ void WebServerClass::handleGetConfig()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleShowCrashLog()
 {
-  Serial.println("ShowCrashLog");
   char buffer[2048]="";
   SaveCrash.print(buffer,sizeof(buffer));
   this->server->send(200, "text/plain", buffer);
@@ -1023,7 +1010,6 @@ void WebServerClass::handleShowCrashLog()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleClearCrashLog()
 {
-  Serial.println("ClearCrashLog");
   SaveCrash.clear();
   this->server->send(200, "text/plain", "OK");
 }
