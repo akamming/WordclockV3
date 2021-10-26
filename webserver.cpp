@@ -943,8 +943,8 @@ void WebServerClass::handleGetConfig()
 
   json["displaymode"] =  displaymode;
   json["timezone"] = Config.timeZone;
-  json["nightmode"] = Config.nightmode ? "\"on\"" : "\"off\"";
-  json["heartbeat"] = (Config.heartbeat==1) ? "\"on\"" : "\"off\"";
+  json["nightmode"] = Config.nightmode ? "on" : "off";
+  json["heartbeat"] = (Config.heartbeat==1) ? "on" : "off";
   char NTPServer[20];
   sprintf(NTPServer,"%u.%u.%u.%u",Config.ntpserver[0],Config.ntpserver[1],Config.ntpserver[2],Config.ntpserver[3]);
 
@@ -952,10 +952,10 @@ void WebServerClass::handleGetConfig()
   json["Brightness"] = Brightness.brightnessOverride;
 
   
+  JsonArray Alarm = json.createNestedArray("Alarm");
   for (int i=0;i<5;i++) {
     String alarmmode;
   
-    JsonArray Alarm = json.createNestedArray("Alarm");
     switch(Config.alarm[i].mode)
     {
     case DisplayMode::matrix:
@@ -976,7 +976,7 @@ void WebServerClass::handleGetConfig()
     alarmobject["h"]=String(Config.alarm[i].h);  
     alarmobject["m"]=String(Config.alarm[i].m);  
     alarmobject["mode"]=alarmmode;  
-    alarmobject["enabled"]=Config.alarm[i].enabled ? "\"on\"" : "\"off\"";  
+    alarmobject["enabled"]=Config.alarm[i].enabled ? "on" : "off";  
 
   }
   serializeJson(json,buf);
