@@ -143,7 +143,6 @@
             <option>UTC+14:00</option>
         </select><br /><br />
 
-        <label><input type="checkbox" name="heartbeat" id="heartbeat" onchange="heartbeatEnableChanged()">Hartslag</label><br /><br />
         NTP Server
         <input type="text" class="ntp_input" id="ntpserver" value="wordt geladen..." onClick="this.setSelectionRange(0, this.value.length)">
         <div class="buttondiv">
@@ -154,6 +153,13 @@
 
 
     <div class="outer_frame">
+        <p>Beheer</p>
+        <div class="buttondiv">
+            <button class="colorbutton" onclick="reset()">Herstarten</button>
+            <button class="colorbutton" onclick="resetWifiCredentials()">reset WiFi configuratie</button>
+            <button class="colorbutton" onclick="factoryReset()">herstel fabriekinstellingen</button>
+            <label><input type="checkbox" name="heartbeat" id="heartbeat" onchange="heartbeatEnableChanged()">Hartslag</label><br /><br />
+        </div>
     </div>
 
     <script>
@@ -397,6 +403,28 @@
         xhttp.open("GET", "http://" + location.hostname + "/setntpserver?ip=" + server, true);
         xhttp.send();
         }
+
+        function reset()
+        {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "http://" + location.hostname + "/reset", true);
+        xhttp.send();
+        }
+
+        function resetWifiCredentials()
+        {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "http://" + location.hostname + "/resetwificredentials", true);
+        xhttp.send();
+        }
+
+        function factoryReset()
+        {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "http://" + location.hostname + "/factoryreset", true);
+        xhttp.send();
+        }
+
 
         function loadTimeZone()
         {
