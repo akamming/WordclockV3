@@ -107,6 +107,8 @@ void WebServerClass::begin()
   this->server->on("/getconfig", std::bind(&WebServerClass::handleGetConfig, this));
   this->server->on("/getalarms", std::bind(&WebServerClass::handleGetAlarms, this));
   this->server->on("/setalarm", std::bind(&WebServerClass::handleSetAlarm, this));
+  this->server->on("/gethostname", std::bind(&WebServerClass::handleGetHostname, this));
+  this->server->on("/sethostname", std::bind(&WebServerClass::handleSetHostname, this));
   
 #ifdef DEBUG
   this->server->on("/showcrashlog", std::bind(&WebServerClass::handleShowCrashLog, this));
@@ -665,6 +667,7 @@ void WebServerClass::handleInfo()
 	json["resetinfo"] = ESP.getResetInfo();
   json["freeheap"] = ESP.getFreeHeap();
   json["configsize"] = Config.Configsize();
+  json["hostname"] = Config.hostname;
 
   int milliseconds  = millis();
   long seconds=milliseconds/1000;
@@ -892,6 +895,41 @@ void WebServerClass::handleSetAlarm()
 
   Config.saveDelayed();
 }
+
+//---------------------------------------------------------------------------------------
+// handleGetHostname
+//
+// Outputs the currently active hostname
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleGetHostname()
+{
+    this->server->send(200, "text/plain", Config.hostname); 
+}
+
+//---------------------------------------------------------------------------------------
+// handleSetHostname
+//
+// Sets the currently active hostname
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleSetHostname()
+{
+  if(this->server->hasArg("value"))
+  {
+    strncpy(Config.hostname,this->server->arg("value").c_str(),25);
+    Config.save();
+    ESP.reset();
+    this->server->send(200, "text/plain", Config.hostname);
+  } else {
+    this->server->send(200, "text/plain", "invalid arg"); 
+  }
+}
+
 
 
 //---------------------------------------------------------------------------------------

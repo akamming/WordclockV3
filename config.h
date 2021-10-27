@@ -58,7 +58,8 @@ typedef struct _config_struct
 	uint32_t timeZone;
   uint32_t brightnessOverride;
   bool nightmode;
-  t_alarm alarm[10];
+  t_alarm alarm[5];
+  char hostname[25];
 } config_struct;
 
 #define EEPROM_SIZE 512
@@ -96,7 +97,9 @@ public:
 	int delayedWriteTimer = 0;
 	bool delayedWriteFlag = false;
 
-  t_alarm alarm[10];
+  t_alarm alarm[5];
+
+  char hostname[25];
 
 private:
 	// copy of EEPROM content

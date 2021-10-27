@@ -141,12 +141,15 @@
             <option>UTC+12:00</option>
             <option>UTC+13:00</option>
             <option>UTC+14:00</option>
-        </select><br /><br />
-
-        NTP Server
-        <input type="text" class="ntp_input" id="ntpserver" value="wordt geladen..." onClick="this.setSelectionRange(0, this.value.length)">
+        </select>
+        <br /><br />
+        Hostname
+        <input type="text" class="hn_input" id="hostname" value="wordt geladen..." onClick="this.setSelectionRange(0, this.value.length)">
+        <br /><br />
+        NTPserver
+        <input type="text" class="ntpinput" id="ntpserver" value="wordt geladen..." onClick="this.setSelectionRange(0, this.value.length)"><br /><br />
         <div class="buttondiv">
-            <button class="colorbutton" onclick="saveNtpServer()">Opslaan</button>
+            <button class="colorbutton" onclick="saveSettings()">Opslaan</button>
         </div>
     </div>
 
@@ -337,6 +340,22 @@
         xhttp.send();
         }
 
+        function loadHostname()
+        {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function()
+        {
+        if(xhttp.readyState == 4 && xhttp.status == 200)
+        {
+        console.log("received " + xhttp.responseText);
+        document.getElementById('hostname').value = xhttp.responseText;
+        }
+        };
+        xhttp.open("GET", "http://" + location.hostname + "/gethostname", true);
+        xhttp.send();
+        }
+
+
         function sendColorTimer()
         {
         var update = false;
@@ -390,9 +409,10 @@
         return true;
         }
 
-        function saveNtpServer()
+        function saveSettings()
         {
         var server = document.getElementById('ntpserver').value;
+        var hostname = document.getElementById('hostname').value;
         if(!isValidIP(server))
         {
         alert("Ongeldig IP Adres!");
@@ -402,6 +422,12 @@
         var xhttp = new XMLHttpRequest();
         xhttp.open("GET", "http://" + location.hostname + "/setntpserver?ip=" + server, true);
         xhttp.send();
+
+        var xhttp2 = new XMLHttpRequest();
+        xhttp2.open("GET", "http://" + location.hostname + "/sethostname?value=" + hostname, true);
+        xhttp2.send();
+
+
         }
 
         function reset()
@@ -569,6 +595,7 @@
         {
         loadColors();
         loadNtpServer();
+        loadHostname();
         loadMode();
         loadHeartbeat();
         loadNightMode();

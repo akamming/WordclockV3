@@ -259,7 +259,7 @@ void setup()
   // WiFi.persistent(true);
 	WiFiManager wifiManager;
 	wifiManager.setAPCallback(configModeCallback);
-	if (!wifiManager.autoConnect("WordClock"))
+  if (!wifiManager.autoConnect(Config.hostname))
 	{
 		Serial.println("failed to connect, timeout");
 		delay(1000);
@@ -274,8 +274,8 @@ void setup()
 	// OTA update
 	Serial.println("Initializing OTA");
 	ArduinoOTA.setPort(8266);
-	ArduinoOTA.setHostname("WordClock" );
-	ArduinoOTA.setPassword("WordClock");
+	ArduinoOTA.setHostname(Config.hostname);
+	// ArduinoOTA.setPassword("WordClock");
 	ArduinoOTA.onStart([]()
 	{
 		LED.setMode(DisplayMode::update);

@@ -120,8 +120,10 @@ void ConfigClass::save()
 	for (int i = 0; i < 4; i++)
 		this->config->ntpserver[i] = this->ntpserver[i];
   this->config->brightnessOverride=Brightness.brightnessOverride;
-  for (int i=0; i<10;i++)
+  for (int i=0; i<5;i++)
     this->config->alarm[i]=this->alarm[i];
+
+  strncpy(this->config->hostname,this->hostname,25);
 
 	for (int i = 0; i < EEPROM_SIZE; i++)
 		EEPROM.write(i, this->eeprom_data[i]);
@@ -178,7 +180,7 @@ void ConfigClass::reset()
 	this->ntpserver[3] = this->config->ntpserver[3];
 
   // reset all alarms
-  for (int i=0;i<10;i++) {
+  for (int i=0;i<5;i++) {
     this->alarm[i].h=0;
     this->alarm[i].m=0;
     this->alarm[i].mode=DisplayMode::plasma;
@@ -191,6 +193,8 @@ void ConfigClass::reset()
   this->alarm[2]={ 21, 00, DisplayMode::fire, false};
   this->alarm[3]={ 22, 00, DisplayMode::heart, false};
   this->alarm[4]={ 23, 00, DisplayMode::stars, false};
+
+  strcpy(this->hostname,"WordClock");
 
 }
 
@@ -226,7 +230,8 @@ void ConfigClass::load()
 		this->ntpserver[i] = this->config->ntpserver[i];
   Brightness.brightnessOverride=this->config->brightnessOverride;
   
-  for (int i=0; i<10;i++)
+  for (int i=0; i<5;i++)
     this->alarm[i]=this->config->alarm[i];
   
+  strncpy(this->hostname,this->config->hostname,25);
 }
