@@ -659,7 +659,6 @@ void LEDFunctionsClass::show()
 #endif
     ofs += 3;
 	}
-  this->inprogress=true;
 #ifdef FASTLED
   FastLED.show();
 #elif defined(NEOPIXELBUS)
@@ -667,7 +666,6 @@ void LEDFunctionsClass::show()
 #else
   this->pixels->show();
 #endif
-  this->inprogress=false;
 }
 
 //---------------------------------------------------------------------------------------

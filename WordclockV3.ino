@@ -89,9 +89,6 @@ unsigned long NextTick = 0;
 //---------------------------------------------------------------------------------------
 void timerCallback()
 {
-  if (LED.inprogress){
-    Serial.println("timer called during pixel show");
-  }
 	// update time variables
 	if (!timeVarLock)
 	{

@@ -138,8 +138,6 @@ void NtpClass::begin(IPAddress ip, TNtpCallback callback, int timezone, bool DST
 //---------------------------------------------------------------------------------------
 void NtpClass::tickerFunction()
 {
-  if (LED.inprogress) Serial.println("NTP Ticker called during pixel-Show");
-  
 	// increment timer variable
 	this->timer += TIMER_RESOLUTION;
 
