@@ -31,7 +31,6 @@ public:
 	virtual ~WebServerClass();
 	void begin();
 	void process();
-  long lastAction=-10000; // when we start assume last action was a long time ago
 
 private:
 	ESP8266WebServer *server = NULL;

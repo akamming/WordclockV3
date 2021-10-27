@@ -123,7 +123,6 @@ void WebServerClass::begin()
     (void)contentType; // contentType(".html") => "text/html" */
 
     Serial.printf("%s called\n\r",url.c_str());
-    WebServer.lastAction=millis();
     
     return ESP8266WebServer::CLIENT_REQUEST_CAN_CONTINUE;
   });

@@ -22,7 +22,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#include <Pinger.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <ArduinoOTA.h>
@@ -39,14 +38,6 @@
 #include "config.h"
 #include "osapi.h"
 
-// needed for pinger.h
-extern "C"
-{
-  #include <lwip/icmp.h> // needed for icmp packet definitions
-}
-
-// Set global to avoid object removing after setup() routine
-Pinger pinger;
 
 #define DEBUG(...) Serial.printf(__VA_ARGS__);
 
@@ -67,9 +58,6 @@ int OTA_in_progress = 0;
 #define TIMER_RESOLUTION 100
 #define HOURGLASS_ANIMATION_PERIOD 100
 #define TICKTIME 20 // no of millisecs between clock display updates
-#define PINGTIME 5000  // no millisecs between router pings
-#define MAXPINGERRORS 5 // Reset ESP after this number of consecutive ping failures (every succesful ping counter = reset)
-#define WEBSERVERTIMEOUT 0000 // no of msec to wait after last Webserver action to start updating the LED's again (prevent timer issues)
 
 Ticker timer;
 int h = 0;
@@ -90,9 +78,6 @@ int updateCountdown = 0;
 bool NTPTimeAcquired=false;
 
 unsigned long NextTick = 0;
-unsigned long NextPing = 0;
-int PingErrorCount = 0; // remember no errors after last succesful ping
-bool NetworkConnectionLost = false;
 
 //---------------------------------------------------------------------------------------
 // timerCallback
@@ -325,35 +310,6 @@ void setup()
 		else if (error == OTA_END_ERROR) Serial.println("End Failed");
 	});
 	ArduinoOTA.begin();
-
-  // Setup Pingercallback
-  pinger.OnReceive([](const PingerResponse& response)
-  {
-    if (response.ReceivedResponse)
-    {
-      Serial.printf("Reply from %s: bytes=%d time=%lums TTL=%d\n\r",response.DestIPAddress.toString().c_str(),response.EchoMessageSize - sizeof(struct icmp_echo_hdr),response.ResponseTime,response.TimeToLive);
-
-      if (PingErrorCount>0) {
-        Serial.println("Resetting Ping Error Count");
-        PingErrorCount=0;  // Reset Ping Error Count every succesful ping
-      }
-    }
-    else
-    {
-      Serial.println("Ping Request to router timed out.");
-      PingErrorCount++;
-
-      // Check if we have to reset
-      if (PingErrorCount>MAXPINGERRORS) {
-        Serial.printf ("Network connection lost: %d Ping Errors occurred after last succesful ping, restarting ESP\n\r",PingErrorCount);
-        NetworkConnectionLost = true;
-      }
-    }
-
-    // Return true to continue the ping sequence.
-    // If current event returns false, the ping sequence is interrupted.
-    return true;
-  });
   
   // NTP
 	Serial.println("Starting NTP module");
@@ -369,9 +325,8 @@ void setup()
 	startup = false;
 	Serial.println("Startup complete.");
 
-  // Set NextTick and NextPing to now
+  // Set NextTick to now
   NextTick=millis();
-  NextPing=millis();
 }
 
 //-----------------------------------------------------------------------------------
@@ -393,29 +348,11 @@ void loop()
     Config.save();
   }
 
-  // only Ping every PINGTIME mseconds
-  if (millis()>=NextPing and OTA_in_progress==0) {
-    NextPing=millis()+PINGTIME;
-
-    // Ping default gateway
-    // Serial.printf("Pinging default gateway with IP %s\n\r",WiFi.gatewayIP().toString().c_str());
-    // pinger.Ping(WiFi.gatewayIP(),1);
-  }
-  
   // Only process LED functions every TICKTIME mseconds 
   if (millis()>=NextTick) 
   {
     // increase Next Tick
-    NextTick = millis()+TICKTIME;
-
-    // if (NetworkConnectionLost) {
-      // Serial.println("Lost the network, reboot by causing exception (so startup hourglass is not shown)");
-      // int *test;
-      // *test=5;
-      // Serial.println("test = "+String(*test));
-      // ESP.reset();
-  	// }
-  
+    NextTick = millis()+TICKTIME;  
   
   	// do not continue if OTA update is in progress
   	// OTA callbacks drive the LED display mode and OTA progress
@@ -475,10 +412,7 @@ void loop()
       LED.setTime(h, m, s, ms);
       if (not RecoverFromException) 
       {
-        if ((long) millis()>(WebServer.lastAction+WEBSERVERTIMEOUT)) 
-        {
-          LED.process();
-        }
+        LED.process();
       }
         
     	// output current time if seconds value has changed
@@ -507,7 +441,9 @@ void loop()
           digitalWrite(LED_BUILTIN, HIGH); 
     	}
     
-      
+
+#ifndef NEOPIXELBUS
+      // does not work with NEOPIXELBUS, due to DMA method conflicting with incoming Serial
     	if (Serial.available())
     	{
     		int incoming = Serial.read();
@@ -516,11 +452,6 @@ void loop()
     		case 'i':
     			Serial.println("WordClock ESP8266 ready.");
     			break;
-    
-        case 'L':
-          Serial.println("Simulate lost network connection");
-          NetworkConnectionLost=true;
-          break;
     
     		case 'X':
     			// WiFi.disconnect();
@@ -553,6 +484,8 @@ void loop()
     			break;
     		}
     	}
+#endif
+
     }
   } 
 }
