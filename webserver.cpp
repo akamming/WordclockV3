@@ -667,7 +667,6 @@ void WebServerClass::handleInfo()
 	json["resetinfo"] = ESP.getResetInfo();
   json["freeheap"] = ESP.getFreeHeap();
   json["configsize"] = Config.Configsize();
-  json["hostname"] = Config.hostname;
 
   int milliseconds  = millis();
   long seconds=milliseconds/1000;
@@ -987,6 +986,7 @@ void WebServerClass::handleGetConfig()
 
   json["NTPServer"] = NTPServer;
   json["Brightness"] = Brightness.brightnessOverride;
+  json["hostname"] = Config.hostname;
 
   
   JsonArray Alarm = json.createNestedArray("Alarm");
