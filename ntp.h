@@ -37,6 +37,7 @@ public:
 	void setServer(IPAddress address);
 	IPAddress getServer();
 	void setTimeZone(int timeZone);
+  void process();
 
 	// public members
 	bool syncInProgress = false;
@@ -48,16 +49,13 @@ private:
 	};
 
 	int lastSunday(int year, int month, int lastDayInMonth);
-	static void tickerFunctionWrapper(NtpClass *obj);
 	int dayOfWeek(int y, int m, int d);
 	void decodeTime(long long t);
-	void tickerFunction();
 	bool isDSTactive();
 	void sendPacket();
 	void parse();
 
 	IPAddress timeServer;
-	Ticker ticker;
 	WiFiUDP udp;
 	NtpState state = NtpState::idle;
 	TNtpCallback _callback = NULL;
@@ -73,9 +71,9 @@ private:
 	int ms = 0;
 	int tz = 0;
 	bool useDST = false;
+  unsigned long previousMillis = 0;
 };
 
 extern NtpClass NTP;
 
 #endif
-

@@ -71,6 +71,15 @@ public:
 	static const int height = 10;
 	uint8_t currentValues[NUM_PIXELS * 3];
 
+#ifdef FASTLED
+  CRGB leds[NUM_PIXELS]; // FastLed
+#elif defined(NEOPIXELBUS)
+  NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod> *strip = NULL;
+  // NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> *strip = NULL;
+#else
+  Adafruit_NeoPixel *pixels = NULL;
+#endif
+
 private:
 	static const std::vector<leds_template_t> hoursTemplate;
 	static const std::vector<leds_template_t> minutesTemplate;
@@ -85,14 +94,6 @@ private:
 	std::vector<MatrixObject> matrix;
 	std::vector<StarObject> stars;
 	uint8_t targetValues[NUM_PIXELS * 3];
-#ifdef FASTLED
-  CRGB leds[NUM_PIXELS]; // FastLed
-#elif defined(NEOPIXELBUS)
-  NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod> *strip = NULL;
-  // NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> *strip = NULL;
-#else
-	Adafruit_NeoPixel *pixels = NULL;
-#endif
   
 	int heartBrightness = 0;
 	int heartState = 0;

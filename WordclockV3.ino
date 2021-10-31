@@ -64,6 +64,8 @@ int h = 0;
 int m = 0;
 int s = 0;
 int ms = 0;
+unsigned long CurrentTime=0;
+
 int lastSecond = -1;
 bool timeVarLock = false;
 bool startup = true;
@@ -78,6 +80,20 @@ int updateCountdown = 0;
 bool NTPTimeAcquired=false;
 
 unsigned long NextTick = 0;
+
+//---------------------------------------------------------------------------------------
+// timestamp()
+//
+// converts h,m,s,ms to usigned long with no of msec sinds 0:00:00.000
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+unsigned long timestamp(int _h, int _m, int _s, int _ms)
+{
+  return (_h*3600 + _m*60 + _s) * 1000 + _ms;
+}
+
 
 //---------------------------------------------------------------------------------------
 // timerCallback
@@ -107,6 +123,7 @@ void timerCallback()
 				}
 			}
 		}
+    CurrentTime=timestamp(h,m,s,ms);
 		timeVarLock = false;
 	}
 
@@ -169,6 +186,7 @@ void NtpCallback(uint8_t _h, uint8_t _m, uint8_t _s, uint8_t _ms)
 	m = _m;
 	s = _s;
 	ms = _ms;
+  CurrentTime=timestamp(h,m,s,ms);
 	timeVarLock = false;
 }
 
@@ -293,7 +311,7 @@ void setup()
 		LED.setMode(DisplayMode::update);
 		Config.updateProgress = (progress) * 110 / total;
     LED.process();
-		Serial.printf("OTA Progress: %u%%\r\n", (progress / (total / 100)));
+    Serial.printf("OTA Progress: %u%%\r\n", (progress / (total / 100)));
 	});
 	ArduinoOTA.onError([](ota_error_t error)
 	{
@@ -331,6 +349,9 @@ void setup()
 //-----------------------------------------------------------------------------------
 void loop()
 {
+  // handle NTP
+  NTP.process();
+  
   // do OTA update stuff
   ArduinoOTA.handle();
 
@@ -410,6 +431,13 @@ void loop()
       if (not RecoverFromException) 
       {
         LED.process();
+#ifdef NEOPIXELBUS
+        // Make sure command is finished before new code is executed
+        while (LED.strip->CanShow()==false)
+        {
+          delay(1);
+        }
+#endif
       }
         
     	// output current time if seconds value has changed

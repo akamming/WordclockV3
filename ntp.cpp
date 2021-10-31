@@ -44,20 +44,6 @@
 NtpClass NTP = NtpClass();
 
 //---------------------------------------------------------------------------------------
-// tickerFunctionWrapper
-//
-// Static wrapper which is used as callback function for Ticker and takes supplied
-// argument to call the handler tickerFunction() of instance method
-//
-// -> obj: Instance of class to call the method tickerFunctio() on
-// <- --
-//---------------------------------------------------------------------------------------
-void NtpClass::tickerFunctionWrapper(NtpClass *obj)
-{
-	obj->tickerFunction();
-}
-
-//---------------------------------------------------------------------------------------
 // NtpClass
 //
 // Constructor, sets up a timer to trigger the internal state machine
@@ -67,8 +53,7 @@ void NtpClass::tickerFunctionWrapper(NtpClass *obj)
 //---------------------------------------------------------------------------------------
 NtpClass::NtpClass()
 {
-	this->ticker.attach_ms(TIMER_RESOLUTION, NtpClass::tickerFunctionWrapper,
-			 this);
+  // empty
 }
 
 //---------------------------------------------------------------------------------------
@@ -126,62 +111,66 @@ void NtpClass::begin(IPAddress ip, TNtpCallback callback, int timezone, bool DST
 	Serial.println("NtpClass::begin()"); // Waiting 2 seconds");
 	this->state = NtpState::waitingForReload;
 	this->timer = NTP_RELOAD_INTERVAL; // - 2000;
+  this->previousMillis = 0;
 }
 
 //---------------------------------------------------------------------------------------
-// tickerFunction
+// process
 //
-// Function to be called by the timer, drives the internal state machine
+// Function to be called by the main loop, drives the internal state machine
 //
 // -> --
 // <- --
 //---------------------------------------------------------------------------------------
-void NtpClass::tickerFunction()
+void NtpClass::process()
 {
-	// increment timer variable
-	this->timer += TIMER_RESOLUTION;
+  // increment timer variable
+  this->timer += (unsigned long)(millis()-previousMillis);
+  previousMillis=millis();
 
-	switch (this->state)
-	{
-	case NtpState::startRequest:
-		this->udp.flush(); // clear previously received data
-		this->sendPacket(); // request new time data
-		this->timer = 0;
-		this->state = NtpState::waitingForReply;
-		this->syncInProgress = true;
-		break;
+  switch (this->state)
+  {
+  case NtpState::startRequest:
+    this->udp.flush(); // clear previously received data
+    this->sendPacket(); // request new time data
+    this->timer = 0;
+    this->state = NtpState::waitingForReply;
+    this->syncInProgress = true;
+    break;
 
-	case NtpState::waitingForReply:
-		if (this->timer >= NTP_TIMEOUT)
-		{
-			Serial.println("NtpClass: NTP request timeout");
-			this->state = NtpState::startRequest;
-		}
-		else if (udp.parsePacket() > 0)
-		{
-			Serial.println("NtpClass: Received NTP packet");
-			this->parse();
-			if (this->_callback)
-				this->_callback(this->h, this->m, this->s, this->ms);
-			this->timer = 0;
-			this->state = NtpState::waitingForReload;
-			this->syncInProgress = false;
-		}
-		break;
+  case NtpState::waitingForReply:
+    if (this->timer >= NTP_TIMEOUT)
+    {
+      Serial.println("NtpClass: NTP request timeout ("+String(timer)+")");
+      this->state = NtpState::startRequest;
+    }
+    else if (udp.parsePacket() > 0)
+    {
+      Serial.println("NtpClass: Received NTP packet");
+      this->parse();
+      if (this->_callback)
+        this->_callback(this->h, this->m, this->s, this->ms);
+      this->timer = 0;
+      this->state = NtpState::waitingForReload;
+      this->syncInProgress = false;
+    }
+    break;
 
-	case NtpState::waitingForReload:
-		if (this->timer >= NTP_RELOAD_INTERVAL)
-		{
-			Serial.println("NtpClass: NTP reload timer expired.");
-			this->state = NtpState::startRequest;
-		}
-		break;
+  case NtpState::waitingForReload:
+    if (this->timer >= NTP_RELOAD_INTERVAL)
+    {
+      Serial.println("NtpClass: NTP reload timer expired.");
+      this->state = NtpState::startRequest;
+    }
+    break;
 
-	case NtpState::idle:
-	default:
-		break;
-	}
+  case NtpState::idle:
+  default:
+    break;
+  }
 }
+
+
 
 //---------------------------------------------------------------------------------------
 // dayOfWeek

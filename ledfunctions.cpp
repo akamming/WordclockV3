@@ -19,7 +19,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ledfunctions.h"
-
 //---------------------------------------------------------------------------------------
 #if 1 // variables
 //---------------------------------------------------------------------------------------
@@ -324,7 +323,6 @@ void LEDFunctionsClass::begin(int pin)
   // this->strip = new NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod>(NUM_PIXELS,D6);
   this->strip = new NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod>(NUM_PIXELS);
   this->strip->Begin();
-  this->strip->Show();
 #else
 	this->pixels = new Adafruit_NeoPixel(NUM_PIXELS, pin, NEO_GRB + NEO_KHZ800);
   this->pixels->begin();
@@ -911,7 +909,7 @@ void LEDFunctionsClass::renderPlasma()
     int color;
     double cx, cy, xx, yy;
 
-    _time += 0.05;
+    _time += 0.025;
 
     for (int y=0; y<LEDFunctionsClass::height; y++)
     {
