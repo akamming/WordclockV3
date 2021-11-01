@@ -31,6 +31,10 @@
 #include "EspSaveCrash.h"
 #endif
 
+#define GETCONFIGMESSAGESIZE 768
+#define INFOMESSAGESIZE 512
+
+
 //---------------------------------------------------------------------------------------
 // global instance
 //---------------------------------------------------------------------------------------
@@ -650,8 +654,7 @@ void WebServerClass::handleSetNtpServer()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleInfo()
 {
-	StaticJsonDocument<512> json;
-	char buf[512];
+	DynamicJsonDocument json(512);
 	json["heap"] = ESP.getFreeHeap();
 	json["sketchsize"] = ESP.getSketchSize();
 	json["sketchspace"] = ESP.getFreeSketchSpace();
@@ -680,8 +683,11 @@ void WebServerClass::handleInfo()
   sprintf(buffer, "%i days, %i hours, %i mins, %i seconds, %i milliseconds", days, hrs, mins, secs, msecs);
   json["uptime"] = buffer;
   
-  serializeJson(json,buf);
+
+  char *buf = (char*)malloc(sizeof(char)*INFOMESSAGESIZE+1);
+  serializeJson(json,buf,INFOMESSAGESIZE);
 	this->server->send(200, "application/json", buf);
+  free(buf);
 }
 
 //---------------------------------------------------------------------------------------
@@ -942,8 +948,8 @@ void WebServerClass::handleSetHostname()
 void WebServerClass::handleGetConfig()
 {
 
-  StaticJsonDocument<1024> json;
-  char buf[1024];
+  DynamicJsonDocument json(GETCONFIGMESSAGESIZE);
+
 
   int displaymode = 0;
   switch(Config.defaultMode)
@@ -1016,8 +1022,10 @@ void WebServerClass::handleGetConfig()
     alarmobject["enabled"]=Config.alarm[i].enabled ? "on" : "off";  
 
   }
-  serializeJson(json,buf);
+  char *buf = (char*)malloc(sizeof(char)*GETCONFIGMESSAGESIZE+1);
+  serializeJson(json, buf, GETCONFIGMESSAGESIZE);
   this->server->send(200, "application/json", buf); 
+  free (buf);
 }
 
 #ifdef DEBUG
