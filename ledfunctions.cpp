@@ -616,11 +616,13 @@ void LEDFunctionsClass::fade()
 	for (int i = 0; i < NUM_PIXELS * 3; i++)
 	{
 		delta = this->targetValues[i] - this->currentValues[i];
-		if (delta > 64) this->currentValues[i] += 8;
-		else if (delta > 16) this->currentValues[i] += 4;
+		if (delta > 128) this->currentValues[i] += 32;
+    else if (delta > 64) this->currentValues[i] += 16;
+    else if (delta > 16) this->currentValues[i] += 8;
 		else if (delta > 0) this->currentValues[i]++;
-		else if (delta < -64) this->currentValues[i] -= 8;
-		else if (delta < -16) this->currentValues[i] -= 4;
+    else if (delta < -128) this->currentValues[i] -= 32;
+		else if (delta < -64) this->currentValues[i] -= 16;
+		else if (delta < -16) this->currentValues[i] -= 8;
 		else if (delta < 0) this->currentValues[i]--;
 	}
 }
