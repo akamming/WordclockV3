@@ -64,6 +64,7 @@
             <option>fire</option>
             <option>heart</option>
         </select>
+        <input type="number" value="1" name="a0duration" id="a0duration" min="0" max="60" onchange="alarmChanged(0)" />
         <input type="checkbox" name="a0enabled" id="a0enabled" onchange="alarmChanged(0)">
         <br />
         <input type="time" value="12:00" name="a1time" id="a1time" onchange="alarmChanged(1)" />
@@ -74,6 +75,7 @@
             <option>fire</option>
             <option>heart</option>
         </select>
+        <input type="number" value="1" name="a1duration" id="a1duration" min="0" max="60" onchange="alarmChanged(0)" />
         <input type="checkbox" name="a1enabled" id="a1enabled" onchange="alarmChanged(1)">
         <br />
         <input type="time" value="12:00" name="a2time" id="a2time" onchange="alarmChanged(2)" />
@@ -84,6 +86,7 @@
             <option>fire</option>
             <option>heart</option>
         </select>
+        <input type="number" value="1" name="a2duration" id="a2duration" min="0" max="60" onchange="alarmChanged(0)" />
         <input type="checkbox" name="a2enabled" id="a2enabled" onchange="alarmChanged(2)">
         <br />
         <input type="time" value="12:00" name="a3time" id="a3time" onchange="alarmChanged(3)" />
@@ -94,6 +97,7 @@
             <option>fire</option>
             <option>heart</option>
         </select>
+        <input type="number" value="1" name="a3duration" id="a3duration" min="0" max="60" onchange="alarmChanged(0)" />
         <input type="checkbox" name="a3enabled" id="a3enabled" onchange="alarmChanged(3)">
         <br />
         <input type="time" value="12:00" name="a4time" id="a4time" onchange="alarmChanged(4)" />
@@ -104,6 +108,7 @@
             <option>fire</option>
             <option>heart</option>
         </select>
+        <input type="number" value="1" name="a4duration" id="a4duration" min="0" max="60" onchange="alarmChanged(0)" />
         <input type="checkbox" name="a4enabled" id="a4enabled" onchange="alarmChanged(4)">
         <br />
 
@@ -319,6 +324,9 @@
         newBackground = updateButton('backgroundColorButton', 'Achtergrond', c[0], c[1], c[2]);
         newForeground = updateButton('foregroundColorButton', 'Voorgrond', c[3], c[4], c[5]);
         newSeconds = updateButton('secondsColorButton', 'Seconden', c[6], c[7], c[8]);
+        lastBackground = newBackground;
+        lastForeground = newForeground;
+        lastSeconds = newSeconds;
         }
         };
         xhttp.open("GET", "http://" + location.hostname + "/getcolors", true);
@@ -556,9 +564,10 @@
             var xhttp = new XMLHttpRequest();
             var time = document.getElementById('a'+index.toString()+'time').value;
             var mode = document.getElementById('a'+index.toString()+'mode').value;
+            var duration = document.getElementById('a'+index.toString()+'duration').value;
             var enabled = "off";
             if(document.getElementById('a'+index.toString()+'enabled').checked == true) enabled = "on";
-            xhttp.open("GET", "http://" + location.hostname + "/setalarm?number=" + index.toString() + "&time="+time+"&mode="+mode+"&enabled="+enabled, true);
+            xhttp.open("GET", "http://" + location.hostname + "/setalarm?number=" + index.toString() + "&time="+time+"&mode="+mode+"&enabled="+enabled+"&duration="+duration, true);
             xhttp.send();
         }
 
@@ -573,9 +582,10 @@
                     console.log("received " + xhttp.responseText);
                     var c = xhttp.responseText.split(",");
                     for (let i = 0; i < 5; i++) {
-                        document.getElementById('a'+i.toString()+'time').value = c[i*3];
-                        document.getElementById('a'+i.toString()+'mode').value = c[i*3+1];
-                        if(c[i*3+2] == "on")
+                        document.getElementById('a'+i.toString()+'time').value = c[i*4];
+                        document.getElementById('a'+i.toString()+'duration').value = c[i*4+1];
+                        document.getElementById('a'+i.toString()+'mode').value = c[i*4+2];
+                        if(c[i*3+3] == "on")
                         {
                             document.getElementById('a'+i.toString()+'enabled').checked = true;
                         }

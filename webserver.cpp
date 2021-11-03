@@ -31,8 +31,8 @@
 #include "EspSaveCrash.h"
 #endif
 
-#define GETCONFIGMESSAGESIZE 768
-#define INFOMESSAGESIZE 512
+#define GETCONFIGMESSAGESIZE 1280
+#define INFOMESSAGESIZE 600
 
 
 //---------------------------------------------------------------------------------------
@@ -685,9 +685,9 @@ void WebServerClass::handleInfo()
   
 
   char *buf = (char*)malloc(sizeof(char)*INFOMESSAGESIZE+1);
-  serializeJson(json,buf,INFOMESSAGESIZE);
+  serializeJsonPretty(json,buf,INFOMESSAGESIZE);
 	this->server->send(200, "application/json", buf);
-  free(buf);
+  free(buf); 
 }
 
 //---------------------------------------------------------------------------------------
@@ -843,7 +843,7 @@ void WebServerClass::handleGetAlarms()
 
     // buildup alarmchararray
     char buffer[20];
-    sprintf(buffer,"%02d:%02d,%s,%s",Config.alarm[i].h,Config.alarm[i].m,displaymode,Config.alarm[i].enabled ? "on," : "off,");
+    sprintf(buffer,"%02d:%02d,%d,%s,%s",Config.alarm[i].h,Config.alarm[i].m,Config.alarm[i].duration,displaymode,Config.alarm[i].enabled ? "on," : "off,");
     strcat(message,buffer); 
   }
   this->server->send(200, "text/plain", message);
@@ -872,6 +872,11 @@ void WebServerClass::handleSetAlarm()
       Config.alarm[i].m=this->server->arg("time").substring(index+1,length).toInt();
     }
 
+    if (this->server->hasArg("duration")) {
+      Config.alarm[i].duration=server->arg("duration").toInt();
+    }
+
+    
     if (this->server->hasArg("enabled") && this->server->arg("enabled").equalsIgnoreCase("On")) {
       Config.alarm[i].enabled=true;
     } else {
@@ -1018,12 +1023,13 @@ void WebServerClass::handleGetConfig()
     JsonObject alarmobject = Alarm.createNestedObject();
     alarmobject["h"]=String(Config.alarm[i].h);  
     alarmobject["m"]=String(Config.alarm[i].m);  
+    alarmobject["duration"]=String(Config.alarm[i].duration);  
     alarmobject["mode"]=alarmmode;  
     alarmobject["enabled"]=Config.alarm[i].enabled ? "on" : "off";  
 
   }
   char *buf = (char*)malloc(sizeof(char)*GETCONFIGMESSAGESIZE+1);
-  serializeJson(json, buf, GETCONFIGMESSAGESIZE);
+  serializeJsonPretty(json, buf, GETCONFIGMESSAGESIZE);
   this->server->send(200, "application/json", buf); 
   free (buf);
 }

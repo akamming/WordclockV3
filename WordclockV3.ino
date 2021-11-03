@@ -431,13 +431,13 @@ void loop()
       if (not RecoverFromException) 
       {
         LED.process();
-#ifdef NEOPIXELBUS
+/* #ifdef NEOPIXELBUS
         // Make sure command is finished before new code is executed
         while (LED.strip->CanShow()==false)
         {
           delay(1);
         }
-#endif
+#endif */
       }
         
     	// output current time if seconds value has changed
@@ -457,14 +457,14 @@ void loop()
         int hrs = (seconds/3600) % 24;
         int days = (seconds/(3600*24));
     
-    
-    		DEBUG("%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
+
+    		DEBUG("%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, Free Cont Stack = %i, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
     			  h, m, s, (int)Brightness.avg, (int)(Brightness.avg*100)%100,
-    			  ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getMaxFreeBlockSize(), Brightness.value(),
+    			  ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getMaxFreeBlockSize(), ESP.getFreeContStack(), Brightness.value(),
     			  days,hrs,mins,secs,msecs);
-    	} else {
-          digitalWrite(LED_BUILTIN, HIGH); 
-    	}
+      	} else {
+            digitalWrite(LED_BUILTIN, HIGH); 
+      	}
     
 
 #ifndef NEOPIXELBUS

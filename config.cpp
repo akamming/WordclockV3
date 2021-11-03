@@ -180,19 +180,20 @@ void ConfigClass::reset()
 	this->ntpserver[3] = this->config->ntpserver[3];
 
   // reset all alarms
-  for (int i=0;i<5;i++) {
+  /* for (int i=0;i<5;i++) {
     this->alarm[i].h=0;
     this->alarm[i].m=0;
+    this->alarm[i].duration=1;
     this->alarm[i].mode=DisplayMode::plasma;
     this->alarm[i].enabled=false;
-  }
+  } */
 
   // Default times
-  this->alarm[0]={ 19, 00, DisplayMode::matrix, false};
-  this->alarm[1]={ 20, 00, DisplayMode::plasma, false};
-  this->alarm[2]={ 21, 00, DisplayMode::fire, false};
-  this->alarm[3]={ 22, 00, DisplayMode::heart, false};
-  this->alarm[4]={ 23, 00, DisplayMode::stars, false};
+  this->alarm[0]={ 19, 00, 1, DisplayMode::matrix, false};
+  this->alarm[1]={ 20, 00, 1, DisplayMode::plasma, false};
+  this->alarm[2]={ 21, 00, 1, DisplayMode::fire, false};
+  this->alarm[3]={ 22, 00, 1, DisplayMode::heart, false};
+  this->alarm[4]={ 23, 00, 1, DisplayMode::stars, false};
 
   strcpy(this->hostname,"WordClock");
 

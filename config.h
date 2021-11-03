@@ -40,7 +40,7 @@ typedef struct _palette_entry
 
 typedef struct _alarm
 {
-  uint8_t h,m;
+  uint8_t h,m, duration;
   DisplayMode mode;
   bool enabled;
 } t_alarm;
