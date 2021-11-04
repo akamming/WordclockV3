@@ -349,6 +349,7 @@ void setup()
 //-----------------------------------------------------------------------------------
 void loop()
 {
+  bool AlarmInProgress = false;
   // handle NTP
   NTP.process();
   
@@ -397,7 +398,6 @@ void loop()
     	} else {    
        
         // overrule any of the above in case of configured alarms
-        bool AlarmInProgress = false;
         for (int i=0;i<5;i++)
         {
           if (Config.alarm[i].enabled) {
@@ -479,9 +479,12 @@ void loop()
     			  h, m, s, (int)Brightness.avg, (int)(Brightness.avg*100)%100,
     			  ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getMaxFreeBlockSize(), ESP.getFreeContStack(), Brightness.value(),
     			  days,hrs,mins,secs,msecs);
-      	} else {
-            digitalWrite(LED_BUILTIN, HIGH); 
-      	}
+        if (AlarmInProgress) {
+          DEBUG("Alarm in Progress at %2.2f%%\r\n",LED.AlarmProgress*100); 
+        }
+    	} else {
+          digitalWrite(LED_BUILTIN, HIGH); 
+    	}
     
 
 #ifndef NEOPIXELBUS

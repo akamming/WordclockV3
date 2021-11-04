@@ -108,6 +108,7 @@ private:
   
 
 	void fillBackground(int seconds, int milliseconds, uint8_t *buf);
+  void fillTime(int h, int m, uint8_t *target);
 	void renderRed();
 	void renderGreen();
 	void renderBlue();
@@ -116,6 +117,7 @@ private:
 	void renderFire();
 	void renderPlasma();
   void renderStars();
+  palette_entry blendedColor(palette_entry from_color, palette_entry to_color, float progress);
   void renderWakeup();
 	void renderUpdate();
 	void renderUpdateComplete();

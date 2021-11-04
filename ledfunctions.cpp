@@ -329,6 +329,9 @@ void LEDFunctionsClass::begin(int pin)
 #endif
 }
 
+
+
+
 //---------------------------------------------------------------------------------------
 // process
 //
@@ -711,6 +714,21 @@ void LEDFunctionsClass::fillBackground(int seconds, int milliseconds, uint8_t *b
 	for (int i = 0; i < NUM_PIXELS; i++) buf[i] = (i < pos) ? 2 : 0;
 }
 
+//---------------------------------------------------------------------------------------
+// fillTime
+//
+// Adds words and minutes to buffer), buffer needs to be initialized (e.g. by fillbackground)
+//
+// -> seconds, milliseconds: Time value which the fill process will base on
+//    buf: destination buffer
+// <- --
+//---------------------------------------------------------------------------------------
+void LEDFunctionsClass::fillTime(int h, int m, uint8_t *target)
+{
+  // To be filled, work in progress
+}
+
+
 #endif
 
 //---------------------------------------------------------------------------------------
@@ -989,6 +1007,24 @@ void LEDFunctionsClass::renderStars()
 }
 
 //---------------------------------------------------------------------------------------
+// blendedColor
+//
+// calculates the correct in between color based on progress
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+palette_entry LEDFunctionsClass::blendedColor(palette_entry from_color, palette_entry to_color, float progress)
+{
+  palette_entry resulting_color = { from_color.r + progress*(to_color.r - from_color.r), 
+                                    from_color.g + progress*(to_color.g - from_color.g), 
+                                    from_color.b + progress*(to_color.b - from_color.b) };  
+  return resulting_color;
+}
+
+
+
+//---------------------------------------------------------------------------------------
 // renderWakeup
 //
 // Renders the wakeuplight effect
@@ -999,45 +1035,40 @@ void LEDFunctionsClass::renderStars()
 void LEDFunctionsClass::renderWakeup()
 {
   palette_entry palette[3];
-  uint8_t sun[] = {
-    0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0,
-    1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-    0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
-    0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+  /* uint8_t sun[] = {
     0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0,
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 01 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0,
+    0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+    0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
     1, 1, 1, 1
-  };
+  }; */    // TODO: Code upcoming sun
+  
    uint8_t buf[NUM_PIXELS];
 
-  this->renderTime(buf, this->h, this->m, this->s, this->ms);
+  this->renderTime(buf, this->h, this->m, this->s, this->ms); // Make sure we can still see the time
 
-
-  int Color0[3] = {0, 0, 0}; // At start
-  int Color1[3] = {15, 0, 35}; // at 33%: LEt it be a bit blue/purple
-  int Color2[3] = {150, 50, 2}; // at 66%: LEt it be a bit orange 
-  int Color3[3] = {255, 255, 100}; // at 100%: LEt it be yellow, close to white
+  palette_entry Color0 = {0, 0, 0}; // At start
+  palette_entry Color1 = {15, 0, 35}; // at 33%: LEt it be a bit blue/purple
+  palette_entry Color2 = {150, 10, 10}; // at 66%: LEt it be red
+  palette_entry Color3 = {255, 255, 100}; // at 100%: LEt it be yellow, close to white
   
-  if (this->AlarmProgress<=0.333){
-    float progress=this->AlarmProgress*3;
-    palette[2] = { Color0[0]+(int) (progress*(Color1[0]-Color0[0])), Color0[1]+(int) (progress*(Color1[1]-Color0[1])), Color0[2]+(int) (progress*(Color1[2]-Color0[2]))};
-    Serial.printf("Phase 1, %2.2f procent\r\n",progress);
+  if (this->AlarmProgress<=0.3333){
+    palette[2] = this->blendedColor(Color0,Color1,this->AlarmProgress*3);
   } else if (this->AlarmProgress<=0.666) {
-    float progress=(this->AlarmProgress-0.333)*3;
-    palette[2] = { Color1[0]+(int) (progress*(Color2[0]-Color1[0])), Color1[1]+(int) (progress*(Color2[1]-Color1[1])), Color1[2]+(int) (progress*(Color2[2]-Color1[2]))};
-    Serial.printf("Phase 2, %2.2f procent\r\n",progress);
+    palette[2] = this->blendedColor(Color1,Color2,(this->AlarmProgress-0.3333)*3);
   } else {
-    float progress=(this->AlarmProgress-0.666)*3;
-    palette[2] = { Color2[0]+(int) (progress*(Color3[0]-Color2[0])), Color2[1]+(int) (progress*(Color3[1]-Color2[1])), Color2[2]+(int) (progress*(Color3[2]-Color2[2]))};
-    Serial.printf("Phase 3, %2.2f procent\r\n",progress);
+    palette[2] = this->blendedColor(Color2,Color3,(this->AlarmProgress-0.6666)*3);
   }
-  palette[0]=palette[2];
-  palette[1]={ 0,0,2 };
-  
+
+  // set the other colors
+  palette[0]=palette[2]; // secondscolor=backgroundcolor=wakeupcolor 
+  palette[1]={ 0,0, 2*(255/this->brightness) }; // time words in nightmode color
   
   this->set(buf, palette, true);
 }
