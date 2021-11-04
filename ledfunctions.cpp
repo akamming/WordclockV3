@@ -405,6 +405,10 @@ void LEDFunctionsClass::process()
 	case DisplayMode::plasma:
 		this->renderPlasma();
 		break;
+  case DisplayMode::wakeup:
+    this->renderWakeup();
+    break;
+
 	case DisplayMode::fade:
 		this->renderTime(buf, this->h, this->m, this->s, this->ms);
 		this->set(buf, palette, false);
@@ -983,6 +987,61 @@ void LEDFunctionsClass::renderStars()
 
 	for(StarObject &s : this->stars) s.render(this->currentValues, this->stars);
 }
+
+//---------------------------------------------------------------------------------------
+// renderWakeup
+//
+// Renders the wakeuplight effect
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void LEDFunctionsClass::renderWakeup()
+{
+  palette_entry palette[3];
+  uint8_t sun[] = {
+    0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0,
+    1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+    0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+    0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 1, 1, 1
+  };
+   uint8_t buf[NUM_PIXELS];
+
+  this->renderTime(buf, this->h, this->m, this->s, this->ms);
+
+
+  int Color0[3] = {0, 0, 0}; // At start
+  int Color1[3] = {15, 0, 35}; // at 33%: LEt it be a bit blue/purple
+  int Color2[3] = {150, 50, 2}; // at 66%: LEt it be a bit orange 
+  int Color3[3] = {255, 255, 100}; // at 100%: LEt it be yellow, close to white
+  
+  if (this->AlarmProgress<=0.333){
+    float progress=this->AlarmProgress*3;
+    palette[2] = { Color0[0]+(int) (progress*(Color1[0]-Color0[0])), Color0[1]+(int) (progress*(Color1[1]-Color0[1])), Color0[2]+(int) (progress*(Color1[2]-Color0[2]))};
+    Serial.printf("Phase 1, %2.2f procent\r\n",progress);
+  } else if (this->AlarmProgress<=0.666) {
+    float progress=(this->AlarmProgress-0.333)*3;
+    palette[2] = { Color1[0]+(int) (progress*(Color2[0]-Color1[0])), Color1[1]+(int) (progress*(Color2[1]-Color1[1])), Color1[2]+(int) (progress*(Color2[2]-Color1[2]))};
+    Serial.printf("Phase 2, %2.2f procent\r\n",progress);
+  } else {
+    float progress=(this->AlarmProgress-0.666)*3;
+    palette[2] = { Color2[0]+(int) (progress*(Color3[0]-Color2[0])), Color2[1]+(int) (progress*(Color3[1]-Color2[1])), Color2[2]+(int) (progress*(Color3[2]-Color2[2]))};
+    Serial.printf("Phase 3, %2.2f procent\r\n",progress);
+  }
+  palette[0]=palette[2];
+  palette[1]={ 0,0,2 };
+  
+  
+  this->set(buf, palette, true);
+}
+
 
 //---------------------------------------------------------------------------------------
 // renderHeart

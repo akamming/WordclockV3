@@ -55,7 +55,7 @@ int OTA_in_progress = 0;
 //---------------------------------------------------------------------------------------
 // Timer related variables
 //---------------------------------------------------------------------------------------
-#define TIMER_RESOLUTION 100
+#define TIMER_RESOLUTION 50
 #define HOURGLASS_ANIMATION_PERIOD 100
 #define TICKTIME 20 // no of millisecs between clock display updates
 
@@ -401,14 +401,31 @@ void loop()
         for (int i=0;i<5;i++)
         {
           if (Config.alarm[i].enabled) {
-            if (h==Config.alarm[i].h && m==Config.alarm[i].m) {
-              Config.nightmode=false;
-              LED.setMode(Config.alarm[i].mode);
-              AlarmInProgress = true;
+            unsigned long StartTime=timestamp(Config.alarm[i].h,Config.alarm[i].m,0,0);
+            unsigned long EndTime=StartTime+Config.alarm[i].duration*60000;  // Duration is in minutes, 1 min = 60.000 msec.
+  
+            if (EndTime<24*3600*1000) { // EndTime is the same day
+              if (CurrentTime>=StartTime && CurrentTime<EndTime) {
+                Config.nightmode=false;
+                LED.setMode(Config.alarm[i].mode);
+                LED.AlarmProgress=(float) (CurrentTime-StartTime) / (float) (EndTime-StartTime); // Let the alarmhandling know how far we are in the progress
+                AlarmInProgress=true;
+              }
+            } else { // Endtime is the next day, in which case we have to handle the rollover at 0.00
+              if (CurrentTime>StartTime || CurrentTime<EndTime-24*3600*1000) {
+                Config.nightmode=false;
+                LED.setMode(Config.alarm[i].mode);
+                if (CurrentTime>StartTime) {
+                  LED.AlarmProgress=(CurrentTime-StartTime)/(EndTime-StartTime); // Let the alarmhandling know how far we are in the progress
+                } else {
+                  LED.AlarmProgress=(CurrentTime+24*3600*1000-StartTime)/(EndTime-StartTime); // Let the alarmhandling know how far we are in the progress
+                }
+                AlarmInProgress=true;
+              }
             }
           }
         }
-      
+
         // display hourglass until time acquired from NTP Server
         if (not AlarmInProgress)
         {

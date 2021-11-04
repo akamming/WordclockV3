@@ -837,6 +837,8 @@ void WebServerClass::handleGetAlarms()
       strcpy(displaymode,"heart"); break;
     case DisplayMode::stars:
       strcpy(displaymode,"stars"); break;
+    case DisplayMode::wakeup:
+      strcpy(displaymode,"wakeup"); break;
     default:
       strcpy(displaymode,"unknown"); break;
     }
@@ -894,6 +896,8 @@ void WebServerClass::handleSetAlarm()
         Config.alarm[i].mode = DisplayMode::heart;
       else if (this->server->arg("mode").equalsIgnoreCase("stars"))
         Config.alarm[i].mode = DisplayMode::stars;
+      else if (this->server->arg("mode").equalsIgnoreCase("wakeup"))
+        Config.alarm[i].mode = DisplayMode::wakeup;
       else
         Config.alarm[i].mode = DisplayMode::plasma;  // default
     }
@@ -969,6 +973,8 @@ void WebServerClass::handleGetConfig()
     displaymode = 3; break;
   case DisplayMode::explode:
     displaymode = 4; break;
+  case DisplayMode::wakeup:
+    displaymode = 5; break;
   default:
     displaymode = 0; break;
   }
@@ -1016,14 +1022,16 @@ void WebServerClass::handleGetConfig()
       alarmmode = "heart"; break;
     case DisplayMode::stars:
       alarmmode = "stars"; break;
+    case DisplayMode::wakeup:
+      alarmmode = "wakeup"; break;
     default:
       alarmmode = "unknown"; break;
     }
 
     JsonObject alarmobject = Alarm.createNestedObject();
-    alarmobject["h"]=String(Config.alarm[i].h);  
-    alarmobject["m"]=String(Config.alarm[i].m);  
-    alarmobject["duration"]=String(Config.alarm[i].duration);  
+    alarmobject["h"]=Config.alarm[i].h;  
+    alarmobject["m"]=Config.alarm[i].m;  
+    alarmobject["duration"]=Config.alarm[i].duration;  
     alarmobject["mode"]=alarmmode;  
     alarmobject["enabled"]=Config.alarm[i].enabled ? "on" : "off";  
 

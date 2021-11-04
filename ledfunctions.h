@@ -70,6 +70,7 @@ public:
 	static const int width = 11;
 	static const int height = 10;
 	uint8_t currentValues[NUM_PIXELS * 3];
+  float AlarmProgress=0;
 
 #ifdef FASTLED
   CRGB leds[NUM_PIXELS]; // FastLed
@@ -104,6 +105,7 @@ private:
 	int ms = 0;
 	int lastM = -1;
 	int lastH = -1;
+  
 
 	void fillBackground(int seconds, int milliseconds, uint8_t *buf);
 	void renderRed();
@@ -113,7 +115,8 @@ private:
 	void renderHeart();
 	void renderFire();
 	void renderPlasma();
-	void renderStars();
+  void renderStars();
+  void renderWakeup();
 	void renderUpdate();
 	void renderUpdateComplete();
 	void renderUpdateError();

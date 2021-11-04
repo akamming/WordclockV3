@@ -40,6 +40,16 @@ p
     text-align: center;
 }
 
+.duration
+{
+    width: 3em;
+}
+
+.time {
+    width: 5em;
+}
+
+
 .header
 {
     font-size: 24px;
