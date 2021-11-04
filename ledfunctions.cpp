@@ -725,7 +725,50 @@ void LEDFunctionsClass::fillBackground(int seconds, int milliseconds, uint8_t *b
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::fillTime(int h, int m, uint8_t *target)
 {
-  // To be filled, work in progress
+  // set static LEDs
+  target[0] = 1; // H
+  target[1] = 1; // E
+  target[2] = 1; // T
+
+  target[4] = 1; // I
+  target[5] = 1; // S
+
+  // minutes 1...4 for the corners
+  for(int i=0; i<=((m%5)-1); i++) target[10 * 11 + i] = 1;
+
+  // iterate over minutes_template
+  int adjust_hour = 0;
+  for(leds_template_t t : LEDFunctionsClass::minutesTemplate)
+  {
+    // test if this template matches the current minute
+    if(m >= t.param1 && m <= t.param2)
+    {
+      // set all LEDs defined in this template
+      for(int i : t.LEDs) target[i] = 1;
+      adjust_hour = t.param0;
+      break;
+    }
+  }
+
+  // adjust hour display if necessary (e. g. 09:45 = quarter to *TEN* instead of NINE)
+  h += adjust_hour;
+  if(h > 23)  h -= 24;
+
+  // iterate over hours template
+  for(leds_template_t t : LEDFunctionsClass::hoursTemplate)
+  {
+    // test if this template matches the current hour
+    if((t.param1 == h || t.param2 == h) &&
+       ((t.param0 == 1 && m < 5)  || // special case full hour
+      (t.param0 == 2 && m >= 5) || // special case hour + minutes
+      (t.param0 == 0)))            // normal case
+    {
+      // set all LEDs defined in this template
+      for(int i : t.LEDs) target[i] = 1;
+      break;
+    }
+  }
+
 }
 
 
@@ -748,52 +791,7 @@ void LEDFunctionsClass::fillTime(int h, int m, uint8_t *target)
 void LEDFunctionsClass::renderTime(uint8_t *target, int h, int m, int s, int ms)
 {
 	this->fillBackground(s, ms, target);
-
-  // set static LEDs
-  target[0] = 1; // H
-  target[1] = 1; // E
-  target[2] = 1; // T
-
-  target[4] = 1; // I
-  target[5] = 1; // S
-
-
-
-	// minutes 1...4 for the corners
-	for(int i=0; i<=((m%5)-1); i++) target[10 * 11 + i] = 1;
-
-	// iterate over minutes_template
-	int adjust_hour = 0;
-	for(leds_template_t t : LEDFunctionsClass::minutesTemplate)
-	{
-		// test if this template matches the current minute
-		if(m >= t.param1 && m <= t.param2)
-		{
-			// set all LEDs defined in this template
-			for(int i : t.LEDs) target[i] = 1;
-			adjust_hour = t.param0;
-			break;
-		}
-	}
-
-	// adjust hour display if necessary (e. g. 09:45 = quarter to *TEN* instead of NINE)
-	h += adjust_hour;
-	if(h > 23)	h -= 24;
-
-	// iterate over hours template
-	for(leds_template_t t : LEDFunctionsClass::hoursTemplate)
-	{
-		// test if this template matches the current hour
-		if((t.param1 == h || t.param2 == h) &&
-		   ((t.param0 == 1 && m < 5)  || // special case full hour
-			(t.param0 == 2 && m >= 5) || // special case hour + minutes
-			(t.param0 == 0)))            // normal case
-		{
-			// set all LEDs defined in this template
-			for(int i : t.LEDs) target[i] = 1;
-			break;
-		}
-	}
+  this->fillTime(h, m, target);
 
 	// DEBUG
 	static int last_minutes = -1;
