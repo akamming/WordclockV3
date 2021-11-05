@@ -1032,42 +1032,64 @@ palette_entry LEDFunctionsClass::blendedColor(palette_entry from_color, palette_
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderWakeup()
 {
-  palette_entry palette[3];
-  /* uint8_t sun[] = {
-    0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
-    0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0,
-    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 01 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-    0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0,
-    0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
-    0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
-    1, 1, 1, 1
-  }; */    // TODO: Code upcoming sun
+// #define USE_SUN
   
-   uint8_t buf[NUM_PIXELS];
+  palette_entry palette[3];
+#ifdef USE_SUN
+  uint8_t buf[] = {
+    0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0,
+    0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0,
+    0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0,
+    0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 
+    0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0,
+    0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0,
+    0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0,
+    0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0,
+    0, 0, 0, 0
+  };
+#else
+  uint8_t buf[NUM_PIXELS];
+  this->fillBackground(s, ms, buf);
+  this->fillTime(this->h, this->m, buf);
+#endif  
+  
+  palette_entry SunColor0 = {0, 0, 0}; // At start
+  palette_entry SunColor1 = {15, 0, 35}; // at 33%: LEt it be a bit blue/purple
+  palette_entry SunColor2 = {150, 10, 10}; // at 66%: LEt it be red
+  palette_entry SunColor3 = {255, 255, 100}; // at 100%: LEt it be yellow, close to white
 
-  this->renderTime(buf, this->h, this->m, this->s, this->ms); // Make sure we can still see the time
-
-  palette_entry Color0 = {0, 0, 0}; // At start
-  palette_entry Color1 = {15, 0, 35}; // at 33%: LEt it be a bit blue/purple
-  palette_entry Color2 = {150, 10, 10}; // at 66%: LEt it be red
-  palette_entry Color3 = {255, 255, 100}; // at 100%: LEt it be yellow, close to white
+#ifdef USE_SUN
+  palette_entry AirColor0 = {2, 2, 2}; // At start
+  palette_entry AirColor1 = {0, 0, 10}; // at 33%: LEt it be a bit blue/purple
+  palette_entry AirColor2 = {60, 90, 125}; // at 66%: LEt it be red
+  palette_entry AirColor3 = {120, 175, 255}; // at 100%: LEt it be yellow, close to white */ // needs more thinking
+#endif
   
   if (this->AlarmProgress<=0.3333){
-    palette[2] = this->blendedColor(Color0,Color1,this->AlarmProgress*3);
+#ifdef USE_SUN
+    palette[0] = this->blendedColor(AirColor0,AirColor1,this->AlarmProgress*3);
+#endif
+    palette[2] = this->blendedColor(SunColor0,SunColor1,this->AlarmProgress*3);
   } else if (this->AlarmProgress<=0.666) {
-    palette[2] = this->blendedColor(Color1,Color2,(this->AlarmProgress-0.3333)*3);
+#ifdef USE_SUN
+    palette[0] = this->blendedColor(AirColor1,AirColor2,(this->AlarmProgress-0.3333)*3);
+#endif
+    palette[2] = this->blendedColor(SunColor1,SunColor2,(this->AlarmProgress-0.3333)*3);
   } else {
-    palette[2] = this->blendedColor(Color2,Color3,(this->AlarmProgress-0.6666)*3);
+#ifdef USE_SUN
+    palette[0] = this->blendedColor(AirColor2,AirColor3,(this->AlarmProgress-0.6666)*3);
+#endif
+    palette[2] = this->blendedColor(SunColor2,SunColor3,(this->AlarmProgress-0.6666)*3);
   }
 
   // set the other colors
-  palette[0]=palette[2]; // secondscolor=backgroundcolor=wakeupcolor 
   palette[1]={ 0,0, 2*(255/this->brightness) }; // time words in nightmode color
-  
+#ifndef USE_SUN
+  palette[0]= palette[2]; // don't show seconds
+#endif
+
   this->set(buf, palette, true);
 }
 
