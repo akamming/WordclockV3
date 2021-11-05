@@ -146,8 +146,8 @@
 
 
     <div class="outer_frame">
-        <p>Opties</p>
-        <br />Tijdzone
+        <p>Configuratie</p>
+        Tijdzone
         <select name="timezone" id="timezone" onchange="timeZoneChanged()">
             <option>UTC-12:00</option>
             <option>UTC-11:00</option>
@@ -176,421 +176,419 @@
             <option>UTC+12:00</option>
             <option>UTC+13:00</option>
             <option>UTC+14:00</option>
-        </select>
-        <br /><br />
+        </select><br />
         Hostname
-        <input type="text" class="hn_input" id="hostname" value="wordt geladen..." onClick="this.setSelectionRange(0, this.value.length)">
-        <br /><br />
+        <input type="text" class="hn_input" id="hostname" size="10" value="wordt geladen..." onClick="this.setSelectionRange(0, this.value.length)">
+        <br />
         NTPserver
-        <input type="text" class="ntpinput" id="ntpserver" value="wordt geladen..." onClick="this.setSelectionRange(0, this.value.length)"><br /><br />
+        <input type="text" class="ntpinput" id="ntpserver" size="10" value="wordt geladen..." onClick="this.setSelectionRange(0, this.value.length)"><br />
+        <label><input type="checkbox" name="heartbeat" id="heartbeat" onchange="heartbeatEnableChanged()">Hartslag</label><br />
         <div class="buttondiv">
             <button class="colorbutton" onclick="saveSettings()">Opslaan</button>
         </div>
     </div>
 
 
-
-    <div class="outer_frame">
-        <p>Beheer</p>
-        <div class="buttondiv">
-            <button class="colorbutton" onclick="reset()">Herstarten</button>
-            <button class="colorbutton" onclick="resetWifiCredentials()">reset WiFi configuratie</button>
-            <button class="colorbutton" onclick="factoryReset()">herstel fabriekinstellingen</button>
-            <label><input type="checkbox" name="heartbeat" id="heartbeat" onchange="heartbeatEnableChanged()">Hartslag</label><br /><br />
+        <div class="outer_frame">
+            <p>Beheer</p>
+            <div class="buttondiv">
+                <button class="colorbutton" onclick="reset()">Herstarten</button>
+                <button class="colorbutton" onclick="resetWifiCredentials()">reset WiFi configuratie</button>
+                <button class="colorbutton" onclick="factoryReset()">herstel fabriekinstellingen</button>
+            </div>
         </div>
-    </div>
 
-    <script>
-        var lastBackground = '';
-        var newBackground = '';
-        var lastForeground = '';
-        var newForeground = '';
-        var lastSeconds = '';
-        var newSeconds = '';
+        <script>
+            var lastBackground = '';
+            var newBackground = '';
+            var lastForeground = '';
+            var newForeground = '';
+            var lastSeconds = '';
+            var newSeconds = '';
 
-        var timer = setTimeout(sendColorTimer, 250);
+            var timer = setTimeout(sendColorTimer, 250);
 
-        function heartbeatEnableChanged()
-        {
-        var enabled = 0;
-        var heartbeatCheckbox = document.getElementById("heartbeat");
-        if(heartbeatCheckbox.checked == true) enabled = 1;
+            function heartbeatEnableChanged()
+            {
+            var enabled = 0;
+            var heartbeatCheckbox = document.getElementById("heartbeat");
+            if(heartbeatCheckbox.checked == true) enabled = 1;
 
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", "http://" + location.hostname + "/setheartbeat?value=" + enabled, true);
-        xhttp.send();
-        }
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "http://" + location.hostname + "/setheartbeat?value=" + enabled, true);
+            xhttp.send();
+            }
 
-        function nightmodeEnableChanged()
-        {
-        var enabled = 0;
-        var heartbeatCheckbox = document.getElementById("nightmode");
-        if(heartbeatCheckbox.checked == true) enabled = 1;
+            function nightmodeEnableChanged()
+            {
+            var enabled = 0;
+            var heartbeatCheckbox = document.getElementById("nightmode");
+            if(heartbeatCheckbox.checked == true) enabled = 1;
 
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", "http://" + location.hostname + "/setnightmode?value=" + enabled, true);
-        xhttp.send();
-        }
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "http://" + location.hostname + "/setnightmode?value=" + enabled, true);
+            xhttp.send();
+            }
 
-        function displayModeChanged()
-        {
-        var newMode;
-        var displayModeCombo = document.getElementById("displaymode");
-        switch(displayModeCombo.selectedIndex)
-        {
-        case 0: // plain
-        newMode = 0;
-        break;
-        case 1: // fade
-        newMode = 1;
-        break;
-        case 2: // flying letters vertical up
-        newMode = 2;
-        break;
-        case 3: // flying letters vertical down
-        newMode = 3;
-        break;
-        case 4: // exploding letters
-        newMode = 4;
-        break;
-        case 5: // random
-        newMode = 5;
-        break;
-        default:
-        newMode = 0;
-        break;
-        }
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", "http://" + location.hostname + "/setmode?value=" + newMode, true);
-        xhttp.send();
-        }
+            function displayModeChanged()
+            {
+            var newMode;
+            var displayModeCombo = document.getElementById("displaymode");
+            switch(displayModeCombo.selectedIndex)
+            {
+            case 0: // plain
+            newMode = 0;
+            break;
+            case 1: // fade
+            newMode = 1;
+            break;
+            case 2: // flying letters vertical up
+            newMode = 2;
+            break;
+            case 3: // flying letters vertical down
+            newMode = 3;
+            break;
+            case 4: // exploding letters
+            newMode = 4;
+            break;
+            case 5: // random
+            newMode = 5;
+            break;
+            default:
+            newMode = 0;
+            break;
+            }
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "http://" + location.hostname + "/setmode?value=" + newMode, true);
+            xhttp.send();
+            }
 
-        function timeZoneChanged()
-        {
-        var newTimeZone;
-        var timeZoneCombo = document.getElementById("timezone");
-        switch(timeZoneCombo.selectedIndex)
-        {
-        case 0:
-        newTimeZone = -12; break;
-        case 1:
-        newTimeZone = -11; break;
-        case 2:
-        newTimeZone = -10; break;
-        case 3:
-        newTimeZone = -9; break;
-        case 4:
-        newTimeZone = -8; break;
-        case 5:
-        newTimeZone = -7; break;
-        case 6:
-        newTimeZone = -6; break;
-        case 7:
-        newTimeZone = -5; break;
-        case 8:
-        newTimeZone = -4; break;
-        case 9:
-        newTimeZone = -3; break;
-        case 10:
-        newTimeZone = -2; break;
-        case 11:
-        newTimeZone = -1; break;
-        case 12:
-        newTimeZone = 0; break;
-        case 13:
-        newTimeZone = 1; break;
-        case 14:
-        newTimeZone = 2; break;
-        case 15:
-        newTimeZone = 3; break;
-        case 16:
-        newTimeZone = 4; break;
-        case 17:
-        newTimeZone = 5; break;
-        case 18:
-        newTimeZone = 6; break;
-        case 19:
-        newTimeZone = 7; break;
-        case 20:
-        newTimeZone = 8; break;
-        case 21:
-        newTimeZone = 9; break;
-        case 22:
-        newTimeZone = 10; break;
-        case 23:
-        newTimeZone = 11; break;
-        case 24:
-        newTimeZone = 12; break;
-        case 25:
-        newTimeZone = 13; break;
-        case 26:
-        newTimeZone = 14; break;
-        default:
-        newTimeZone = 0;
-        break;
-        }
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", "http://" + location.hostname + "/settimezone?value=" + newTimeZone, true);
-        xhttp.send();
-        }
+            function timeZoneChanged()
+            {
+            var newTimeZone;
+            var timeZoneCombo = document.getElementById("timezone");
+            switch(timeZoneCombo.selectedIndex)
+            {
+            case 0:
+            newTimeZone = -12; break;
+            case 1:
+            newTimeZone = -11; break;
+            case 2:
+            newTimeZone = -10; break;
+            case 3:
+            newTimeZone = -9; break;
+            case 4:
+            newTimeZone = -8; break;
+            case 5:
+            newTimeZone = -7; break;
+            case 6:
+            newTimeZone = -6; break;
+            case 7:
+            newTimeZone = -5; break;
+            case 8:
+            newTimeZone = -4; break;
+            case 9:
+            newTimeZone = -3; break;
+            case 10:
+            newTimeZone = -2; break;
+            case 11:
+            newTimeZone = -1; break;
+            case 12:
+            newTimeZone = 0; break;
+            case 13:
+            newTimeZone = 1; break;
+            case 14:
+            newTimeZone = 2; break;
+            case 15:
+            newTimeZone = 3; break;
+            case 16:
+            newTimeZone = 4; break;
+            case 17:
+            newTimeZone = 5; break;
+            case 18:
+            newTimeZone = 6; break;
+            case 19:
+            newTimeZone = 7; break;
+            case 20:
+            newTimeZone = 8; break;
+            case 21:
+            newTimeZone = 9; break;
+            case 22:
+            newTimeZone = 10; break;
+            case 23:
+            newTimeZone = 11; break;
+            case 24:
+            newTimeZone = 12; break;
+            case 25:
+            newTimeZone = 13; break;
+            case 26:
+            newTimeZone = 14; break;
+            default:
+            newTimeZone = 0;
+            break;
+            }
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "http://" + location.hostname + "/settimezone?value=" + newTimeZone, true);
+            xhttp.send();
+            }
 
-        function updateButton(id, text, r, g, b)
-        {
-        button = document.getElementById(id);
-        button.jscolor.fromRGB(r, g, b);
-        button.innerHTML = text;
-        return button.jscolor.toString();
-        }
+            function updateButton(id, text, r, g, b)
+            {
+            button = document.getElementById(id);
+            button.jscolor.fromRGB(r, g, b);
+            button.innerHTML = text;
+            return button.jscolor.toString();
+            }
 
-        function loadColors()
-        {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function()
-        {
-        if(xhttp.readyState == 4 && xhttp.status == 200)
-        {
-        console.log("received " + xhttp.responseText);
-        var c = xhttp.responseText.split(",");
-        newBackground = updateButton('backgroundColorButton', 'Achtergrond', c[0], c[1], c[2]);
-        newForeground = updateButton('foregroundColorButton', 'Voorgrond', c[3], c[4], c[5]);
-        newSeconds = updateButton('secondsColorButton', 'Seconden', c[6], c[7], c[8]);
-        lastBackground = newBackground;
-        lastForeground = newForeground;
-        lastSeconds = newSeconds;
-        }
-        };
-        xhttp.open("GET", "http://" + location.hostname + "/getcolors", true);
-        xhttp.send();
-        }
+            function loadColors()
+            {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function()
+            {
+            if(xhttp.readyState == 4 && xhttp.status == 200)
+            {
+            console.log("received " + xhttp.responseText);
+            var c = xhttp.responseText.split(",");
+            newBackground = updateButton('backgroundColorButton', 'Achtergrond', c[0], c[1], c[2]);
+            newForeground = updateButton('foregroundColorButton', 'Voorgrond', c[3], c[4], c[5]);
+            newSeconds = updateButton('secondsColorButton', 'Seconden', c[6], c[7], c[8]);
+            lastBackground = newBackground;
+            lastForeground = newForeground;
+            lastSeconds = newSeconds;
+            }
+            };
+            xhttp.open("GET", "http://" + location.hostname + "/getcolors", true);
+            xhttp.send();
+            }
 
-        function loadNtpServer()
-        {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function()
-        {
-        if(xhttp.readyState == 4 && xhttp.status == 200)
-        {
-        console.log("received " + xhttp.responseText);
-        document.getElementById('ntpserver').value = xhttp.responseText;
-        }
-        };
-        xhttp.open("GET", "http://" + location.hostname + "/getntpserver", true);
-        xhttp.send();
-        }
+            function loadNtpServer()
+            {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function()
+            {
+            if(xhttp.readyState == 4 && xhttp.status == 200)
+            {
+            console.log("received " + xhttp.responseText);
+            document.getElementById('ntpserver').value = xhttp.responseText;
+            }
+            };
+            xhttp.open("GET", "http://" + location.hostname + "/getntpserver", true);
+            xhttp.send();
+            }
 
-        function loadHostname()
-        {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function()
-        {
-        if(xhttp.readyState == 4 && xhttp.status == 200)
-        {
-        console.log("received " + xhttp.responseText);
-        document.getElementById('hostname').value = xhttp.responseText;
-        }
-        };
-        xhttp.open("GET", "http://" + location.hostname + "/gethostname", true);
-        xhttp.send();
-        }
-
-
-        function sendColorTimer()
-        {
-        var update = false;
-
-        if(newBackground != '' && newBackground != lastBackground)
-        {
-        lastBackground = newBackground;
-        update = true;
-        }
-        if(newForeground != '' && newForeground != lastForeground)
-        {
-        lastForeground = newForeground;
-        update = true;
-        }
-        if(newSeconds != '' && newSeconds != lastSeconds)
-        {
-        lastSeconds = newSeconds;
-        update = true;
-        }
-
-        if(newSeconds == '' || newBackground == '' || newForeground == '')
-        {
-        update = false;
-        }
-
-        if(update == true)
-        {
-        var request = "http://" + location.hostname + "/setcolor?"
-        + "bg=" + newBackground
-        + "&fg=" + newForeground
-        + "&s=" + newSeconds;
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", request, true);
-        xhttp.send();
-        }
-
-        timer = setTimeout(sendColorTimer, 250);
-        }
-
-        function isValidIP(ip)
-        {
-        var s = ip.split('.');
-        if(s.length != 4) return false;
-        for(var i=0; i<3; i++)
-        {
-        if(s[i] == '') return false;
-        if(isNaN(s[i])) return false;
-        var n = parseInt(s[i]);
-        if(n < 0 || n > 255) return false;
-        }
-        return true;
-        }
-
-        function saveSettings()
-        {
-        var server = document.getElementById('ntpserver').value;
-        var hostname = document.getElementById('hostname').value;
-        if(!isValidIP(server))
-        {
-        alert("Ongeldig IP Adres!");
-        return;
-        }
-
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", "http://" + location.hostname + "/setntpserver?ip=" + server, true);
-        xhttp.send();
-
-        var xhttp2 = new XMLHttpRequest();
-        xhttp2.open("GET", "http://" + location.hostname + "/sethostname?value=" + hostname, true);
-        xhttp2.send();
+            function loadHostname()
+            {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function()
+            {
+            if(xhttp.readyState == 4 && xhttp.status == 200)
+            {
+            console.log("received " + xhttp.responseText);
+            document.getElementById('hostname').value = xhttp.responseText;
+            }
+            };
+            xhttp.open("GET", "http://" + location.hostname + "/gethostname", true);
+            xhttp.send();
+            }
 
 
-        }
+            function sendColorTimer()
+            {
+            var update = false;
 
-        function reset()
-        {
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", "http://" + location.hostname + "/reset", true);
-        xhttp.send();
-        }
+            if(newBackground != '' && newBackground != lastBackground)
+            {
+            lastBackground = newBackground;
+            update = true;
+            }
+            if(newForeground != '' && newForeground != lastForeground)
+            {
+            lastForeground = newForeground;
+            update = true;
+            }
+            if(newSeconds != '' && newSeconds != lastSeconds)
+            {
+            lastSeconds = newSeconds;
+            update = true;
+            }
 
-        function resetWifiCredentials()
-        {
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", "http://" + location.hostname + "/resetwificredentials", true);
-        xhttp.send();
-        }
+            if(newSeconds == '' || newBackground == '' || newForeground == '')
+            {
+            update = false;
+            }
 
-        function factoryReset()
-        {
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", "http://" + location.hostname + "/factoryreset", true);
-        xhttp.send();
-        }
+            if(update == true)
+            {
+            var request = "http://" + location.hostname + "/setcolor?"
+            + "bg=" + newBackground
+            + "&fg=" + newForeground
+            + "&s=" + newSeconds;
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", request, true);
+            xhttp.send();
+            }
+
+            timer = setTimeout(sendColorTimer, 250);
+            }
+
+            function isValidIP(ip)
+            {
+            var s = ip.split('.');
+            if(s.length != 4) return false;
+            for(var i=0; i<3; i++)
+            {
+            if(s[i] == '') return false;
+            if(isNaN(s[i])) return false;
+            var n = parseInt(s[i]);
+            if(n < 0 || n > 255) return false;
+            }
+            return true;
+            }
+
+            function saveSettings()
+            {
+            var server = document.getElementById('ntpserver').value;
+            var hostname = document.getElementById('hostname').value;
+            if(!isValidIP(server))
+            {
+            alert("Ongeldig IP Adres!");
+            return;
+            }
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "http://" + location.hostname + "/setntpserver?ip=" + server, true);
+            xhttp.send();
+
+            var xhttp2 = new XMLHttpRequest();
+            xhttp2.open("GET", "http://" + location.hostname + "/sethostname?value=" + hostname, true);
+            xhttp2.send();
 
 
-        function loadTimeZone()
-        {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function()
-        {
-        if(xhttp.readyState == 4 && xhttp.status == 200)
-        {
-        console.log("received " + xhttp.responseText);
-        document.getElementById('timezone').selectedIndex = parseInt(xhttp.responseText) + 12;
-        }
-        };
-        xhttp.open("GET", "http://" + location.hostname + "/gettimezone", true);
-        xhttp.send();
-        }
+            }
 
-        function loadMode()
-        {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function()
-        {
-        if(xhttp.readyState == 4 && xhttp.status == 200)
-        {
-        console.log("received " + xhttp.responseText);
-        document.getElementById('displaymode').selectedIndex = xhttp.responseText;
-        }
-        };
-        xhttp.open("GET", "http://" + location.hostname + "/getmode", true);
-        xhttp.send();
-        }
+            function reset()
+            {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "http://" + location.hostname + "/reset", true);
+            xhttp.send();
+            }
 
-        function loadHeartbeat()
-        {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function()
-        {
-        if(xhttp.readyState == 4 && xhttp.status == 200)
-        {
-        console.log("received " + xhttp.responseText);
-        if(xhttp.responseText == "1")
-        {
-        document.getElementById('heartbeat').checked = true;
-        }
-        else
-        {
-        document.getElementById('heartbeat').checked = false;
-        }
+            function resetWifiCredentials()
+            {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "http://" + location.hostname + "/resetwificredentials", true);
+            xhttp.send();
+            }
 
-        }
-        };
-        xhttp.open("GET", "http://" + location.hostname + "/getheartbeat", true);
-        xhttp.send();
-        }
+            function factoryReset()
+            {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "http://" + location.hostname + "/factoryreset", true);
+            xhttp.send();
+            }
 
-        function loadNightMode()
-        {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function()
-        {
-        if(xhttp.readyState == 4 && xhttp.status == 200)
-        {
-        console.log("received " + xhttp.responseText);
-        if(xhttp.responseText == "1")
-        {
-        document.getElementById('nightmode').checked = true;
-        }
-        else
-        {
-        document.getElementById('nightmode').checked = false;
-        }
 
-        }
-        };
-        xhttp.open("GET", "http://" + location.hostname + "/getnightmode", true);
-        xhttp.send();
-        }
+            function loadTimeZone()
+            {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function()
+            {
+            if(xhttp.readyState == 4 && xhttp.status == 200)
+            {
+            console.log("received " + xhttp.responseText);
+            document.getElementById('timezone').selectedIndex = parseInt(xhttp.responseText) + 12;
+            }
+            };
+            xhttp.open("GET", "http://" + location.hostname + "/gettimezone", true);
+            xhttp.send();
+            }
 
-        function loadBrightness()
-        {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function()
-        {
-        if(xhttp.readyState == 4 && xhttp.status == 200)
-        {
-        console.log("received " + xhttp.responseText);
-        document.getElementById('brightness').value = xhttp.responseText;
-        }
-        };
-        xhttp.open("GET", "http://" + location.hostname + "/getbrightness", true);
-        xhttp.send();
-        }
+            function loadMode()
+            {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function()
+            {
+            if(xhttp.readyState == 4 && xhttp.status == 200)
+            {
+            console.log("received " + xhttp.responseText);
+            document.getElementById('displaymode').selectedIndex = xhttp.responseText;
+            }
+            };
+            xhttp.open("GET", "http://" + location.hostname + "/getmode", true);
+            xhttp.send();
+            }
 
-        function brightnessChanged(slidevalue)
-        {
+            function loadHeartbeat()
+            {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function()
+            {
+            if(xhttp.readyState == 4 && xhttp.status == 200)
+            {
+            console.log("received " + xhttp.responseText);
+            if(xhttp.responseText == "1")
+            {
+            document.getElementById('heartbeat').checked = true;
+            }
+            else
+            {
+            document.getElementById('heartbeat').checked = false;
+            }
 
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", "http://" + location.hostname + "/setbrightness?value=" + slidevalue, true);
-        xhttp.send();
-        }
+            }
+            };
+            xhttp.open("GET", "http://" + location.hostname + "/getheartbeat", true);
+            xhttp.send();
+            }
 
-        function alarmChanged(index)
-        {
+            function loadNightMode()
+            {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function()
+            {
+            if(xhttp.readyState == 4 && xhttp.status == 200)
+            {
+            console.log("received " + xhttp.responseText);
+            if(xhttp.responseText == "1")
+            {
+            document.getElementById('nightmode').checked = true;
+            }
+            else
+            {
+            document.getElementById('nightmode').checked = false;
+            }
+
+            }
+            };
+            xhttp.open("GET", "http://" + location.hostname + "/getnightmode", true);
+            xhttp.send();
+            }
+
+            function loadBrightness()
+            {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function()
+            {
+            if(xhttp.readyState == 4 && xhttp.status == 200)
+            {
+            console.log("received " + xhttp.responseText);
+            document.getElementById('brightness').value = xhttp.responseText;
+            }
+            };
+            xhttp.open("GET", "http://" + location.hostname + "/getbrightness", true);
+            xhttp.send();
+            }
+
+            function brightnessChanged(slidevalue)
+            {
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "http://" + location.hostname + "/setbrightness?value=" + slidevalue, true);
+            xhttp.send();
+            }
+
+            function alarmChanged(index)
+            {
             var xhttp = new XMLHttpRequest();
             var time = document.getElementById('a'+index.toString()+'time').value;
             var mode = document.getElementById('a'+index.toString()+'mode').value;
@@ -600,53 +598,53 @@
             if(document.getElementById('a'+index.toString()+'enabled').checked == true) enabled = "on";
             xhttp.open("GET", "http://" + location.hostname + "/setalarm?number=" + index.toString() + "&time="+time+"&mode="+mode+"&enabled="+enabled+"&duration="+duration+"&type="+type, true);
             xhttp.send();
-        }
+            }
 
-        function loadAlarms()
-        {
+            function loadAlarms()
+            {
             var xhttp = new XMLHttpRequest();
             xhttp.onreadystatechange = function()
             {
-                if(xhttp.readyState == 4 && xhttp.status == 200)
-                {
+            if(xhttp.readyState == 4 && xhttp.status == 200)
+            {
 
-                    console.log("received " + xhttp.responseText);
-                    var c = xhttp.responseText.split(",");
-                    for (let i = 0; i < 5; i++) {
-                        document.getElementById('a'+i.toString()+'time').value = c[i*5];
-                        document.getElementById('a'+i.toString()+'duration').value = c[i*5+1];
-                        document.getElementById('a'+i.toString()+'mode').value = c[i*5+2];
-                        if(c[i*5+3] == "on")
-                        {
-                            document.getElementById('a'+i.toString()+'enabled').checked = true;
-                        }
-                        else
-                        {
-                            document.getElementById('a'+i.toString()+'enabled').checked = false;
-                        }
-                        document.getElementById('a'+i.toString()+'type').value = c[i*5+4];
-                    }
-                }
+            console.log("received " + xhttp.responseText);
+            var c = xhttp.responseText.split(",");
+            for (let i = 0; i < 5; i++) {
+            document.getElementById('a'+i.toString()+'time').value = c[i*5];
+            document.getElementById('a'+i.toString()+'duration').value = c[i*5+1];
+            document.getElementById('a'+i.toString()+'mode').value = c[i*5+2];
+            if(c[i*5+3] == "on")
+            {
+            document.getElementById('a'+i.toString()+'enabled').checked = true;
+            }
+            else
+            {
+            document.getElementById('a'+i.toString()+'enabled').checked = false;
+            }
+            document.getElementById('a'+i.toString()+'type').value = c[i*5+4];
+            }
+            }
             };
             xhttp.open("GET", "http://" + location.hostname + "/getalarms", true);
             xhttp.send();
-        }
+            }
 
 
-        function loadSettings()
-        {
-        loadColors();
-        loadNtpServer();
-        loadHostname();
-        loadMode();
-        loadHeartbeat();
-        loadNightMode();
-        loadTimeZone();
-        loadBrightness();
-        loadAlarms();
-        }
+            function loadSettings()
+            {
+            loadColors();
+            loadNtpServer();
+            loadHostname();
+            loadMode();
+            loadHeartbeat();
+            loadNightMode();
+            loadTimeZone();
+            loadBrightness();
+            loadAlarms();
+            }
 
-    </script>
+        </script>
 
 
 </body>
