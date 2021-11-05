@@ -42,12 +42,21 @@ p
 
 .duration
 {
-    width: 3em;
+    width: 2em;
 }
 
 .time {
     width: 5em;
 }
+
+.transitions {
+    width: 11em;
+}
+
+.alarmmode {
+    width: 4em;
+}
+
 
 
 .header

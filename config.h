@@ -32,6 +32,11 @@ enum class DisplayMode
   wifiManager, invalid
 };
 
+enum class AlarmType
+{
+  oneoff, always, weekend, workingdays
+};
+
 // structure to encapsulate a color value with red, green and blue values
 typedef struct _palette_entry
 {
@@ -40,9 +45,10 @@ typedef struct _palette_entry
 
 typedef struct _alarm
 {
-  uint8_t h,m, duration;
+  uint8_t h,m,duration;
   DisplayMode mode;
   bool enabled;
+  AlarmType type;
 } t_alarm;
 
 // structure with configuration data to be stored in EEPROM

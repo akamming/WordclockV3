@@ -684,10 +684,9 @@ void WebServerClass::handleInfo()
   json["uptime"] = buffer;
   
 
-  char *buf = (char*)malloc(sizeof(char)*INFOMESSAGESIZE+1);
-  serializeJsonPretty(json,buf,INFOMESSAGESIZE);
+  String buf;
+  serializeJsonPretty(json,buf);
 	this->server->send(200, "application/json", buf);
-  free(buf); 
 }
 
 //---------------------------------------------------------------------------------------
@@ -824,6 +823,7 @@ void WebServerClass::handleGetAlarms()
 
   for (int i=0;i<5;i++) {
     char displaymode[20];
+    char alarmtype[20];
     
     switch(Config.alarm[i].mode)
     {
@@ -843,9 +843,23 @@ void WebServerClass::handleGetAlarms()
       strcpy(displaymode,"unknown"); break;
     }
 
+    switch(Config.alarm[i].type)
+    {
+      case AlarmType::oneoff:
+        strcpy(alarmtype,"Eenmalig"); break;
+      case AlarmType::always:
+        strcpy(alarmtype,"Altijd"); break;
+      case AlarmType::weekend:
+        strcpy(alarmtype,"Weekend"); break;
+      case AlarmType::workingdays:
+        strcpy(alarmtype,"Werkdagen"); break;
+      default:
+        strcpy(alarmtype,"Onbekend"); break;
+    }
+
     // buildup alarmchararray
-    char buffer[20];
-    sprintf(buffer,"%02d:%02d,%d,%s,%s",Config.alarm[i].h,Config.alarm[i].m,Config.alarm[i].duration,displaymode,Config.alarm[i].enabled ? "on," : "off,");
+    char buffer[40];
+    sprintf(buffer,"%02d:%02d,%d,%s,%s,%s,",Config.alarm[i].h,Config.alarm[i].m,Config.alarm[i].duration,displaymode,Config.alarm[i].enabled ? "on" : "off",alarmtype);
     strcat(message,buffer); 
   }
   this->server->send(200, "text/plain", message);
@@ -900,6 +914,19 @@ void WebServerClass::handleSetAlarm()
         Config.alarm[i].mode = DisplayMode::wakeup;
       else
         Config.alarm[i].mode = DisplayMode::plasma;  // default
+    }
+
+    if (this->server->hasArg("type")) {
+      if (this->server->arg("type").equalsIgnoreCase("eenmalig")) 
+        Config.alarm[i].type = AlarmType::oneoff; 
+      else if (this->server->arg("type").equalsIgnoreCase("altijd")) 
+        Config.alarm[i].type = AlarmType::always; 
+      else if (this->server->arg("type").equalsIgnoreCase("werkdagen")) 
+        Config.alarm[i].type = AlarmType::workingdays; 
+      else if (this->server->arg("type").equalsIgnoreCase("weekend")) 
+        Config.alarm[i].type = AlarmType::weekend; 
+      else
+        Config.alarm[i].type = AlarmType::oneoff;  // default
     }
     
     this->server->send(200, "text/plain", "OK");
@@ -1008,7 +1035,7 @@ void WebServerClass::handleGetConfig()
   
   JsonArray Alarm = json.createNestedArray("Alarm");
   for (int i=0;i<5;i++) {
-    String alarmmode;
+    String alarmmode,alarmtype;
   
     switch(Config.alarm[i].mode)
     {
@@ -1028,18 +1055,31 @@ void WebServerClass::handleGetConfig()
       alarmmode = "unknown"; break;
     }
 
+    switch(Config.alarm[i].type)
+    {
+      case AlarmType::oneoff:
+        alarmtype="Eenmalig"; break;
+      case AlarmType::always:
+        alarmtype="Altijd"; break;
+      case AlarmType::weekend:
+        alarmtype="Weekend"; break;
+      case AlarmType::workingdays:
+        alarmtype="Werkdagen"; break;
+      default:
+        alarmtype="Onbekend"; break;
+    }
+
     JsonObject alarmobject = Alarm.createNestedObject();
     alarmobject["h"]=Config.alarm[i].h;  
     alarmobject["m"]=Config.alarm[i].m;  
     alarmobject["duration"]=Config.alarm[i].duration;  
     alarmobject["mode"]=alarmmode;  
     alarmobject["enabled"]=Config.alarm[i].enabled ? "on" : "off";  
-
+    alarmobject["type"]=alarmtype;
   }
-  char *buf = (char*)malloc(sizeof(char)*GETCONFIGMESSAGESIZE+1);
-  serializeJsonPretty(json, buf, GETCONFIGMESSAGESIZE);
+  String buf;
+  serializeJsonPretty(json, buf);
   this->server->send(200, "application/json", buf); 
-  free (buf);
 }
 
 #ifdef DEBUG

@@ -12,7 +12,7 @@
     <div class="header">Woordklok Instellingen</div>
 
     <div class="outer_frame">
-        <p>Kleuren</p>
+        <p>Weergave</p>
         <div class="buttondiv">
             <button id="foregroundColorButton"
                     class="colorbutton jscolor {width:150,onFineChange:'newForeground=this.toString()',valueElement:null,value:'ffffff'}">
@@ -33,31 +33,26 @@
                 wordt geladen...
             </button>
         </div>
-
-    </div>
-
-    <div class="outer_frame">
-        <p>Weergave</p><br />
-        
         <div class="slidediv">
             Helderheid  <input type="range" min="0" max="255" value="125" name="brightness" id="brightness" onchange="brightnessChanged(this.value)" />
         </div>
-        <br />Overgangen
-        <select name="displaymode" id="displaymode" onchange="displayModeChanged()">
+        Overgangen
+        <select name="displaymode" id="displaymode" class="transitions" onchange="displayModeChanged()">
             <option>Simpel</option>
             <option>Zachte overgangen</option>
             <option>Letters die naar boven vliegen</option>
             <option>Letters die naar beneden vallen</option>
             <option>Exploderende letters</option>
             <option>Willekeurig</option>
-        </select><br /><br />
+        </select>
         <label><input type="checkbox" name="nachtmodus" id="nightmode" onchange="nightmodeEnableChanged()">Nachtstand</label>
     </div>
 
+
     <div class="outer_frame">
-        Wakeup lights<br />
+        Alarmen<br />
         <input type="time" value="12:00" name="a0time" id="a0time" class="time" onchange="alarmChanged(0)" />
-        <select name="a0mode" id="a0mode" onchange="alarmChanged(0)">
+        <select name="a0mode" id="a0mode" class="alarmmode" onchange="alarmChanged(0)">
             <option>stars</option>
             <option>matrix</option>
             <option>plasma</option>
@@ -66,10 +61,16 @@
             <option>wakeup</option>
         </select>
         <input type="number" value="1" name="a0duration" id="a0duration" min="0" max="60" class="duration" onchange="alarmChanged(0)" />
+        <select name="a0type" id="a0type" class="alarmmode" onchange="alarmChanged(0)">
+            <option>Eenmalig</option>
+            <option>Altijd</option>
+            <option>Weekend</option>
+            <option>Werkdagen</option>
+        </select>
         <input type="checkbox" name="a0enabled" id="a0enabled" onchange="alarmChanged(0)">
         <br />
         <input type="time" value="12:00" name="a1time" id="a1time" class="time" onchange="alarmChanged(1)" />
-        <select name="a1mode" id="a1mode" onchange="alarmChanged(1)">
+        <select name="a1mode" id="a1mode" class="alarmmode" onchange="alarmChanged(1)">
             <option>stars</option>
             <option>matrix</option>
             <option>plasma</option>
@@ -77,11 +78,17 @@
             <option>heart</option>
             <option>wakeup</option>
         </select>
-        <input type="number" value="1" name="a1duration" id="a1duration" min="0" max="60" class="duration" onchange="alarmChanged(0)" />
+        <input type="number" value="1" name="a1duration" id="a1duration" min="0" max="60" class="duration" onchange="alarmChanged(1)" />
+        <select name="a1type" id="a1type" class="alarmmode" onchange="alarmChanged(1)">
+            <option>Eenmalig</option>
+            <option>Altijd</option>
+            <option>Weekend</option>
+            <option>Werkdagen</option>
+        </select>
         <input type="checkbox" name="a1enabled" id="a1enabled" onchange="alarmChanged(1)">
         <br />
         <input type="time" value="12:00" name="a2time" id="a2time" class="time" onchange="alarmChanged(2)" />
-        <select name="a2mode" id="a2mode" onchange="alarmChanged(2)">
+        <select name="a2mode" id="a2mode" class="alarmmode" onchange="alarmChanged(2)">
             <option>stars</option>
             <option>matrix</option>
             <option>plasma</option>
@@ -89,11 +96,17 @@
             <option>heart</option>
             <option>wakeup</option>
         </select>
-        <input type="number" value="1" name="a2duration" id="a2duration" min="0" max="60" class="duration" onchange="alarmChanged(0)" />
+        <input type="number" value="1" name="a2duration" id="a2duration" min="0" max="60" class="duration" onchange="alarmChanged(2)" />
+        <select name="a2type" id="a2type" class="alarmmode" onchange="alarmChanged(2)">
+            <option>Eenmalig</option>
+            <option>Altijd</option>
+            <option>Weekend</option>
+            <option>Werkdagen</option>
+        </select>
         <input type="checkbox" name="a2enabled" id="a2enabled" onchange="alarmChanged(2)">
         <br />
         <input type="time" value="12:00" name="a3time" id="a3time" class="time" onchange="alarmChanged(3)" />
-        <select name="a3mode" id="a3mode" onchange="alarmChanged(3)">
+        <select name="a3mode" id="a3mode" class="alarmmode" onchange="alarmChanged(3)">
             <option>stars</option>
             <option>matrix</option>
             <option>plasma</option>
@@ -101,11 +114,17 @@
             <option>heart</option>
             <option>wakeup</option>
         </select>
-        <input type="number" value="1" name="a3duration" id="a3duration" min="0" max="60" class="duration" onchange="alarmChanged(0)" />
+        <input type="number" value="1" name="a3duration" id="a3duration" min="0" max="60" class="duration" onchange="alarmChanged(3)" />
+        <select name="a3type" id="a3type" class="alarmmode" onchange="alarmChanged(3)">
+            <option>Eenmalig</option>
+            <option>Altijd</option>
+            <option>Weekend</option>
+            <option>Werkdagen</option>
+        </select>
         <input type="checkbox" name="a3enabled" id="a3enabled" onchange="alarmChanged(3)">
         <br />
         <input type="time" value="12:00" name="a4time" id="a4time" class="time" onchange="alarmChanged(4)" />
-        <select name="a4mode" id="a4mode" onchange="alarmChanged(4)">
+        <select name="a4mode" id="a4mode" class="alarmmode" onchange="alarmChanged(4)">
             <option>stars</option>
             <option>matrix</option>
             <option>plasma</option>
@@ -113,7 +132,13 @@
             <option>heart</option>
             <option>wakeup</option>
         </select>
-        <input type="number" value="1" name="a4duration" id="a4duration" min="0" max="60" class="duration" onchange="alarmChanged(0)" />
+        <input type="number" value="1" name="a4duration" id="a4duration" min="0" max="60" class="duration" onchange="alarmChanged(4)" />
+        <select name="a4type" id="a4type" class="alarmmode" onchange="alarmChanged(4)">
+            <option>Eenmalig</option>
+            <option>Altijd</option>
+            <option>Weekend</option>
+            <option>Werkdagen</option>
+        </select>
         <input type="checkbox" name="a4enabled" id="a4enabled" onchange="alarmChanged(4)">
         <br />
 
@@ -569,10 +594,11 @@
             var xhttp = new XMLHttpRequest();
             var time = document.getElementById('a'+index.toString()+'time').value;
             var mode = document.getElementById('a'+index.toString()+'mode').value;
+            var type = document.getElementById('a'+index.toString()+'type').value;
             var duration = document.getElementById('a'+index.toString()+'duration').value;
             var enabled = "off";
             if(document.getElementById('a'+index.toString()+'enabled').checked == true) enabled = "on";
-            xhttp.open("GET", "http://" + location.hostname + "/setalarm?number=" + index.toString() + "&time="+time+"&mode="+mode+"&enabled="+enabled+"&duration="+duration, true);
+            xhttp.open("GET", "http://" + location.hostname + "/setalarm?number=" + index.toString() + "&time="+time+"&mode="+mode+"&enabled="+enabled+"&duration="+duration+"&type="+type, true);
             xhttp.send();
         }
 
@@ -587,10 +613,10 @@
                     console.log("received " + xhttp.responseText);
                     var c = xhttp.responseText.split(",");
                     for (let i = 0; i < 5; i++) {
-                        document.getElementById('a'+i.toString()+'time').value = c[i*4];
-                        document.getElementById('a'+i.toString()+'duration').value = c[i*4+1];
-                        document.getElementById('a'+i.toString()+'mode').value = c[i*4+2];
-                        if(c[i*3+3] == "on")
+                        document.getElementById('a'+i.toString()+'time').value = c[i*5];
+                        document.getElementById('a'+i.toString()+'duration').value = c[i*5+1];
+                        document.getElementById('a'+i.toString()+'mode').value = c[i*5+2];
+                        if(c[i*5+3] == "on")
                         {
                             document.getElementById('a'+i.toString()+'enabled').checked = true;
                         }
@@ -598,6 +624,7 @@
                         {
                             document.getElementById('a'+i.toString()+'enabled').checked = false;
                         }
+                        document.getElementById('a'+i.toString()+'type').value = c[i*5+4];
                     }
                 }
             };
