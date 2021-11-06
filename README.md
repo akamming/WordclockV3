@@ -1,16 +1,41 @@
 # esp8266wordclock
 Wordclock with WS2812B RGB LED modules driven by an ESP8266 module
 
-This is my interpretation of the popular wordclock project. Key features:
+This is my adaptation of [thoralt's interpretation of the popular wordclock project](https://github.com/thoralt/esp8266wordclock). 
 
+All credits for Thoralt!!!! 
+
+this fork has all the original features:
 - runs on ESP8266 (ESP-07)
 - using Arduino framework
-- 114 WS2812B LEDs (driven by AdaFruit_NeoPixel library)
+- 114 WS2812B LEDs 
 - WiFi connected
 - WiFiManager allows for easy configuration when WiFi network is not yet configured
 - NTP client regularly fetches time
 - integrated web server handles configuration interface for colors, time server etc.
 - automatic brightness using LDR 
+
+plus several added features
+- translated to dutch
+- driven by [neopixelbus](https://github.com/Makuna/NeoPixelBus) to prevent  watchdog timer resets! This restricts the data pin to be used to be GPIO3. 
+- better stability (fixes for several exceptions)
+- added timers/alarms
+- wakeuplight function
+- nightmode
+- plugin available for [domoticz integration](https://github.com/akamming/Domoticz-WordClock) 
+
+original text readme:
+
+Key features:
+- runs on ESP8266 (ESP-07)
+- using Arduino framework
+- 114 WS2812B LEDs 
+- WiFi connected
+- WiFiManager allows for easy configuration when WiFi network is not yet configured
+- NTP client regularly fetches time
+- integrated web server handles configuration interface for colors, time server etc.
+- automatic brightness using LDR 
+
 
 ![front](https://github.com/thoralt/esp8266wordclock/blob/master/doc/exploding_letters.gif)
 ![front](https://github.com/thoralt/esp8266wordclock/blob/master/doc/IMG_5712.JPG)
