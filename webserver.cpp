@@ -526,6 +526,11 @@ void WebServerClass::handleSetMode()
 		if(this->server->arg("value") == "2") mode = DisplayMode::flyingLettersVerticalUp;
 		if(this->server->arg("value") == "3") mode = DisplayMode::flyingLettersVerticalDown;
 		if(this->server->arg("value") == "4") mode = DisplayMode::explode;
+    if(this->server->arg("value") == "5") mode = DisplayMode::plasma;
+    if(this->server->arg("value") == "6") mode = DisplayMode::matrix;
+    if(this->server->arg("value") == "7") mode = DisplayMode::heart;
+    if(this->server->arg("value") == "8") mode = DisplayMode::fire;
+    if(this->server->arg("value") == "9") mode = DisplayMode::stars;
 	}
 
 	if(mode == DisplayMode::invalid)
@@ -564,6 +569,16 @@ void WebServerClass::handleGetMode()
 		strcat(mode,"3"); break;
 	case DisplayMode::explode:
 		strcat(mode,"4"); break;
+  case DisplayMode::plasma:
+    strcat(mode,"5"); break;
+  case DisplayMode::matrix:
+    strcat(mode,"6"); break;
+  case DisplayMode::heart:
+    strcat(mode,"7"); break;
+  case DisplayMode::fire:
+    strcat(mode,"8"); break;
+  case DisplayMode::stars:
+    strcat(mode,"9"); break;
 	default:
 		strcat(mode,"0"); break;
 	}

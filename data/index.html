@@ -36,16 +36,20 @@
         <div class="slidediv">
             Helderheid  <input type="range" min="0" max="255" value="125" name="brightness" id="brightness" onchange="brightnessChanged(this.value)" />
         </div>
-        Overgangen
+        Effect
         <select name="displaymode" id="displaymode" class="transitions" onchange="displayModeChanged()">
             <option>Simpel</option>
             <option>Zachte overgangen</option>
             <option>Letters die naar boven vliegen</option>
             <option>Letters die naar beneden vallen</option>
             <option>Exploderende letters</option>
-            <option>Willekeurig</option>
-        </select>
-        <label><input type="checkbox" name="nachtmodus" id="nightmode" onchange="nightmodeEnableChanged()">Nachtstand</label>
+            <option>Plasma</option>
+            <option>The Matrix</option>
+            <option>Heart</option>>
+            <option>Fire</option>
+            <option>Stars</option>
+        </select><br />
+        <label>Nachtstand<input type="checkbox" name="nachtmodus" id="nightmode" onchange="nightmodeEnableChanged()"></label>
     </div>
 
 
@@ -251,8 +255,20 @@
             case 4: // exploding letters
             newMode = 4;
             break;
-            case 5: // random
+            case 5: // plasma
             newMode = 5;
+            break;
+            case 6: // matrix
+            newMode = 6;
+            break;
+            case 7: // heart
+            newMode = 7;
+            break;
+            case 8: // fire
+            newMode = 8;
+            break;
+            case 9: // stars
+            newMode = 9;
             break;
             default:
             newMode = 0;
