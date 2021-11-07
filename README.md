@@ -1,7 +1,8 @@
 # esp8266wordclock
 Wordclock with WS2812B RGB LED modules driven by an ESP8266 module
 
-This is my adaptation of [thoralt's interpretation of the popular wordclock project](https://github.com/thoralt/esp8266wordclock). 
+This is my adaptation of [thoralt's interpretation of the popular wordclock project](https://github.com/thoralt/esp8266wordclock):
+![front](https://github.com/akamming/WordclockV3/blob/master/doc/woordklok.png)
 
 All credits for Thoralt!!!! 
 
@@ -24,7 +25,9 @@ plus several added features
 - nightmode
 - plugin available for [domoticz integration](https://github.com/akamming/Domoticz-WordClock) 
 
-original text readme:
+
+
+## original text readme:
 
 Key features:
 - runs on ESP8266 (ESP-07)
