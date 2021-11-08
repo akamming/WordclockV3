@@ -39,15 +39,11 @@ private:
   bool endsWith(const char* what, const char* withwhat);
 	void handleSaveConfig();
 	void handleLoadConfig();
-	void handleGetColors();
 	void handleSetColor();
 	void handleNotFound();
 	void handleSetTimeZone();
-	void handleGetTimeZone();
 	void handleSetMode();
-	void handleGetMode();
 	void handleSetHeartbeat();
-	void handleGetHeartbeat();
 	void handleInfo();
 	void handleH();
 	void handleM();
@@ -55,20 +51,15 @@ private:
 	void handleG();
 	void handleB();
 	void handleDebug();
-  void handleGetBrightness();
   void handleSetBrightness();
 	void handleGetADC();
-	void handleGetNtpServer();
 	void handleSetNtpServer();
   void handleResetWifiCredentials();
   void handleFactoryReset();
   void handleReset();
-  void handleGetNightMode();
   void handleSetNightMode();
   void handleGetConfig();
-  void handleGetAlarms();
   void handleSetAlarm();
-  void handleGetHostname();
   void handleSetHostname();
 #ifdef DEBUG
   void handleShowCrashLog();

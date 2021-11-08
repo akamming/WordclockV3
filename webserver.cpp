@@ -86,32 +86,23 @@ void WebServerClass::begin()
 	this->server->on("/saveconfig", std::bind(&WebServerClass::handleSaveConfig, this));
 	this->server->on("/loadconfig", std::bind(&WebServerClass::handleLoadConfig, this));
 	this->server->on("/setheartbeat", std::bind(&WebServerClass::handleSetHeartbeat, this));
-	this->server->on("/getheartbeat", std::bind(&WebServerClass::handleGetHeartbeat, this));
-	this->server->on("/getcolors", std::bind(&WebServerClass::handleGetColors, this));
-	this->server->on("/getntpserver", std::bind(&WebServerClass::handleGetNtpServer, this));
 	this->server->on("/setntpserver", std::bind(&WebServerClass::handleSetNtpServer, this));
 	this->server->on("/h", std::bind(&WebServerClass::handleH, this));
 	this->server->on("/m", std::bind(&WebServerClass::handleM, this));
 	this->server->on("/r", std::bind(&WebServerClass::handleR, this));
 	this->server->on("/g", std::bind(&WebServerClass::handleG, this));
 	this->server->on("/b", std::bind(&WebServerClass::handleB, this));
-  this->server->on("/getbrightness", std::bind(&WebServerClass::handleGetBrightness, this));
   this->server->on("/setbrightness", std::bind(&WebServerClass::handleSetBrightness, this));
 	this->server->on("/getadc", std::bind(&WebServerClass::handleGetADC, this));
 	this->server->on("/setmode", std::bind(&WebServerClass::handleSetMode, this));
-	this->server->on("/getmode", std::bind(&WebServerClass::handleGetMode, this));
 	this->server->on("/settimezone", std::bind(&WebServerClass::handleSetTimeZone, this));
-	this->server->on("/gettimezone", std::bind(&WebServerClass::handleGetTimeZone, this));
   this->server->on("/debug", std::bind(&WebServerClass::handleDebug, this));
   this->server->on("/resetwificredentials", std::bind(&WebServerClass::handleResetWifiCredentials, this));
   this->server->on("/factoryreset", std::bind(&WebServerClass::handleFactoryReset, this));
   this->server->on("/reset", std::bind(&WebServerClass::handleReset, this));
   this->server->on("/setnightmode", std::bind(&WebServerClass::handleSetNightMode, this));
-  this->server->on("/getnightmode", std::bind(&WebServerClass::handleGetNightMode, this));
   this->server->on("/getconfig", std::bind(&WebServerClass::handleGetConfig, this));
-  this->server->on("/getalarms", std::bind(&WebServerClass::handleGetAlarms, this));
   this->server->on("/setalarm", std::bind(&WebServerClass::handleSetAlarm, this));
-  this->server->on("/gethostname", std::bind(&WebServerClass::handleGetHostname, this));
   this->server->on("/sethostname", std::bind(&WebServerClass::handleSetHostname, this));
   
 #ifdef DEBUG
@@ -342,22 +333,6 @@ void WebServerClass::handleB()
 }
 
 //---------------------------------------------------------------------------------------
-// handleGetBrightness
-//
-// Handles the /getbrightness request, returns the brightness value
-//
-// -> --
-// <- --
-//---------------------------------------------------------------------------------------
-void WebServerClass::handleGetBrightness()
-{
-  char buf[5];
-  sprintf(buf,"%d",Brightness.brightnessOverride);
-  this->server->send(200, "text/plain", buf);
-}
-
-
-//---------------------------------------------------------------------------------------
 // handleSetBrightness
 //
 // Handles the /setbrightness request, sets LED matrix to selected brightness, 256 = auto
@@ -377,7 +352,7 @@ void WebServerClass::handleSetBrightness()
 }
 
 //---------------------------------------------------------------------------------------
-// handleNightMode
+// handleSetNightMode
 //
 // Handles the /setnightmode request, sets LED matrix to night mode palette
 //
@@ -394,22 +369,6 @@ void WebServerClass::handleSetNightMode()
     this->server->send(200, "text/plain", "OK");
   }
 }
-
-//---------------------------------------------------------------------------------------
-// handleGetNightmode
-//
-// Returns the state of the heartbeat flag.
-//
-// -> --
-// <- --
-//---------------------------------------------------------------------------------------
-void WebServerClass::handleGetNightMode()
-{
-  if(Config.nightmode) this->server->send(200, "text/plain", "1");
-  else this->server->send(200, "text/plain", "0");
-}
-
-
 
 void WebServerClass::handleDebug()
 {
@@ -490,22 +449,6 @@ void WebServerClass::handleSetTimeZone()
 }
 
 //---------------------------------------------------------------------------------------
-// handleGetTimeZone
-//
-// Handles the /gettimezone request, delivers offset to UTC in hours.
-//
-// -> --
-// <- --
-//---------------------------------------------------------------------------------------
-void WebServerClass::handleGetTimeZone()
-{
-
-  char buf[3];
-  sprintf(buf,"%u",Config.timeZone);
-	this->server->send(200, "text/plain", buf);
-}
-
-//---------------------------------------------------------------------------------------
 // handleSetMode
 //
 // Handles the /setmode request. Sets the display mode to one of the allowed values,
@@ -547,45 +490,6 @@ void WebServerClass::handleSetMode()
 }
 
 //---------------------------------------------------------------------------------------
-// handleGetMode
-//
-// Handles the /getmode request and returns the current default display mode.
-//
-// -> --
-// <- --
-//---------------------------------------------------------------------------------------
-void WebServerClass::handleGetMode()
-{
-	char mode[5] = "";
-	switch(Config.defaultMode)
-	{
-	case DisplayMode::plain:
-		strcat(mode,"0"); break;
-	case DisplayMode::fade:
-		strcat(mode,"1"); break;
-	case DisplayMode::flyingLettersVerticalUp:
-		strcat(mode,"2"); break;
-	case DisplayMode::flyingLettersVerticalDown:
-		strcat(mode,"3"); break;
-	case DisplayMode::explode:
-		strcat(mode,"4"); break;
-  case DisplayMode::plasma:
-    strcat(mode,"5"); break;
-  case DisplayMode::matrix:
-    strcat(mode,"6"); break;
-  case DisplayMode::heart:
-    strcat(mode,"7"); break;
-  case DisplayMode::fire:
-    strcat(mode,"8"); break;
-  case DisplayMode::stars:
-    strcat(mode,"9"); break;
-	default:
-		strcat(mode,"0"); break;
-	}
-	this->server->send(200, "text/plain", mode);
-}
-
-//---------------------------------------------------------------------------------------
 // handleNotFound
 //
 // Handles all requests not bound to other handlers, tries to serve a file if found in
@@ -613,24 +517,6 @@ void WebServerClass::handleNotFound()
 		}
 		this->server->send(404, "text/plain", message);
 	}
-}
-
-//---------------------------------------------------------------------------------------
-// handleGetNtpServer
-//
-// Delivers the currently configured NTP server IP address
-//
-// -> --
-// <- --
-//---------------------------------------------------------------------------------------
-void WebServerClass::handleGetNtpServer()
-{
-
-  char NTPServer[20];
-  sprintf(NTPServer,"%u.%u.%u.%u",Config.ntpserver[0],Config.ntpserver[1],Config.ntpserver[2],Config.ntpserver[3]);
-
-  // this->server->send(200, "application/json", Config.ntpserver.toString());
-  this->server->send(200, "application/json", NTPServer);
 }
 
 //---------------------------------------------------------------------------------------
@@ -676,6 +562,7 @@ void WebServerClass::handleInfo()
 	json["cpufrequency"] = ESP.getCpuFreqMHz();
 	json["chipid"] = ESP.getChipId();
 	json["sdkversion"] = ESP.getSdkVersion();
+  json["coreversion"] = ESP.getCoreVersion ();
 	json["bootversion"] = ESP.getBootVersion();
 	json["bootmode"] = ESP.getBootMode();
 	json["flashid"] = ESP.getFlashChipId();
@@ -792,96 +679,6 @@ void WebServerClass::handleSetHeartbeat()
 }
 
 //---------------------------------------------------------------------------------------
-// handleGetHeartbeat
-//
-// Returns the state of the heartbeat flag.
-//
-// -> --
-// <- --
-//---------------------------------------------------------------------------------------
-void WebServerClass::handleGetHeartbeat()
-{
-	if(Config.heartbeat) this->server->send(200, "text/plain", "1");
-	else this->server->send(200, "text/plain", "0");
-}
-
-//---------------------------------------------------------------------------------------
-// handleGetColors
-//
-// Outputs the currently active colors as comma separated list for background, foreground
-// and seconds color with 3 values each (red, green, blue)
-//
-// -> --
-// <- --
-//---------------------------------------------------------------------------------------
-void WebServerClass::handleGetColors()
-{
-  char message[50];
-  sprintf(message,"%u,%u,%u,%u,%u,%u,%u,%u,%u",Config.bg.r,Config.bg.g,Config.bg.b,
-                                               Config.fg.r,Config.fg.g,Config.fg.b,
-                                               Config.s.r, Config.s.g, Config.s.b);
-  this->server->send(200, "text/plain", message);
-}
-
-//---------------------------------------------------------------------------------------
-// handleGetAlarms
-//
-// gets the alarms
-//
-// -> --
-// <- --
-//---------------------------------------------------------------------------------------
-void WebServerClass::handleGetAlarms()
-{
-  char alarmmode[10];
-  char message[256]="";
-
-  for (int i=0;i<5;i++) {
-    char displaymode[20];
-    char alarmtype[20];
-    
-    switch(Config.alarm[i].mode)
-    {
-    case DisplayMode::matrix:
-      strcpy(displaymode,"matrix"); break;
-    case DisplayMode::plasma:
-      strcpy(displaymode,"plasma"); break;
-    case DisplayMode::fire:
-      strcpy(displaymode,"fire"); break;
-    case DisplayMode::heart:
-      strcpy(displaymode,"heart"); break;
-    case DisplayMode::stars:
-      strcpy(displaymode,"stars"); break;
-    case DisplayMode::wakeup:
-      strcpy(displaymode,"wakeup"); break;
-    default:
-      strcpy(displaymode,"unknown"); break;
-    }
-
-    switch(Config.alarm[i].type)
-    {
-      case AlarmType::oneoff:
-        strcpy(alarmtype,"Eenmalig"); break;
-      case AlarmType::always:
-        strcpy(alarmtype,"Altijd"); break;
-      case AlarmType::weekend:
-        strcpy(alarmtype,"Weekend"); break;
-      case AlarmType::workingdays:
-        strcpy(alarmtype,"Werkdagen"); break;
-      default:
-        strcpy(alarmtype,"Onbekend"); break;
-    }
-
-    // buildup alarmchararray
-    char buffer[40];
-    sprintf(buffer,"%02d:%02d,%d,%s,%s,%s,",Config.alarm[i].h,Config.alarm[i].m,Config.alarm[i].duration,displaymode,Config.alarm[i].enabled ? "on" : "off",alarmtype);
-    strcat(message,buffer); 
-  }
-  this->server->send(200, "text/plain", message);
-
-}
-
-//---------------------------------------------------------------------------------------
 // handleSetAlarm
 //
 // Sets an alarm
@@ -950,19 +747,6 @@ void WebServerClass::handleSetAlarm()
   }
 
   Config.saveDelayed();
-}
-
-//---------------------------------------------------------------------------------------
-// handleGetHostname
-//
-// Outputs the currently active hostname
-//
-// -> --
-// <- --
-//---------------------------------------------------------------------------------------
-void WebServerClass::handleGetHostname()
-{
-    this->server->send(200, "text/plain", Config.hostname); 
 }
 
 //---------------------------------------------------------------------------------------
@@ -1039,7 +823,6 @@ void WebServerClass::handleGetConfig()
   json["displaymode"] =  displaymode;
   json["timezone"] = Config.timeZone;
   json["nightmode"] = Config.nightmode;
-  // json["heartbeat"] = (Config.heartbeat==1) ? true : false;
   json["heartbeat"] = Config.heartbeat==1;
   char NTPServer[20];
   sprintf(NTPServer,"%u.%u.%u.%u",Config.ntpserver[0],Config.ntpserver[1],Config.ntpserver[2],Config.ntpserver[3]);
