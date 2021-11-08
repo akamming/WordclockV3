@@ -356,7 +356,7 @@
             return button.jscolor.toString();
             }
 
-            function loadColors()
+            function loadConfig()
             {
             var xhttp = new XMLHttpRequest();
             xhttp.onreadystatechange = function()
@@ -364,46 +364,34 @@
             if(xhttp.readyState == 4 && xhttp.status == 200)
             {
             console.log("received " + xhttp.responseText);
-            var c = xhttp.responseText.split(",");
-            newBackground = updateButton('backgroundColorButton', 'Achtergrond', c[0], c[1], c[2]);
-            newForeground = updateButton('foregroundColorButton', 'Voorgrond', c[3], c[4], c[5]);
-            newSeconds = updateButton('secondsColorButton', 'Seconden', c[6], c[7], c[8]);
+            const json = JSON.parse(xhttp.responseText);
+            newBackground = updateButton('backgroundColorButton', 'Achtergrond', json.backgroundcolor.r, json.backgroundcolor.g, json.backgroundcolor.b);
+            newForeground = updateButton('foregroundColorButton', 'Voorgrond', json.foregroundcolor.r, json.foregroundcolor.g, json.foregroundcolor.b);
+            newSeconds = updateButton('secondsColorButton', 'Seconden', json.secondscolor.r, json.secondscolor.g, json.secondscolor.b);
             lastBackground = newBackground;
             lastForeground = newForeground;
             lastSeconds = newSeconds;
-            }
-            };
-            xhttp.open("GET", "http://" + location.hostname + "/getcolors", true);
-            xhttp.send();
-            }
 
-            function loadNtpServer()
-            {
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function()
-            {
-            if(xhttp.readyState == 4 && xhttp.status == 200)
-            {
-            console.log("received " + xhttp.responseText);
-            document.getElementById('ntpserver').value = xhttp.responseText;
-            }
-            };
-            xhttp.open("GET", "http://" + location.hostname + "/getntpserver", true);
-            xhttp.send();
-            }
+            document.getElementById('ntpserver').value = json.NTPServer;
+            document.getElementById('hostname').value = json.hostname;
+            document.getElementById('displaymode').selectedIndex = json.displaymode;
+            document.getElementById('heartbeat').checked = json.heartbeat;
+            document.getElementById('nightmode').checked = json.nightmode;
+            document.getElementById('timezone').selectedIndex = json.timezone + 12;
+            document.getElementById('brightness').value = json.Brightness;
 
-            function loadHostname()
+            for (let i = 0; i < 5; i++) 
             {
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function()
-            {
-            if(xhttp.readyState == 4 && xhttp.status == 200)
-            {
-            console.log("received " + xhttp.responseText);
-            document.getElementById('hostname').value = xhttp.responseText;
+            document.getElementById('a'+i.toString()+'time').value = json.Alarm[i].time;
+            document.getElementById('a'+i.toString()+'duration').value = json.Alarm[i].duration;
+            document.getElementById('a'+i.toString()+'mode').value = json.Alarm[i].mode;
+            document.getElementById('a'+i.toString()+'enabled').checked = json.Alarm[i].enabled;
+            document.getElementById('a'+i.toString()+'type').value = json.Alarm[i].type;
+            }   
+
             }
             };
-            xhttp.open("GET", "http://" + location.hostname + "/gethostname", true);
+            xhttp.open("GET", "http://" + location.hostname + "/getconfig", true);
             xhttp.send();
             }
 
@@ -503,98 +491,6 @@
             xhttp.send();
             }
 
-
-            function loadTimeZone()
-            {
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function()
-            {
-            if(xhttp.readyState == 4 && xhttp.status == 200)
-            {
-            console.log("received " + xhttp.responseText);
-            document.getElementById('timezone').selectedIndex = parseInt(xhttp.responseText) + 12;
-            }
-            };
-            xhttp.open("GET", "http://" + location.hostname + "/gettimezone", true);
-            xhttp.send();
-            }
-
-            function loadMode()
-            {
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function()
-            {
-            if(xhttp.readyState == 4 && xhttp.status == 200)
-            {
-            console.log("received " + xhttp.responseText);
-            document.getElementById('displaymode').selectedIndex = xhttp.responseText;
-            }
-            };
-            xhttp.open("GET", "http://" + location.hostname + "/getmode", true);
-            xhttp.send();
-            }
-
-            function loadHeartbeat()
-            {
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function()
-            {
-            if(xhttp.readyState == 4 && xhttp.status == 200)
-            {
-            console.log("received " + xhttp.responseText);
-            if(xhttp.responseText == "1")
-            {
-            document.getElementById('heartbeat').checked = true;
-            }
-            else
-            {
-            document.getElementById('heartbeat').checked = false;
-            }
-
-            }
-            };
-            xhttp.open("GET", "http://" + location.hostname + "/getheartbeat", true);
-            xhttp.send();
-            }
-
-            function loadNightMode()
-            {
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function()
-            {
-            if(xhttp.readyState == 4 && xhttp.status == 200)
-            {
-            console.log("received " + xhttp.responseText);
-            if(xhttp.responseText == "1")
-            {
-            document.getElementById('nightmode').checked = true;
-            }
-            else
-            {
-            document.getElementById('nightmode').checked = false;
-            }
-
-            }
-            };
-            xhttp.open("GET", "http://" + location.hostname + "/getnightmode", true);
-            xhttp.send();
-            }
-
-            function loadBrightness()
-            {
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function()
-            {
-            if(xhttp.readyState == 4 && xhttp.status == 200)
-            {
-            console.log("received " + xhttp.responseText);
-            document.getElementById('brightness').value = xhttp.responseText;
-            }
-            };
-            xhttp.open("GET", "http://" + location.hostname + "/getbrightness", true);
-            xhttp.send();
-            }
-
             function brightnessChanged(slidevalue)
             {
 
@@ -649,15 +545,7 @@
 
             function loadSettings()
             {
-            loadColors();
-            loadNtpServer();
-            loadHostname();
-            loadMode();
-            loadHeartbeat();
-            loadNightMode();
-            loadTimeZone();
-            loadBrightness();
-            loadAlarms();
+            loadConfig();
             }
 
         </script>

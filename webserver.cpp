@@ -1038,8 +1038,9 @@ void WebServerClass::handleGetConfig()
 
   json["displaymode"] =  displaymode;
   json["timezone"] = Config.timeZone;
-  json["nightmode"] = Config.nightmode ? "on" : "off";
-  json["heartbeat"] = (Config.heartbeat==1) ? "on" : "off";
+  json["nightmode"] = Config.nightmode;
+  // json["heartbeat"] = (Config.heartbeat==1) ? true : false;
+  json["heartbeat"] = Config.heartbeat==1;
   char NTPServer[20];
   sprintf(NTPServer,"%u.%u.%u.%u",Config.ntpserver[0],Config.ntpserver[1],Config.ntpserver[2],Config.ntpserver[3]);
 
@@ -1084,12 +1085,14 @@ void WebServerClass::handleGetConfig()
         alarmtype="Onbekend"; break;
     }
 
+    char timestr[6];
+    sprintf(timestr,"%02d:%02d",Config.alarm[i].h,Config.alarm[i].m);
+
     JsonObject alarmobject = Alarm.createNestedObject();
-    alarmobject["h"]=Config.alarm[i].h;  
-    alarmobject["m"]=Config.alarm[i].m;  
+    alarmobject["time"]=timestr;
     alarmobject["duration"]=Config.alarm[i].duration;  
     alarmobject["mode"]=alarmmode;  
-    alarmobject["enabled"]=Config.alarm[i].enabled ? "on" : "off";  
+    alarmobject["enabled"]=Config.alarm[i].enabled;  
     alarmobject["type"]=alarmtype;
   }
   String buf;
