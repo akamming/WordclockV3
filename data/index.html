@@ -48,6 +48,7 @@
             <option>Heart</option>>
             <option>Fire</option>
             <option>Stars</option>
+            <option>Random</option>
         </select><br />
         <label>Nachtstand<input type="checkbox" name="nachtmodus" id="nightmode" onchange="nightmodeEnableChanged()"></label>
     </div>
@@ -269,6 +270,9 @@
             break;
             case 9: // stars
             newMode = 9;
+            break;
+            case 10: // random
+            newMode=10;
             break;
             default:
             newMode = 0;
