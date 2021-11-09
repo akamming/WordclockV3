@@ -474,6 +474,11 @@ void WebServerClass::handleSetMode()
     if(this->server->arg("value") == "7") mode = DisplayMode::heart;
     if(this->server->arg("value") == "8") mode = DisplayMode::fire;
     if(this->server->arg("value") == "9") mode = DisplayMode::stars;
+    if(this->server->arg("value") == "10") mode = DisplayMode::random;
+    if(this->server->arg("value") == "11") mode = DisplayMode::HorizontalStripes;
+    if(this->server->arg("value") == "12") mode = DisplayMode::VerticalStripes;
+    if(this->server->arg("value") == "13") mode = DisplayMode::MovingTriangle;
+    
 	}
 
 	if(mode == DisplayMode::invalid)
@@ -483,6 +488,7 @@ void WebServerClass::handleSetMode()
 	else
 	{
 		LED.setMode(mode);
+    LED.lastOffset=0; // in case of moving effects, reset from start
 		Config.defaultMode = mode;
 		Config.save();
 		this->server->send(200, "text/plain", "OK");
@@ -801,9 +807,26 @@ void WebServerClass::handleGetConfig()
     displaymode = 4; break;
   case DisplayMode::wakeup:
     displaymode = 5; break;
+  case DisplayMode::matrix:
+    displaymode = 6; break;
+  case DisplayMode::heart:
+    displaymode = 7; break;
+  case DisplayMode::fire:
+    displaymode = 8; break;
+  case DisplayMode::stars:
+    displaymode = 9; break;
+  case DisplayMode::random:
+    displaymode = 10; break;
+  case DisplayMode::HorizontalStripes:
+    displaymode = 11; break;
+  case DisplayMode::VerticalStripes:
+    displaymode = 12; break;
+  case DisplayMode::MovingTriangle:
+    displaymode = 13; break;
   default:
-    displaymode = 0; break;
+    displaymode = 1; break;
   }
+ 
   JsonObject background = json.createNestedObject("backgroundcolor");
   background["r"] = Config.bg.r;
   background["g"] = Config.bg.g;

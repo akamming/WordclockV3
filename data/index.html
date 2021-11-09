@@ -49,6 +49,9 @@
             <option>Fire</option>
             <option>Stars</option>
             <option>Random</option>
+            <option>Horizontale Strepen</option>
+            <option>Verticale Strepen</option>
+            <option>Bewegende Driehoek</option>
         </select><br />
         <label>Nachtstand<input type="checkbox" name="nachtmodus" id="nightmode" onchange="nightmodeEnableChanged()"></label>
     </div>
@@ -237,47 +240,8 @@
 
             function displayModeChanged()
             {
-            var newMode;
             var displayModeCombo = document.getElementById("displaymode");
-            switch(displayModeCombo.selectedIndex)
-            {
-            case 0: // plain
-            newMode = 0;
-            break;
-            case 1: // fade
-            newMode = 1;
-            break;
-            case 2: // flying letters vertical up
-            newMode = 2;
-            break;
-            case 3: // flying letters vertical down
-            newMode = 3;
-            break;
-            case 4: // exploding letters
-            newMode = 4;
-            break;
-            case 5: // plasma
-            newMode = 5;
-            break;
-            case 6: // matrix
-            newMode = 6;
-            break;
-            case 7: // heart
-            newMode = 7;
-            break;
-            case 8: // fire
-            newMode = 8;
-            break;
-            case 9: // stars
-            newMode = 9;
-            break;
-            case 10: // random
-            newMode=10;
-            break;
-            default:
-            newMode = 0;
-            break;
-            }
+            var newMode = displayModeCombo.selectedIndex;
             var xhttp = new XMLHttpRequest();
             xhttp.open("GET", "http://" + location.hostname + "/setmode?value=" + newMode, true);
             xhttp.send();

@@ -70,7 +70,9 @@ public:
 	static const int width = 11;
 	static const int height = 10;
 	uint8_t currentValues[NUM_PIXELS * 3];
-  float AlarmProgress=0;
+  float AlarmProgress=0; // let the alarm know how much % of the time has passed
+  unsigned long lastUpdate=0; // for some effects
+  int lastOffset=0; // for some effects
 
 #ifdef FASTLED
   CRGB leds[NUM_PIXELS]; // FastLed
@@ -95,6 +97,7 @@ private:
 	std::vector<MatrixObject> matrix;
 	std::vector<StarObject> stars;
 	uint8_t targetValues[NUM_PIXELS * 3];
+
   
 	int heartBrightness = 0;
 	int heartState = 0;
@@ -105,7 +108,6 @@ private:
 	int ms = 0;
 	int lastM = -1;
 	int lastH = -1;
-  
 
 	void fillBackground(int seconds, int milliseconds, uint8_t *buf);
   void fillTime(int h, int m, uint8_t *target);
@@ -119,6 +121,7 @@ private:
   void renderStars();
   palette_entry blendedColor(palette_entry from_color, palette_entry to_color, float progress);
   void renderWakeup();
+  void renderRandom(uint8_t *target);
 	void renderUpdate();
 	void renderUpdateComplete();
 	void renderUpdateError();
@@ -127,7 +130,8 @@ private:
 	void renderTime(uint8_t *target, int h, int m, int s, int ms);
 	void renderFlyingLetters();
 	void prepareFlyingLetters(uint8_t *source);
-	void renderExplosion();
+  void renderExplosion();
+  void renderStripes(uint8_t *target, palette_entry *palette, byte NoOfColorsInPalette, bool Horizontal);
 	void prepareExplosion(uint8_t *source);
 	void fade();
 	void set(const uint8_t *buf, palette_entry palette[]);

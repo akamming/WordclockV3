@@ -411,6 +411,15 @@ void LEDFunctionsClass::process()
   case DisplayMode::wakeup:
     this->renderWakeup();
     break;
+  case DisplayMode::random: 
+    this->renderRandom(buf);
+    break;
+  case DisplayMode::HorizontalStripes: 
+    this->renderStripes(buf,palette,3,true);
+    break;
+  case DisplayMode::VerticalStripes: 
+    this->renderStripes(buf,palette,3,false);
+    break;
 
 	case DisplayMode::fade:
 		this->renderTime(buf, this->h, this->m, this->s, this->ms);
@@ -418,7 +427,7 @@ void LEDFunctionsClass::process()
 		this->fade();
 		break;
 
-	case DisplayMode::random: // TODO: Implement random display mode
+    
 	case DisplayMode::plain:
 	default:
 		this->renderTime(buf, this->h, this->m, this->s, this->ms);
@@ -623,7 +632,7 @@ void LEDFunctionsClass::fade()
 	for (int i = 0; i < NUM_PIXELS * 3; i++)
 	{
 		delta = this->targetValues[i] - this->currentValues[i];
-		if (delta > 128) this->currentValues[i] += 32;
+    if (delta > 128) this->currentValues[i] += 32;
     else if (delta > 64) this->currentValues[i] += 16;
     else if (delta > 16) this->currentValues[i] += 8;
 		else if (delta > 0) this->currentValues[i]++;
@@ -777,6 +786,83 @@ void LEDFunctionsClass::fillTime(int h, int m, uint8_t *target)
 //---------------------------------------------------------------------------------------
 #if 1 // rendering methods
 //---------------------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------------------
+// renderRandom
+//
+// Loads internal buffers with random colors
+//
+// -> target: buffer to be filled
+//    noofcolors: number of colors to populate
+// <- --
+//---------------------------------------------------------------------------------------
+void LEDFunctionsClass::renderRandom(uint8_t *target)
+{
+    palette_entry palette[] = {
+    {255, 0, 0},
+    {0, 255, 0},
+    {0, 0, 255}};
+
+  if ((unsigned long)(millis() - this->lastUpdate) >= 250) // Update every 250ms
+  {
+    for (int i=0;i<NUM_PIXELS;i++)
+    {
+      target[i]=random(0,3);
+    }
+    this->lastUpdate=millis();
+    this->set(target, palette, false);
+  }
+  this->fade();
+}
+
+//---------------------------------------------------------------------------------------
+// renderStripes
+//
+// Loads internal buffers with stripes using palette
+//
+// -> target: buffer to be filled
+//    noofcolors: number of colors to populate
+// <- --
+//---------------------------------------------------------------------------------------
+void LEDFunctionsClass::renderStripes(uint8_t *target, palette_entry *palette, byte NoOfColorsInPalette, bool Horizontal)
+{
+  int rows=10;
+  int cols=11;
+  int Offset=0;
+  
+  if ((unsigned long)(millis() - this->lastUpdate) >= 100) // Update every 100ms
+  {
+
+    // fill 4 dots
+    for (int i=0; i<4; i++){
+      target[rows*cols+i]=(Offset+this->lastOffset)%NoOfColorsInPalette;
+      Offset++;
+    }
+
+    if (Horizontal)
+    {
+      for (int y=0;y<rows;y++){
+        for (int x=0;x<cols;x++){
+          target[y*cols+x]=(Offset+this->lastOffset)%NoOfColorsInPalette;
+        }
+        Offset++;
+      }
+    } else {
+      for (int x=0;x<cols;x++){
+        for (int y=0;y<rows;y++){
+          target[y*cols+x]=(Offset+this->lastOffset)%NoOfColorsInPalette;
+        }
+        Offset++;
+      }
+    }
+    this->lastOffset++;
+    this->lastUpdate=millis();
+    this->set(target, palette, false);
+  }
+  this->fade();
+}
+
+
 
 //---------------------------------------------------------------------------------------
 // renderTime
