@@ -48,11 +48,14 @@
             <option>Heart</option>>
             <option>Fire</option>
             <option>Stars</option>
-            <option>Random</option>
+            <option>Willekeurig</option>
             <option>Horizontale Strepen</option>
             <option>Verticale Strepen</option>
-            <option>Bewegende Driehoek</option>
+            <option>Willekeurige stippen</option>
         </select><br />
+        <div class="slidediv">
+            Snelheid<input type="range" min="1" max="100" value="50" name="animspeed" id="animspeed" onchange="animspeedChanged(this.value)" />
+        </div>
         <label>Nachtstand<input type="checkbox" name="nachtmodus" id="nightmode" onchange="nightmodeEnableChanged()"></label>
     </div>
 
@@ -347,6 +350,7 @@
             document.getElementById('nightmode').checked = json.nightmode;
             document.getElementById('timezone').selectedIndex = json.timezone + 12;
             document.getElementById('brightness').value = json.Brightness;
+            document.getElementById('animspeed').value = json.animspeed;
 
             for (let i = 0; i < 5; i++) 
             {
@@ -461,9 +465,15 @@
 
             function brightnessChanged(slidevalue)
             {
-
             var xhttp = new XMLHttpRequest();
             xhttp.open("GET", "http://" + location.hostname + "/setbrightness?value=" + slidevalue, true);
+            xhttp.send();
+            }
+
+            function animspeedChanged(slidevalue)
+            {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "http://" + location.hostname + "/setanimspeed?value=" + slidevalue, true);
             xhttp.send();
             }
 
@@ -477,36 +487,6 @@
             var enabled = "off";
             if(document.getElementById('a'+index.toString()+'enabled').checked == true) enabled = "on";
             xhttp.open("GET", "http://" + location.hostname + "/setalarm?number=" + index.toString() + "&time="+time+"&mode="+mode+"&enabled="+enabled+"&duration="+duration+"&type="+type, true);
-            xhttp.send();
-            }
-
-            function loadAlarms()
-            {
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function()
-            {
-            if(xhttp.readyState == 4 && xhttp.status == 200)
-            {
-
-            console.log("received " + xhttp.responseText);
-            var c = xhttp.responseText.split(",");
-            for (let i = 0; i < 5; i++) {
-            document.getElementById('a'+i.toString()+'time').value = c[i*5];
-            document.getElementById('a'+i.toString()+'duration').value = c[i*5+1];
-            document.getElementById('a'+i.toString()+'mode').value = c[i*5+2];
-            if(c[i*5+3] == "on")
-            {
-            document.getElementById('a'+i.toString()+'enabled').checked = true;
-            }
-            else
-            {
-            document.getElementById('a'+i.toString()+'enabled').checked = false;
-            }
-            document.getElementById('a'+i.toString()+'type').value = c[i*5+4];
-            }
-            }
-            };
-            xhttp.open("GET", "http://" + location.hostname + "/getalarms", true);
             xhttp.send();
             }
 

@@ -61,6 +61,8 @@ private:
   void handleGetConfig();
   void handleSetAlarm();
   void handleSetHostname();
+  void handleSetAnimSpeed();
+
 #ifdef DEBUG
   void handleShowCrashLog();
   void handleClearCrashLog();

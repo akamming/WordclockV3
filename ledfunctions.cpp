@@ -415,10 +415,13 @@ void LEDFunctionsClass::process()
     this->renderRandom(buf);
     break;
   case DisplayMode::HorizontalStripes: 
-    this->renderStripes(buf,palette,3,true);
+    this->renderStripes(buf,true);
     break;
   case DisplayMode::VerticalStripes: 
-    this->renderStripes(buf,palette,3,false);
+    this->renderStripes(buf,false);
+    break;
+  case DisplayMode::RandomDots: 
+    this->renderRandomDots();
     break;
 
 	case DisplayMode::fade:
@@ -612,6 +615,37 @@ void LEDFunctionsClass::setBuffer(uint8_t *target, const uint8_t *source,
 }
 
 //---------------------------------------------------------------------------------------
+// renderRandomDots
+//
+// Fade one step of the color values from this->currentValues[i] to 
+// this->targetValues[i]. Uses non-linear fade speed depending on distance to target
+// value.
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void LEDFunctionsClass::renderRandomDots()
+{
+  if ((unsigned long)(millis() - this->lastUpdate) >= (100-Config.animspeed)*10) 
+  {
+    // set target
+    for (int i=0;i<NUM_PIXELS*3;i++)
+    {
+      this->targetValues[i]=0;
+    }
+
+    // change current (for 1 dot)
+    byte RandomDot=random(NUM_PIXELS);
+    this->currentValues[RandomDot*3]=random(2)*255;
+    this->currentValues[RandomDot*3+1]=random(2)*255;
+    this->currentValues[RandomDot*3+2]=random(2)*255;
+    this->lastUpdate=millis();
+  }
+  
+  this->fade();
+}
+
+//---------------------------------------------------------------------------------------
 // fade
 //
 // Fade one step of the color values from this->currentValues[i] to 
@@ -623,24 +657,29 @@ void LEDFunctionsClass::setBuffer(uint8_t *target, const uint8_t *source,
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::fade()
 {
-	static int prescaler = 0;
-	if(++prescaler<2) return;
-	prescaler = 0;
-
-
-	int delta;
-	for (int i = 0; i < NUM_PIXELS * 3; i++)
-	{
-		delta = this->targetValues[i] - this->currentValues[i];
-    if (delta > 128) this->currentValues[i] += 32;
-    else if (delta > 64) this->currentValues[i] += 16;
-    else if (delta > 16) this->currentValues[i] += 8;
-		else if (delta > 0) this->currentValues[i]++;
-    else if (delta < -128) this->currentValues[i] -= 32;
-		else if (delta < -64) this->currentValues[i] -= 16;
-		else if (delta < -16) this->currentValues[i] -= 8;
-		else if (delta < 0) this->currentValues[i]--;
-	}
+  if ((unsigned long)(millis() - this->lastFadeTick) >= 15) 
+  {
+    this->lastFadeTick=millis();
+    
+  	static int prescaler = 0;
+  	if(++prescaler<2) return;
+  	prescaler = 0;
+  
+  
+  	int delta;
+  	for (int i = 0; i < NUM_PIXELS * 3; i++)
+  	{
+  		delta = this->targetValues[i] - this->currentValues[i];
+      if (delta > 128) this->currentValues[i] += 32;
+      else if (delta > 64) this->currentValues[i] += 16;
+      else if (delta > 16) this->currentValues[i] += 8;
+  		else if (delta > 0) this->currentValues[i]++;
+      else if (delta < -128) this->currentValues[i] -= 32;
+  		else if (delta < -64) this->currentValues[i] -= 16;
+  		else if (delta < -16) this->currentValues[i] -= 8;
+  		else if (delta < 0) this->currentValues[i]--;
+  	}
+  }
 }
 
 //---------------------------------------------------------------------------------------
@@ -799,15 +838,21 @@ void LEDFunctionsClass::fillTime(int h, int m, uint8_t *target)
 void LEDFunctionsClass::renderRandom(uint8_t *target)
 {
     palette_entry palette[] = {
-    {255, 0, 0},
-    {0, 255, 0},
-    {0, 0, 255}};
+      {0, 0, 0},
+      {255, 0, 0},
+      {0, 255, 0},
+      {0, 0, 255},
+      {255, 255, 0},
+      {255, 0, 255},
+      {0, 255, 255},
+      {255, 255, 255}
+    };
 
-  if ((unsigned long)(millis() - this->lastUpdate) >= 250) // Update every 250ms
+  if ((unsigned long)(millis() - this->lastUpdate) >= (100-Config.animspeed)*20) 
   {
     for (int i=0;i<NUM_PIXELS;i++)
     {
-      target[i]=random(0,3);
+      target[i]=random(8);
     }
     this->lastUpdate=millis();
     this->set(target, palette, false);
@@ -824,33 +869,47 @@ void LEDFunctionsClass::renderRandom(uint8_t *target)
 //    noofcolors: number of colors to populate
 // <- --
 //---------------------------------------------------------------------------------------
-void LEDFunctionsClass::renderStripes(uint8_t *target, palette_entry *palette, byte NoOfColorsInPalette, bool Horizontal)
+void LEDFunctionsClass::renderStripes(uint8_t *target, bool Horizontal)
 {
   int rows=10;
   int cols=11;
   int Offset=0;
-  
-  if ((unsigned long)(millis() - this->lastUpdate) >= 100) // Update every 100ms
-  {
 
+  palette_entry palette[] = {
+    {0, 0, 0},
+    {255, 0, 0},
+    {0, 255, 0},
+    {0, 0, 255},
+    {255, 255, 0},
+    {255, 0, 255},
+    {0, 255, 255},
+    {255, 255, 255}
+  };
+
+  
+  if ((unsigned long)(millis() - this->lastUpdate) >= (100-Config.animspeed)*20) 
+  {
+    byte TargetCol=random(8);
     // fill 4 dots
     for (int i=0; i<4; i++){
-      target[rows*cols+i]=(Offset+this->lastOffset)%NoOfColorsInPalette;
+      target[rows*cols+i]=TargetCol;
       Offset++;
     }
 
     if (Horizontal)
     {
       for (int y=0;y<rows;y++){
+        byte TargetCol=random(8);
         for (int x=0;x<cols;x++){
-          target[y*cols+x]=(Offset+this->lastOffset)%NoOfColorsInPalette;
+          target[y*cols+x]=TargetCol;
         }
         Offset++;
       }
     } else {
       for (int x=0;x<cols;x++){
+        byte TargetCol=random(8);
         for (int y=0;y<rows;y++){
-          target[y*cols+x]=(Offset+this->lastOffset)%NoOfColorsInPalette;
+          target[y*cols+x]=TargetCol;
         }
         Offset++;
       }
@@ -931,14 +990,18 @@ void LEDFunctionsClass::renderHourglass(uint8_t animationStep, bool green)
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderMatrix()
 {
-	// clear buffer
-	memset(this->currentValues, 0, sizeof(this->currentValues));
-
-	// sort by y coordinate for correct overlapping
-	std::sort(matrix.begin(), matrix.end());
-
-	// iterate over all matrix objects, move and render them
-	for (MatrixObject &m : this->matrix) m.render(this->currentValues);
+  if ((unsigned long) (millis()-this->lastUpdate)>(100-Config.animspeed))
+  {
+    this->lastUpdate=millis();
+  	// clear buffer
+  	memset(this->currentValues, 0, sizeof(this->currentValues));
+  
+  	// sort by y coordinate for correct overlapping
+  	std::sort(matrix.begin(), matrix.end());
+  
+  	// iterate over all matrix objects, move and render them
+  	for (MatrixObject &m : this->matrix) m.render(this->currentValues);
+  }
 }
 
 const palette_entry LEDFunctionsClass::firePalette[256] = {
@@ -1014,6 +1077,9 @@ const palette_entry LEDFunctionsClass::plasmaPalette[256] = {
 double _time = 0;
 void LEDFunctionsClass::renderPlasma()
 {
+  if ((unsigned long) (millis()-this->lastUpdate)>(100-Config.animspeed)*2)
+  {
+    this->lastUpdate=millis();
     int color;
     double cx, cy, xx, yy;
 
@@ -1037,10 +1103,14 @@ void LEDFunctionsClass::renderPlasma()
         }
     }
     this->set(plasmaBuf, (palette_entry*)plasmaPalette, true);
+  }
 }
 
 void LEDFunctionsClass::renderFire()
 {
+  if ((unsigned long) (millis()-this->lastUpdate)>(100-Config.animspeed))
+  {
+    this->lastUpdate=millis();
     int f;
 
     // iterate over bottom row, create fire seed
@@ -1071,7 +1141,7 @@ void LEDFunctionsClass::renderFire()
         }
     }
     this->set(fireBuf, (palette_entry*)firePalette, true);
-	delay(100);
+  }
 }
 
 //---------------------------------------------------------------------------------------
@@ -1084,10 +1154,14 @@ void LEDFunctionsClass::renderFire()
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderStars()
 {
-	// clear buffer
-	memset(this->currentValues, 0, sizeof(this->currentValues));
-
-	for(StarObject &s : this->stars) s.render(this->currentValues, this->stars);
+  if ((unsigned long) (millis()-this->lastUpdate)>(100-Config.animspeed))
+  {
+    this->lastUpdate=millis();
+  	// clear buffer
+  	memset(this->currentValues, 0, sizeof(this->currentValues));
+  
+  	for(StarObject &s : this->stars) s.render(this->currentValues, this->stars);
+  }
 }
 
 //---------------------------------------------------------------------------------------
@@ -1190,50 +1264,54 @@ void LEDFunctionsClass::renderWakeup()
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderHeart()
 {
-	palette_entry palette[2];
-	uint8_t heart[] = {
-		0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0,
-		1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1,
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-		0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-		0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
-		0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
-		0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		1, 1, 1, 1
-	};
-	palette[0] = {0, 0, 0};
-	palette[1] = {(uint8_t)this->heartBrightness, 0, 0};
-	this->set(heart, palette, true);
-
-	switch (this->heartState)
-	{
-	case 0:
-		if (this->heartBrightness >= 255) this->heartState = 1;
-		else this->heartBrightness += 32;
-		break;
-
-	case 1:
-		if (this->heartBrightness < 128) this->heartState = 2;
-		else this->heartBrightness -= 32;
-		break;
-
-	case 2:
-		if (this->heartBrightness >= 255) this->heartState = 3;
-		else this->heartBrightness += 32;
-		break;
-
-	case 3:
-	default:
-		if (this->heartBrightness <= 0) this->heartState = 0;
-		else this->heartBrightness -= 4;
-		break;
-	}
-
-	if (this->heartBrightness > 255) this->heartBrightness = 255;
-	if (this->heartBrightness < 0) this->heartBrightness = 0;
+  if ((unsigned long) (millis()-this->lastUpdate)>(100-Config.animspeed))
+  {
+    this->lastUpdate=millis();
+  	palette_entry palette[2];
+  	uint8_t heart[] = {
+  		0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0,
+  		1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1,
+  		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  		0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+  		0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+  		0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+  		0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
+  		0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+  		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  		1, 1, 1, 1
+  	};
+  	palette[0] = {0, 0, 0};
+  	palette[1] = {(uint8_t)this->heartBrightness, 0, 0};
+  	this->set(heart, palette, true);
+  
+  	switch (this->heartState)
+  	{
+  	case 0:
+  		if (this->heartBrightness >= 255) this->heartState = 1;
+  		else this->heartBrightness += 32;
+  		break;
+  
+  	case 1:
+  		if (this->heartBrightness < 128) this->heartState = 2;
+  		else this->heartBrightness -= 32;
+  		break;
+  
+  	case 2:
+  		if (this->heartBrightness >= 255) this->heartState = 3;
+  		else this->heartBrightness += 32;
+  		break;
+  
+  	case 3:
+  	default:
+  		if (this->heartBrightness <= 0) this->heartState = 0;
+  		else this->heartBrightness -= 4;
+  		break;
+  	}
+  
+  	if (this->heartBrightness > 255) this->heartBrightness = 255;
+  	if (this->heartBrightness < 0) this->heartBrightness = 0;  
+  }
 }
 
 //---------------------------------------------------------------------------------------
@@ -1300,58 +1378,62 @@ void LEDFunctionsClass::prepareExplosion(uint8_t *source)
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderExplosion()
 {
-	std::vector<Particle*> particlesToKeep;
-	uint8_t buf[NUM_PIXELS];
-
-	// load palette colors from configuration
-	palette_entry palette[] = {
-		{Config.bg.r, Config.bg.g, Config.bg.b},
-		{Config.fg.r, Config.fg.g, Config.fg.b},
-		{Config.s.r,  Config.s.g,  Config.s.b}};
-
-	// check if the displayed time has changed
-	if((this->m/5 != this->lastM/5) || (this->h != this->lastH))
-	{
-		// prepare new animation with old time
-		this->renderTime(buf, this->lastH, this->lastM, 0, 0);
-		this->prepareExplosion(buf);
-	}
-
-	this->lastM = this->m;
-	this->lastH = this->h;
-
-	// create empty buffer filled with seconds color
-	this->fillBackground(this->s, this->ms, buf);
-
-	// minutes 1...4 for the corners
-	for(int i=0; i<=((this->m%5)-1); i++) buf[10 * 11 + i] = 1;
-
-	// Do we have something to explode?
-	if(this->particles.size() > 0)
-	{
-		// transfer background created by fillBackground to target buffer
-		this->set(buf, palette, true);
-
-		// iterate over all particles
-		for(Particle *p : this->particles)
-		{
-			// move and render current particle
-			p->render(this->currentValues, palette);
-
-			// if particle is still active, keep it; kill it otherwise
-			if(p->alive) particlesToKeep.push_back(p); else delete p;
-		}
-
-		// only keep active particles, discard the rest
-		// -> use particlesToKeep as new list
-		this->particles.swap(particlesToKeep);
-	}
-	else
-	{
-		// present the current time in boring mode with simple fading
-		this->renderTime(buf, this->h, this->m, this->s, this->ms);
-		this->set(buf, palette, false);
-		this->fade();
+  if ((unsigned long) (millis()-this->lastUpdate)>(100-Config.animspeed))
+  {
+    this->lastUpdate=millis();
+  	std::vector<Particle*> particlesToKeep;
+  	uint8_t buf[NUM_PIXELS];
+  
+  	// load palette colors from configuration
+  	palette_entry palette[] = {
+  		{Config.bg.r, Config.bg.g, Config.bg.b},
+  		{Config.fg.r, Config.fg.g, Config.fg.b},
+  		{Config.s.r,  Config.s.g,  Config.s.b}};
+  
+  	// check if the displayed time has changed
+  	if((this->m/5 != this->lastM/5) || (this->h != this->lastH))
+  	{
+  		// prepare new animation with old time
+  		this->renderTime(buf, this->lastH, this->lastM, 0, 0);
+  		this->prepareExplosion(buf);
+  	}
+  
+  	this->lastM = this->m;
+  	this->lastH = this->h;
+  
+  	// create empty buffer filled with seconds color
+  	this->fillBackground(this->s, this->ms, buf);
+  
+  	// minutes 1...4 for the corners
+  	for(int i=0; i<=((this->m%5)-1); i++) buf[10 * 11 + i] = 1;
+  
+  	// Do we have something to explode?
+  	if(this->particles.size() > 0)
+  	{
+  		// transfer background created by fillBackground to target buffer
+  		this->set(buf, palette, true);
+  
+  		// iterate over all particles
+  		for(Particle *p : this->particles)
+  		{
+  			// move and render current particle
+  			p->render(this->currentValues, palette);
+  
+  			// if particle is still active, keep it; kill it otherwise
+  			if(p->alive) particlesToKeep.push_back(p); else delete p;
+  		}
+  
+  		// only keep active particles, discard the rest
+  		// -> use particlesToKeep as new list
+  		this->particles.swap(particlesToKeep);
+  	}
+  	else
+  	{
+  		// present the current time in boring mode with simple fading
+  		this->renderTime(buf, this->h, this->m, this->s, this->ms);
+  		this->set(buf, palette, false);
+  		this->fade();
+  	}
 	}
 }
 
@@ -1442,99 +1524,103 @@ void LEDFunctionsClass::prepareFlyingLetters(uint8_t *source)
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderFlyingLetters()
 {
-	uint8_t buf[NUM_PIXELS];
-
-	// load palette colors from configuration
-	palette_entry palette[] = {
-		{Config.bg.r, Config.bg.g, Config.bg.b},
-		{Config.fg.r, Config.fg.g, Config.fg.b},
-		{Config.s.r,  Config.s.g,  Config.s.b}};
-
-	// check if the displayed time has changed
-	if((this->m/5 != this->lastM/5) || (this->h != this->lastH))
-	{
-		// prepare new animation
-		this->renderTime(buf, this->h, this->m, this->s, this->ms);
-		this->prepareFlyingLetters(buf);
-	}
-
-	this->lastM = this->m;
-	this->lastH = this->h;
-
-
-	// create empty buffer filled with seconds color
-	this->fillBackground(this->s, this->ms, buf);
-
-	// minutes 1...4 for the corners
-	for(int i=0; i<=((this->m%5)-1); i++) buf[10 * 11 + i] = 1;
-
-	// leaving letters animation has priority
-	if(this->leavingLetters.size() > 0)
-	{
-		// count actually moved letters to detect end of animation
-		int movedLetters = 0;
-
-		// iterate over all leavingLetters
-		for(xy_t &p : this->leavingLetters)
-		{
-			// draw letter only if inside visible area
-			if(p.x>=0 && p.y>=0 && p.x<LEDFunctionsClass::width
-					&& p.y<LEDFunctionsClass::height)
-				buf[p.x + p.y * LEDFunctionsClass::width] = 1;
-
-			// continue with next letter if the current letter already
-			// reached its target position
-			if(p.y == p.yTarget && p.x == p.xTarget) continue;
-			p.counter += p.speed;
-			movedLetters++;
-			if(p.counter >= 1000)
-			{
-				p.counter -= 1000;
-				if(p.delay>0)
-				{
-					// do not move if animation of current letter is delayed
-					p.delay--;
-				}
-				else
-				{
-					if(p.y > p.yTarget) p.y--; else p.y++;
-				}
-			}
-		}
-		if(movedLetters == 0) this->leavingLetters.clear();
-	}
-	else
-	{
-		// iterate over all arrivingLetters
-		for(xy_t &p : this->arrivingLetters)
-		{
-			// draw letter only if inside visible area
-			if(p.x>=0 && p.y>=0 && p.x<LEDFunctionsClass::width
-					&& p.y<LEDFunctionsClass::height)
-				buf[p.x + p.y * LEDFunctionsClass::width] = 1;
-
-			// continue with next letter if the current letter already
-			// reached its target position
-			if(p.y == p.yTarget && p.x == p.xTarget) continue;
-			p.counter += p.speed;
-			if(p.counter >= 1000)
-			{
-				p.counter -= 1000;
-				if(p.delay>0)
-				{
-					// do not move if animation of current letter is delayed
-					p.delay--;
-				}
-				else
-				{
-					if(p.y > p.yTarget) p.y--; else p.y++;
-				}
-			}
-		}
-	}
-
-	// present the current content immediately without fading
-	this->set(buf, palette, true);
+  if ((unsigned long) (millis()-this->lastUpdate)>(100-Config.animspeed))
+  {
+    this->lastUpdate=millis();
+  	uint8_t buf[NUM_PIXELS];
+  
+  	// load palette colors from configuration
+  	palette_entry palette[] = {
+  		{Config.bg.r, Config.bg.g, Config.bg.b},
+  		{Config.fg.r, Config.fg.g, Config.fg.b},
+  		{Config.s.r,  Config.s.g,  Config.s.b}};
+  
+  	// check if the displayed time has changed
+  	if((this->m/5 != this->lastM/5) || (this->h != this->lastH))
+  	{
+  		// prepare new animation
+  		this->renderTime(buf, this->h, this->m, this->s, this->ms);
+  		this->prepareFlyingLetters(buf);
+  	}
+  
+  	this->lastM = this->m;
+  	this->lastH = this->h;
+  
+  
+  	// create empty buffer filled with seconds color
+  	this->fillBackground(this->s, this->ms, buf);
+  
+  	// minutes 1...4 for the corners
+  	for(int i=0; i<=((this->m%5)-1); i++) buf[10 * 11 + i] = 1;
+  
+  	// leaving letters animation has priority
+  	if(this->leavingLetters.size() > 0)
+  	{
+  		// count actually moved letters to detect end of animation
+  		int movedLetters = 0;
+  
+  		// iterate over all leavingLetters
+  		for(xy_t &p : this->leavingLetters)
+  		{
+  			// draw letter only if inside visible area
+  			if(p.x>=0 && p.y>=0 && p.x<LEDFunctionsClass::width
+  					&& p.y<LEDFunctionsClass::height)
+  				buf[p.x + p.y * LEDFunctionsClass::width] = 1;
+  
+  			// continue with next letter if the current letter already
+  			// reached its target position
+  			if(p.y == p.yTarget && p.x == p.xTarget) continue;
+  			p.counter += p.speed;
+  			movedLetters++;
+  			if(p.counter >= 1000)
+  			{
+  				p.counter -= 1000;
+  				if(p.delay>0)
+  				{
+  					// do not move if animation of current letter is delayed
+  					p.delay--;
+  				}
+  				else
+  				{
+  					if(p.y > p.yTarget) p.y--; else p.y++;
+  				}
+  			}
+  		}
+  		if(movedLetters == 0) this->leavingLetters.clear();
+  	}
+  	else
+  	{
+  		// iterate over all arrivingLetters
+  		for(xy_t &p : this->arrivingLetters)
+  		{
+  			// draw letter only if inside visible area
+  			if(p.x>=0 && p.y>=0 && p.x<LEDFunctionsClass::width
+  					&& p.y<LEDFunctionsClass::height)
+  				buf[p.x + p.y * LEDFunctionsClass::width] = 1;
+  
+  			// continue with next letter if the current letter already
+  			// reached its target position
+  			if(p.y == p.yTarget && p.x == p.xTarget) continue;
+  			p.counter += p.speed;
+  			if(p.counter >= 1000)
+  			{
+  				p.counter -= 1000;
+  				if(p.delay>0)
+  				{
+  					// do not move if animation of current letter is delayed
+  					p.delay--;
+  				}
+  				else
+  				{
+  					if(p.y > p.yTarget) p.y--; else p.y++;
+  				}
+  			}
+  		}
+  	}
+  
+  	// present the current content immediately without fading
+  	this->set(buf, palette, true);
+  }
 }
 
 //---------------------------------------------------------------------------------------

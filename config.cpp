@@ -124,6 +124,7 @@ void ConfigClass::save()
     this->config->alarm[i]=this->alarm[i];
 
   strncpy(this->config->hostname,this->hostname,25);
+  this->config->animspeed=this->animspeed;
 
 	for (int i = 0; i < EEPROM_SIZE; i++)
 		EEPROM.write(i, this->eeprom_data[i]);
@@ -190,6 +191,8 @@ void ConfigClass::reset()
 
   strcpy(this->hostname,"WordClock");
 
+  this->animspeed = 50; // just a default value, should be between 1 and 100
+
 }
 
 //---------------------------------------------------------------------------------------
@@ -228,4 +231,5 @@ void ConfigClass::load()
     this->alarm[i]=this->config->alarm[i];
   
   strncpy(this->hostname,this->config->hostname,25);
+  this->animspeed = this->config->animspeed;
 }

@@ -53,6 +53,7 @@ typedef struct _xy_t
 #define NUM_MATRIX_OBJECTS 25
 #define NUM_STARS 10
 #define NUM_BRIGHTNESS_CURVES 2
+#define DEFAULTICKTIME 20
 
 class LEDFunctionsClass
 {
@@ -108,6 +109,7 @@ private:
 	int ms = 0;
 	int lastM = -1;
 	int lastH = -1;
+  unsigned long lastFadeTick=0;
 
 	void fillBackground(int seconds, int milliseconds, uint8_t *buf);
   void fillTime(int h, int m, uint8_t *target);
@@ -131,7 +133,8 @@ private:
 	void renderFlyingLetters();
 	void prepareFlyingLetters(uint8_t *source);
   void renderExplosion();
-  void renderStripes(uint8_t *target, palette_entry *palette, byte NoOfColorsInPalette, bool Horizontal);
+  void renderRandomDots();
+  void renderStripes(uint8_t *target, bool Horizontal);
 	void prepareExplosion(uint8_t *source);
 	void fade();
 	void set(const uint8_t *buf, palette_entry palette[]);

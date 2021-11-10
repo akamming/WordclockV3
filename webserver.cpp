@@ -95,6 +95,7 @@ void WebServerClass::begin()
   this->server->on("/setbrightness", std::bind(&WebServerClass::handleSetBrightness, this));
 	this->server->on("/getadc", std::bind(&WebServerClass::handleGetADC, this));
 	this->server->on("/setmode", std::bind(&WebServerClass::handleSetMode, this));
+  this->server->on("/setanimspeed", std::bind(&WebServerClass::handleSetAnimSpeed, this));
 	this->server->on("/settimezone", std::bind(&WebServerClass::handleSetTimeZone, this));
   this->server->on("/debug", std::bind(&WebServerClass::handleDebug, this));
   this->server->on("/resetwificredentials", std::bind(&WebServerClass::handleResetWifiCredentials, this));
@@ -448,6 +449,37 @@ void WebServerClass::handleSetTimeZone()
 	}
 }
 
+
+//---------------------------------------------------------------------------------------
+// handleSetAnimspeed
+//
+// Handles the /setanimspeed request. Sets the animationspeed between 1..100
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleSetAnimSpeed()
+{
+  if(this->server->hasArg("value"))
+  {
+    // get value
+    byte animspeed=this->server->arg("value").toInt();
+    
+    // Check value
+    if (animspeed>0&&animspeed<=100)
+    {
+      Config.animspeed=animspeed;
+      Config.saveDelayed();
+      this->server->send(200, "text/plain", "OK");
+    } else {
+      this->server->send(200, "text/plain", "Value should be min 1 or max 100");
+    }
+  } else {
+    this->server->send(200, "text/plain", "Missing value");
+  }
+}
+
+
 //---------------------------------------------------------------------------------------
 // handleSetMode
 //
@@ -477,7 +509,7 @@ void WebServerClass::handleSetMode()
     if(this->server->arg("value") == "10") mode = DisplayMode::random;
     if(this->server->arg("value") == "11") mode = DisplayMode::HorizontalStripes;
     if(this->server->arg("value") == "12") mode = DisplayMode::VerticalStripes;
-    if(this->server->arg("value") == "13") mode = DisplayMode::MovingTriangle;
+    if(this->server->arg("value") == "13") mode = DisplayMode::RandomDots;
     
 	}
 
@@ -821,7 +853,7 @@ void WebServerClass::handleGetConfig()
     displaymode = 11; break;
   case DisplayMode::VerticalStripes:
     displaymode = 12; break;
-  case DisplayMode::MovingTriangle:
+  case DisplayMode::RandomDots:
     displaymode = 13; break;
   default:
     displaymode = 1; break;
@@ -844,6 +876,7 @@ void WebServerClass::handleGetConfig()
 
 
   json["displaymode"] =  displaymode;
+  json["animspeed"] = Config.animspeed;
   json["timezone"] = Config.timeZone;
   json["nightmode"] = Config.nightmode;
   json["heartbeat"] = Config.heartbeat==1;

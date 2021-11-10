@@ -28,7 +28,7 @@ enum class DisplayMode
 {
   plain, fade, flyingLettersVerticalUp, flyingLettersVerticalDown, explode,
   random, matrix, heart, fire, plasma, stars, wakeup, HorizontalStripes, VerticalStripes,
-  MovingTriangle, red, green, blue,
+  RandomDots, red, green, blue,
   yellowHourglass, greenHourglass, update, updateComplete, updateError,
   wifiManager, invalid
 };
@@ -67,6 +67,7 @@ typedef struct _config_struct
   bool nightmode;
   t_alarm alarm[5];
   char hostname[25];
+  uint8_t animspeed;
 } config_struct;
 
 #define EEPROM_SIZE 512
@@ -107,6 +108,7 @@ public:
   t_alarm alarm[5];
 
   char hostname[25];
+  uint8_t animspeed=50; // value from 1..100
 
 private:
 	// copy of EEPROM content
