@@ -42,6 +42,18 @@ public:
 	// public members
 	bool syncInProgress = false;
 
+  // last NTP timestamp
+  int h = 0;
+  int m = 0;
+  int s = 0;
+  int year = 0;
+  int month = 0;
+  int day = 0;
+  int weekday = 0;
+  int yearday = 0;
+  int ms = 0;
+
+
 private:
 	enum class NtpState
 	{
@@ -60,15 +72,6 @@ private:
 	NtpState state = NtpState::idle;
 	TNtpCallback _callback = NULL;
 	int timer = 0;
-	int h = 0;
-	int m = 0;
-	int s = 0;
-	int year = 0;
-	int month = 0;
-	int day = 0;
-	int weekday = 0;
-	int yearday = 0;
-	int ms = 0;
 	int tz = 0;
 	bool useDST = false;
   unsigned long previousMillis = 0;

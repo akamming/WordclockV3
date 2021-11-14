@@ -608,7 +608,6 @@ void WebServerClass::handleInfo()
 	json["flashsize"] = ESP.getFlashChipRealSize();
 	json["resetreason"] = ESP.getResetReason();
 	json["resetinfo"] = ESP.getResetInfo();
-  json["freeheap"] = ESP.getFreeHeap();
   json["configsize"] = Config.Configsize();
 
   int milliseconds  = millis();
@@ -622,6 +621,9 @@ void WebServerClass::handleInfo()
   char buffer[50];
   sprintf(buffer, "%i days, %i hours, %i mins, %i seconds, %i milliseconds", days, hrs, mins, secs, msecs);
   json["uptime"] = buffer;
+  sprintf(buffer, "%02i:%02i:%02i:%02i %i/%i/%i",NTP.weekday,NTP.h,NTP.m,NTP.s,NTP.day, NTP.month,NTP.year);
+  json["last NTP timestamp"] = buffer;
+
   
 
   String buf;

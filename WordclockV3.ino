@@ -130,7 +130,14 @@ void timerCallback()
 				if (++m > 59)
 				{
 					m = 0;
-					if (++h > 23) h = 0;
+					if (++h > 23) 
+					{
+					  h = 0;
+            if (++wd > 6) 
+            {
+              wd=0;
+            }
+					}
 				}
 			}
 		}
@@ -420,8 +427,9 @@ void loop()
             if (EndTime<24*3600*1000) { // EndTime is the same day
               if (CurrentTime>=StartTime && CurrentTime<EndTime && ( Config.alarm[i].type==AlarmType::always || 
                                                                      Config.alarm[i].type==AlarmType::oneoff || 
-                                                                    (Config.alarm[i].type==AlarmType::weekend && wd>5) ||
-                                                                    (Config.alarm[i].type==AlarmType::workingdays && wd<=5))) {
+                                                                    (Config.alarm[i].type==AlarmType::weekend && (wd==0 || wd==6)) ||
+                                                                    (Config.alarm[i].type==AlarmType::workingdays && wd>0 && wd<6)))
+              {
                 Config.nightmode=false;
                 LED.setMode(Config.alarm[i].mode);
                 LED.AlarmProgress=(float) (CurrentTime-StartTime) / (float) (EndTime-StartTime); // Let the alarmhandling know how far we are in the progress
@@ -432,12 +440,12 @@ void loop()
             } else { // Endtime is the next day, in which case we have to handle the rollover at 0.00, so check for every start en endtime if it's the correct working day
               if (   (CurrentTime>StartTime && ( Config.alarm[i].type==AlarmType::always || // always 
                                                Config.alarm[i].type==AlarmType::oneoff ||  // always
-                                              (Config.alarm[i].type==AlarmType::weekend && wd>5) || // Starttime in the evenings only on saturday and sunday
-                                              (Config.alarm[i].type==AlarmType::workingdays && wd<=5))) // Starttime in the week only from mon-fri
+                                              (Config.alarm[i].type==AlarmType::weekend && (wd==0 || wd==6)) || // Starttime in the evenings only on saturday and sunday
+                                              (Config.alarm[i].type==AlarmType::workingdays && wd>0 && wd<6) ) ) // Starttime in the week only from mon-fri
                   || (CurrentTime<EndTime-24*3600*1000 && ( Config.alarm[i].type==AlarmType::always || // always 
                                                             Config.alarm[i].type==AlarmType::oneoff ||  // always
-                                                           (Config.alarm[i].type==AlarmType::weekend && (wd==1 || wd==7)) || // endtime in morning can only be sunday and monday morning
-                                                           (Config.alarm[i].type==AlarmType::workingdays && wd>1 && wd<7)))) // endtime in morning can only be tue-sat
+                                                           (Config.alarm[i].type==AlarmType::weekend && (wd==0 || wd==1)) || // endtime in morning can only be sunday and monday morning
+                                                           (Config.alarm[i].type==AlarmType::workingdays && wd>1 && wd<7))) ) // endtime in morning can only be tue-sat
               {
                 Config.nightmode=false;
                 LED.setMode(Config.alarm[i].mode);
