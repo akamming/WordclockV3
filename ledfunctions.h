@@ -62,7 +62,6 @@ public:
 	~LEDFunctionsClass();
 	void begin(int pin);
 	void process();
-	void setTime(int h, int m, int s, int ms);
 	void setBrightness(int brightness);
 	void setMode(DisplayMode newMode);
 	void show();
@@ -103,10 +102,6 @@ private:
 	int heartBrightness = 0;
 	int heartState = 0;
 	int brightness = 96;
-	int h = 0;
-	int m = 0;
-	int s = 0;
-	int ms = 0;
 	int lastM = -1;
 	int lastH = -1;
   unsigned long lastFadeTick=0;
@@ -129,7 +124,7 @@ private:
 	void renderUpdateError();
 	void renderHourglass(uint8_t animationStep, bool green);
 	void renderWifiManager();
-	void renderTime(uint8_t *target, int h, int m, int s, int ms);
+	void renderTime(uint8_t *target);
 	void renderFlyingLetters();
 	void prepareFlyingLetters(uint8_t *source);
   void renderExplosion();

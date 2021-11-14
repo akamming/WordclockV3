@@ -19,6 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ledfunctions.h"
+#include "ntp.h"
 //---------------------------------------------------------------------------------------
 #if 1 // variables
 //---------------------------------------------------------------------------------------
@@ -345,10 +346,10 @@ void LEDFunctionsClass::process()
 	if(Config.debugMode) return;
 
 	// check time values against boundaries
-	if(this->h > 23 || this->h < 0) this->h = 0;
-	if(this->m > 59 || this->m < 0) this->m = 0;
-	if(this->s > 59 || this->s < 0) this->s = 0;
-	if(this->ms > 999 || this->ms < 0) this->ms = 0;
+	if(NTP.h > 23 || NTP.h < 0) NTP.h = 0;
+	if(NTP.m > 59 || NTP.m < 0) NTP.m = 0;
+	if(NTP.s > 59 || NTP.s < 0) NTP.s = 0;
+	if(NTP.ms > 999 || NTP.ms < 0) NTP.ms = 0;
 
 	// load palette colors from configuration
 	palette_entry palette[] = {
@@ -425,7 +426,7 @@ void LEDFunctionsClass::process()
     break;
 
 	case DisplayMode::fade:
-		this->renderTime(buf, this->h, this->m, this->s, this->ms);
+		this->renderTime(buf);
 		this->set(buf, palette, false);
 		this->fade();
 		break;
@@ -433,7 +434,7 @@ void LEDFunctionsClass::process()
     
 	case DisplayMode::plain:
 	default:
-		this->renderTime(buf, this->h, this->m, this->s, this->ms);
+		this->renderTime(buf);
 		this->set(buf, palette, true);
 		break;
 	}
@@ -463,23 +464,6 @@ void LEDFunctionsClass::setBrightness(int brightness)
 }
 
 //---------------------------------------------------------------------------------------
-// setTime
-//
-// Sets the time which will be used to drive the LED matrix. The internal time is _not_
-// updated, this function must be called repeatedly if the time changes.
-//
-// -> h, m, s, ms: Time in hours, minutes, seconds, milliseconds
-// <- --
-//---------------------------------------------------------------------------------------
-void LEDFunctionsClass::setTime(int h, int m, int s, int ms)
-{
-	this->h = h;
-	this->m = m;
-	this->s = s;
-	this->ms = ms;
-}
-
-//---------------------------------------------------------------------------------------
 // setMode
 //
 // Sets the display mode to one of the members of the DisplayMode enum and thus changes
@@ -500,7 +484,7 @@ void LEDFunctionsClass::setMode(DisplayMode newMode)
 			(newMode == DisplayMode::flyingLettersVerticalUp ||
 			newMode == DisplayMode::flyingLettersVerticalDown))
 	{
-		this->renderTime(buf, this->h, this->m, this->s, this->ms);
+		this->renderTime(buf);
 		this->prepareFlyingLetters(buf);
 	}
 
@@ -508,7 +492,7 @@ void LEDFunctionsClass::setMode(DisplayMode newMode)
 	// even if the current time did not yet change
 	if(newMode != previousMode && newMode == DisplayMode::explode)
 	{
-		this->renderTime(buf, this->h, this->m, this->s, this->ms);
+		this->renderTime(buf);
 		this->prepareExplosion(buf);
 	}
 
@@ -933,17 +917,17 @@ void LEDFunctionsClass::renderStripes(uint8_t *target, bool Horizontal)
 //            filled with palette indexes representing the time
 // <- --
 //---------------------------------------------------------------------------------------
-void LEDFunctionsClass::renderTime(uint8_t *target, int h, int m, int s, int ms)
+void LEDFunctionsClass::renderTime(uint8_t *target)
 {
-	this->fillBackground(s, ms, target);
-  this->fillTime(h, m, target);
+	this->fillBackground(NTP.s, NTP.ms, target);
+  this->fillTime(NTP.h, NTP.m, target);
 
 	// DEBUG
 	static int last_minutes = -1;
-	if(last_minutes != this->m)
+	if(last_minutes != NTP.m)
 	{
-		last_minutes = this->m;
-		Serial.printf("h=%i, m=%i, s=%i\r\n", this->h, this->m, this->s);
+		last_minutes = NTP.m;
+		Serial.printf("h=%i, m=%i, s=%i\r\n", NTP.h, NTP.m, NTP.s);
 		for(int y=0; y<10; y++)
 		{
 			for(int x=0; x<11; x++)
@@ -1211,8 +1195,8 @@ void LEDFunctionsClass::renderWakeup()
   };
 #else
   uint8_t buf[NUM_PIXELS];
-  this->fillBackground(s, ms, buf);
-  this->fillTime(this->h, this->m, buf);
+  this->fillBackground(NTP.s, NTP.ms, buf);
+  this->fillTime(NTP.h, NTP.m, buf);
 #endif  
   
   palette_entry SunColor0 = {0, 0, 0}; // At start
@@ -1391,21 +1375,21 @@ void LEDFunctionsClass::renderExplosion()
   		{Config.s.r,  Config.s.g,  Config.s.b}};
   
   	// check if the displayed time has changed
-  	if((this->m/5 != this->lastM/5) || (this->h != this->lastH))
+  	if((NTP.m/5 != this->lastM/5) || (NTP.h != this->lastH))
   	{
   		// prepare new animation with old time
-  		this->renderTime(buf, this->lastH, this->lastM, 0, 0);
+  		this->renderTime(buf);
   		this->prepareExplosion(buf);
   	}
   
-  	this->lastM = this->m;
-  	this->lastH = this->h;
+  	this->lastM = NTP.m;
+  	this->lastH = NTP.h;
   
   	// create empty buffer filled with seconds color
-  	this->fillBackground(this->s, this->ms, buf);
+  	this->fillBackground(NTP.s, NTP.ms, buf);
   
   	// minutes 1...4 for the corners
-  	for(int i=0; i<=((this->m%5)-1); i++) buf[10 * 11 + i] = 1;
+  	for(int i=0; i<=((NTP.m%5)-1); i++) buf[10 * 11 + i] = 1;
   
   	// Do we have something to explode?
   	if(this->particles.size() > 0)
@@ -1430,7 +1414,7 @@ void LEDFunctionsClass::renderExplosion()
   	else
   	{
   		// present the current time in boring mode with simple fading
-  		this->renderTime(buf, this->h, this->m, this->s, this->ms);
+  		this->renderTime(buf);
   		this->set(buf, palette, false);
   		this->fade();
   	}
@@ -1498,7 +1482,7 @@ void LEDFunctionsClass::prepareFlyingLetters(uint8_t *source)
 	}
 
 	// DEBUG
-	Serial.printf("h=%i, m=%i, s=%i, lastH=%i, lastM=%i\r\n", this->h, this->m, this->s, this->lastH, this->lastM);
+	Serial.printf("h=%i, m=%i, s=%i, lastH=%i, lastM=%i\r\n", NTP.h, NTP.m, NTP.s, this->lastH, this->lastM);
 	Serial.println("leavingLetters:");
 	for(xy_t &p : this->leavingLetters)
 	{
@@ -1536,22 +1520,22 @@ void LEDFunctionsClass::renderFlyingLetters()
   		{Config.s.r,  Config.s.g,  Config.s.b}};
   
   	// check if the displayed time has changed
-  	if((this->m/5 != this->lastM/5) || (this->h != this->lastH))
+  	if((NTP.m/5 != this->lastM/5) || (NTP.h != this->lastH))
   	{
   		// prepare new animation
-  		this->renderTime(buf, this->h, this->m, this->s, this->ms);
+  		this->renderTime(buf);
   		this->prepareFlyingLetters(buf);
   	}
   
-  	this->lastM = this->m;
-  	this->lastH = this->h;
+  	this->lastM = NTP.m;
+  	this->lastH = NTP.h;
   
   
   	// create empty buffer filled with seconds color
-  	this->fillBackground(this->s, this->ms, buf);
+  	this->fillBackground(NTP.s, NTP.ms, buf);
   
   	// minutes 1...4 for the corners
-  	for(int i=0; i<=((this->m%5)-1); i++) buf[10 * 11 + i] = 1;
+  	for(int i=0; i<=((NTP.m%5)-1); i++) buf[10 * 11 + i] = 1;
   
   	// leaving letters animation has priority
   	if(this->leavingLetters.size() > 0)

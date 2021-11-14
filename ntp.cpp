@@ -124,6 +124,31 @@ void NtpClass::begin(IPAddress ip, TNtpCallback callback, int timezone, bool DST
 //---------------------------------------------------------------------------------------
 void NtpClass::process()
 {
+  // increment time
+  // TODO: Handle month/year/day after handover of day, but for Clock function this is enough...
+  this->ms+=(unsigned long)(millis()-previousMillis);
+  if (this->ms>= 1000)
+  {
+    this->ms -= 1000;
+    if (++this->s > 59)
+    {
+      this->s = 0;
+      if (++this->m > 59)
+      {
+        this->m = 0;
+        if (++this->h > 23) 
+        {
+          this->h = 0;
+          if (++this->weekday > 6) 
+          {
+            this->weekday=0;
+          }
+        }
+      }
+    }
+  }
+
+  
   // increment timer variable
   this->timer += (unsigned long)(millis()-previousMillis);
   previousMillis=millis();

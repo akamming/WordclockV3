@@ -489,17 +489,9 @@ void loop()
     
       // update LEDs
       LED.setBrightness(Brightness.value());
-      LED.setTime(h, m, s, ms);
       if (not RecoverFromException) 
       {
         LED.process();
-/* #ifdef NEOPIXELBUS
-        // Make sure command is finished before new code is executed
-        while (LED.strip->CanShow()==false)
-        {
-          delay(1);
-        }
-#endif */
       }
         
     	// output current time if seconds value has changed
