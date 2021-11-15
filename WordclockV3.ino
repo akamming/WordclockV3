@@ -60,15 +60,7 @@ int OTA_in_progress = 0;
 #define TICKTIME 0 // no of millisecs between clock display updates
 
 Ticker timer;
-int wd = 0;
-int h = 0;
-int m = 0;
-int s = 0;
-int ms = 0;
-unsigned long CurrentTime=0;
-
 int lastSecond = -1;
-bool timeVarLock = false;
 
 //---------------------------------------------------------------------------------------
 // Startup related variables
@@ -116,34 +108,6 @@ unsigned long timestamp(int _h, int _m, int _s, int _ms)
 //---------------------------------------------------------------------------------------
 void timerCallback()
 {
-	// update time variables
-	if (!timeVarLock)
-	{
-		timeVarLock = true;
-		ms += TIMER_RESOLUTION;
-		if (ms >= 1000)
-		{
-			ms -= 1000;
-			if (++s > 59)
-			{
-				s = 0;
-				if (++m > 59)
-				{
-					m = 0;
-					if (++h > 23) 
-					{
-					  h = 0;
-            if (++wd > 6) 
-            {
-              wd=0;
-            }
-					}
-				}
-			}
-		}
-    CurrentTime=timestamp(h,m,s,ms);
-		timeVarLock = false;
-	}
 
 	// decrement delayed EEPROM config timer
 	if(Config.delayedWriteTimer)
@@ -195,19 +159,7 @@ void NtpCallback(uint8_t _wd, uint8_t _h, uint8_t _m, uint8_t _s, uint8_t _ms)
 	Serial.println("NtpCallback()");
   NTPTimeAcquired=true;
 
-	// wait if timer variable lock is set
-	while (timeVarLock) delay(1);
-
-	// lock timer variables to prevent changes during interrupt
-	timeVarLock = true;
-	wd = _wd;
-	h = _h;
-	m = _m;
-	s = _s;
-	ms = _ms;
- 
-  CurrentTime=timestamp(h,m,s,ms);
-	timeVarLock = false;
+  // TODO: Stop startup interrupt
 }
 
 void setLED(unsigned char r, unsigned char g, unsigned char b)
@@ -416,7 +368,9 @@ void loop()
     			setLED(0, 0, 0);
     		}
     	} else {    
-       
+        // get Current time
+        unsigned long CurrentTime=timestamp(NTP.h,NTP.m,NTP.s,NTP.ms);
+        
         // overrule any of the above in case of configured alarms
         for (int i=0;i<5;i++)
         {
@@ -427,8 +381,8 @@ void loop()
             if (EndTime<24*3600*1000) { // EndTime is the same day
               if (CurrentTime>=StartTime && CurrentTime<EndTime && ( Config.alarm[i].type==AlarmType::always || 
                                                                      Config.alarm[i].type==AlarmType::oneoff || 
-                                                                    (Config.alarm[i].type==AlarmType::weekend && (wd==0 || wd==6)) ||
-                                                                    (Config.alarm[i].type==AlarmType::workingdays && wd>0 && wd<6)))
+                                                                    (Config.alarm[i].type==AlarmType::weekend && (NTP.weekday==0 || NTP.weekday==6)) ||
+                                                                    (Config.alarm[i].type==AlarmType::workingdays && NTP.weekday>0 && NTP.weekday<6)))
               {
                 Config.nightmode=false;
                 LED.setMode(Config.alarm[i].mode);
@@ -440,12 +394,12 @@ void loop()
             } else { // Endtime is the next day, in which case we have to handle the rollover at 0.00, so check for every start en endtime if it's the correct working day
               if (   (CurrentTime>StartTime && ( Config.alarm[i].type==AlarmType::always || // always 
                                                Config.alarm[i].type==AlarmType::oneoff ||  // always
-                                              (Config.alarm[i].type==AlarmType::weekend && (wd==0 || wd==6)) || // Starttime in the evenings only on saturday and sunday
-                                              (Config.alarm[i].type==AlarmType::workingdays && wd>0 && wd<6) ) ) // Starttime in the week only from mon-fri
+                                              (Config.alarm[i].type==AlarmType::weekend && (NTP.weekday==0 || NTP.weekday==6)) || // Starttime in the evenings only on saturday and sunday
+                                              (Config.alarm[i].type==AlarmType::workingdays && NTP.weekday>0 && NTP.weekday<6) ) ) // Starttime in the week only from mon-fri
                   || (CurrentTime<EndTime-24*3600*1000 && ( Config.alarm[i].type==AlarmType::always || // always 
                                                             Config.alarm[i].type==AlarmType::oneoff ||  // always
-                                                           (Config.alarm[i].type==AlarmType::weekend && (wd==0 || wd==1)) || // endtime in morning can only be sunday and monday morning
-                                                           (Config.alarm[i].type==AlarmType::workingdays && wd>1 && wd<7))) ) // endtime in morning can only be tue-sat
+                                                           (Config.alarm[i].type==AlarmType::weekend && (NTP.weekday==0 || NTP.weekday==6)) || // endtime in morning can only be sunday and monday morning
+                                                           (Config.alarm[i].type==AlarmType::workingdays && NTP.weekday>1 && NTP.weekday<7))) ) // endtime in morning can only be tue-sat
               {
                 Config.nightmode=false;
                 LED.setMode(Config.alarm[i].mode);
@@ -495,12 +449,12 @@ void loop()
       }
         
     	// output current time if seconds value has changed
-    	if (s != lastSecond)
+    	if (NTP.s != lastSecond)
     	{
         // blink onboard LED if heartbeat is enabled
         if (Config.heartbeat) digitalWrite(LED_BUILTIN, LOW);
 
-    		lastSecond = s;
+    		lastSecond = NTP.s;
     
         // calc uptime
         int milliseconds  = millis();
@@ -513,7 +467,7 @@ void loop()
     
 
     		DEBUG("%02i:%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, Free Cont Stack = %i, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
-    			  wd, h, m, s, (int)Brightness.avg, (int)(Brightness.avg*100)%100,
+    			  NTP.weekday, NTP.h, NTP.m, NTP.s, (int)Brightness.avg, (int)(Brightness.avg*100)%100,
     			  ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getMaxFreeBlockSize(), ESP.getFreeContStack(), Brightness.value(),
     			  days,hrs,mins,secs,msecs);
         if (AlarmInProgress) {

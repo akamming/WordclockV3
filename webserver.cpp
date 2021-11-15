@@ -270,10 +270,9 @@ void WebServerClass::handleResetWifiCredentials()
 // -> --
 // <- --
 //---------------------------------------------------------------------------------------
-extern int h, m;
 void WebServerClass::handleM()
 {
-	if(++m>59) m = 0;
+	if(++NTP.m>59) NTP.m = 0;
 	this->server->send(200, "text/plain", "OK");
 }
 
@@ -287,7 +286,7 @@ void WebServerClass::handleM()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleH()
 {
-	if(++h>23) h = 0;
+	if(++NTP.h>23) NTP.h = 0;
 	this->server->send(200, "text/plain", "OK");
 }
 
