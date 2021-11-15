@@ -620,10 +620,30 @@ void WebServerClass::handleInfo()
   char buffer[50];
   sprintf(buffer, "%i days, %i hours, %i mins, %i seconds, %i milliseconds", days, hrs, mins, secs, msecs);
   json["uptime"] = buffer;
-  sprintf(buffer, "%02i:%02i:%02i:%02i %i/%i/%i",NTP.weekday,NTP.h,NTP.m,NTP.s,NTP.day, NTP.month,NTP.year);
-  json["last NTP timestamp"] = buffer;
 
-  
+  switch (NTP.weekday)
+  {
+    case 0:
+      json["CurrentDay"]="Sunday"; break;
+    case 1:
+      json["CurrentDay"]="Monday"; break;
+    case 2:
+      json["CurrentDay"]="Tuesday"; break;
+    case 3:
+      json["CurrentDay"]="Wednesday"; break;
+    case 4:
+      json["CurrentDay"]="Thursday"; break;
+    case 5:
+      json["CurrentDay"]="Friday"; break;
+    case 6:
+      json["CurrentDay"]="Saturday"; break;
+    default:
+      json["CurrentDay"]="Unknown"; 
+  }
+  sprintf(buffer, "%02i:%02i:%02i.%03i",NTP.h,NTP.m,NTP.s,NTP.ms);
+  json["CurrentTime"] = buffer;
+  sprintf(buffer, "%i/%i/%i",NTP.day, NTP.month,NTP.year);
+  json["CurrentDate"] = buffer;
 
   String buf;
   serializeJsonPretty(json,buf);
