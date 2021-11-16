@@ -81,7 +81,7 @@ void ConfigClass::begin()
 //---------------------------------------------------------------------------------------
 void ConfigClass::saveDelayed()
 {
-	this->delayedWriteTimer = 1000; // 10 seconds using 10 ms timer
+	this->delayedWriteTimer = 10000; // No of msecs to count down.
 }
 
 //---------------------------------------------------------------------------------------
@@ -108,7 +108,7 @@ int ConfigClass::Configsize()
 //---------------------------------------------------------------------------------------
 void ConfigClass::save()
 {
-	this->delayedWriteFlag = false;
+  this->delayedWriteTimer = 0; // Make sure we are not saving again after timer expires
 
 	this->config->bg = this->bg;
 	this->config->fg = this->fg;

@@ -21,6 +21,8 @@
 
 #include <stdint.h>
 #include "config.h"
+#define HOURGLASS_ANIMATION_PERIOD 100
+#define HOURGLASS_ANIMATION_FRAMES 8
 
 // animation frames for hourglass animation
 // second dimension is NUM_PIXELS+2 to guarantee each frame starts at

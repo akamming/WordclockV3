@@ -21,7 +21,6 @@
 #include <IPAddress.h>
 
 #define NUM_PIXELS 114
-#define HOURGLASS_ANIMATION_FRAMES 8
 #define DEBUG 1
 
 enum class DisplayMode
@@ -99,11 +98,9 @@ public:
   DisplayMode defaultMode = DisplayMode::fade;
 
 	int updateProgress = 0;
-	int hourglassState = 0;
 	int timeZone = 0;
 
 	int delayedWriteTimer = 0;
-	bool delayedWriteFlag = false;
 
   t_alarm alarm[5];
 

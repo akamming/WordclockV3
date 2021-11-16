@@ -88,6 +88,7 @@ private:
 	static const std::vector<leds_template_t> minutesTemplate;
 	static const palette_entry firePalette[];
 	static const palette_entry plasmaPalette[];
+  int hourglassState = 0;
 
 	DisplayMode mode = DisplayMode::plain;
 
@@ -122,7 +123,7 @@ private:
 	void renderUpdate();
 	void renderUpdateComplete();
 	void renderUpdateError();
-	void renderHourglass(uint8_t animationStep, bool green);
+	void renderHourglass(bool green);
 	void renderWifiManager();
 	void renderTime(uint8_t *target);
 	void renderFlyingLetters();

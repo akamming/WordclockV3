@@ -56,12 +56,10 @@ int OTA_in_progress = 0;
 // Timer related variables
 //---------------------------------------------------------------------------------------
 #define TIMER_RESOLUTION 50
-#define HOURGLASS_ANIMATION_PERIOD 100
-#define TICKTIME 0 // no of millisecs between clock display updates
 
 Ticker timer;
 int lastSecond = -1;
-
+int lastMillis=0;
 //---------------------------------------------------------------------------------------
 // Startup related variables
 //---------------------------------------------------------------------------------------
@@ -109,23 +107,7 @@ unsigned long timestamp(int _h, int _m, int _s, int _ms)
 void timerCallback()
 {
 
-	// decrement delayed EEPROM config timer
-	if(Config.delayedWriteTimer)
-	{
-		Config.delayedWriteTimer--;
-		if(Config.delayedWriteTimer == 0) Config.delayedWriteFlag = true;
-	}
-
-	hourglassPrescaler += TIMER_RESOLUTION;
-	if (hourglassPrescaler >= HOURGLASS_ANIMATION_PERIOD)
-	{
-		hourglassPrescaler -= HOURGLASS_ANIMATION_PERIOD;
-		if (++Config.hourglassState >= HOURGLASS_ANIMATION_FRAMES)
-			Config.hourglassState = 0;
-
-		// trigger LED processing for hourglass during startup
-		if(startup && not RecoverFromException) LED.process();
-	}
+  if (startup && not RecoverFromException) LED.process();
 }
 
 //---------------------------------------------------------------------------------------
@@ -314,6 +296,10 @@ void setup()
 
   // Set NextTick to now
   NextTick=millis();
+
+  // set lastmillis
+  lastMillis=millis();
+  
 }
 
 //-----------------------------------------------------------------------------------
@@ -321,6 +307,7 @@ void setup()
 //-----------------------------------------------------------------------------------
 void loop()
 {
+  
   bool AlarmInProgress = false;
   // handle NTP
   NTP.process();
@@ -331,198 +318,194 @@ void loop()
   // do web server stuff
   WebServer.process();
 
-  // save configuration to EEPROM if necessary
-  if(Config.delayedWriteFlag)
+  // decrement delayed EEPROM config timer
+  if(Config.delayedWriteTimer>0)
   {
-    DEBUG("Config timer expired, writing configuration.\r\n");
-    Config.delayedWriteFlag = false;
-    Config.save();
+    Config.delayedWriteTimer-=(unsigned long)(millis() - lastMillis);
+    lastMillis=millis();
+    if(Config.delayedWriteTimer <= 0) 
+    {
+      Config.delayedWriteTimer=0; // make sure we don't save to often.
+      DEBUG("Config timer expired, writing configuration.\r\n");
+      Config.save();
+    }
   }
 
-  // Only process LED functions every TICKTIME mseconds 
-  if (millis()>=NextTick) 
+	// do not continue if OTA update is in progress
+	// OTA callbacks drive the LED display mode and OTA progress
+	// in the background, the above call to LED.process() ensures
+	// the OTA status is output to the LEDs
+	if (OTA_in_progress==0) 
   {
-    // increase Next Tick
-    NextTick = millis()+TICKTIME;  
-  
-  	// do not continue if OTA update is in progress
-  	// OTA callbacks drive the LED display mode and OTA progress
-  	// in the background, the above call to LED.process() ensures
-  	// the OTA status is output to the LEDs
-  	if (OTA_in_progress==0) 
-    {
-  
-    	// show the hourglass animation with green corners for configured time
-    	// after boot to be able to reflash with OTA during that time window if
-    	// the firmware hangs afterwards
-  	  if(updateCountdown)
-    	{
-    		setLED(0, 1, 0);
-    		LED.setMode(DisplayMode::greenHourglass);
-    		Serial.print(".");
-    		delay(100);
-    		updateCountdown--;
-    		if(updateCountdown == 0)
-    		{
-    			LED.setMode(Config.defaultMode);
-    			setLED(0, 0, 0);
-    		}
-    	} else {    
-        // get Current time
-        unsigned long CurrentTime=timestamp(NTP.h,NTP.m,NTP.s,NTP.ms);
-        
-        // overrule any of the above in case of configured alarms
-        for (int i=0;i<5;i++)
-        {
-          if (Config.alarm[i].enabled) {
-            unsigned long StartTime=timestamp(Config.alarm[i].h,Config.alarm[i].m,0,0);
-            unsigned long EndTime=StartTime+Config.alarm[i].duration*60000;  // Duration is in minutes, 1 min = 60.000 msec.
-  
-            if (EndTime<24*3600*1000) { // EndTime is the same day
-              if (CurrentTime>=StartTime && CurrentTime<EndTime && ( Config.alarm[i].type==AlarmType::always || 
-                                                                     Config.alarm[i].type==AlarmType::oneoff || 
-                                                                    (Config.alarm[i].type==AlarmType::weekend && (NTP.weekday==0 || NTP.weekday==6)) ||
-                                                                    (Config.alarm[i].type==AlarmType::workingdays && NTP.weekday>0 && NTP.weekday<6)))
-              {
-                Config.nightmode=false;
-                LED.setMode(Config.alarm[i].mode);
-                LED.AlarmProgress=(float) (CurrentTime-StartTime) / (float) (EndTime-StartTime); // Let the alarmhandling know how far we are in the progress
-                AlarmInProgress=true;
-                alarmstate=i;
-                alarmtype=Config.alarm[i].type;
-              }
-            } else { // Endtime is the next day, in which case we have to handle the rollover at 0.00, so check for every start en endtime if it's the correct working day
-              if (   (CurrentTime>StartTime && ( Config.alarm[i].type==AlarmType::always || // always 
-                                               Config.alarm[i].type==AlarmType::oneoff ||  // always
-                                              (Config.alarm[i].type==AlarmType::weekend && (NTP.weekday==0 || NTP.weekday==6)) || // Starttime in the evenings only on saturday and sunday
-                                              (Config.alarm[i].type==AlarmType::workingdays && NTP.weekday>0 && NTP.weekday<6) ) ) // Starttime in the week only from mon-fri
-                  || (CurrentTime<EndTime-24*3600*1000 && ( Config.alarm[i].type==AlarmType::always || // always 
-                                                            Config.alarm[i].type==AlarmType::oneoff ||  // always
-                                                           (Config.alarm[i].type==AlarmType::weekend && (NTP.weekday==0 || NTP.weekday==6)) || // endtime in morning can only be sunday and monday morning
-                                                           (Config.alarm[i].type==AlarmType::workingdays && NTP.weekday>1 && NTP.weekday<7))) ) // endtime in morning can only be tue-sat
-              {
-                Config.nightmode=false;
-                LED.setMode(Config.alarm[i].mode);
-                alarmstate=i;
-                alarmtype=Config.alarm[i].type;
-                if (CurrentTime>StartTime) {
-                  LED.AlarmProgress=(CurrentTime-StartTime)/(EndTime-StartTime); // Let the alarmhandling know how far we are in the progress
-                } else {
-                  LED.AlarmProgress=(CurrentTime+24*3600*1000-StartTime)/(EndTime-StartTime); // Let the alarmhandling know how far we are in the progress
-                }
-                AlarmInProgress=true;
-              }
-            }
-          }
-        }
 
-        if (not AlarmInProgress)
-        {
-          // Check if we have to deactivate a one-off alarm
-          if (alarmstate!=255) {
-            if (Config.alarm[alarmstate].type==AlarmType::oneoff) {
-              Serial.printf("Deactivating alarm %i\r\n",alarmstate);
-              Config.alarm[alarmstate].enabled=false;
-              Config.saveDelayed();
-              alarmstate=255;
-            }
-          }
-          // display hourglass until time acquired from NTP Server
-          if (NTPTimeAcquired){
-            if (RecoverFromException) {
-              RecoverFromException=false;
-              LED.setMode(DisplayMode::plain);
-            } else {
-              LED.setMode(Config.defaultMode);
-            }
-          } else {
-            LED.setMode(DisplayMode::greenHourglass);
-          }
-        }
-    	}
-    
-      // update LEDs
-      LED.setBrightness(Brightness.value());
-      if (not RecoverFromException) 
+  	// show the hourglass animation with green corners for configured time
+  	// after boot to be able to reflash with OTA during that time window if
+  	// the firmware hangs afterwards
+    if(updateCountdown)
+  	{
+  		setLED(0, 1, 0);
+  		LED.setMode(DisplayMode::greenHourglass);
+  		Serial.print(".");
+  		delay(100);
+  		updateCountdown--;
+  		if(updateCountdown == 0)
+  		{
+  			LED.setMode(Config.defaultMode);
+  			setLED(0, 0, 0);
+  		}
+  	} else {    
+      // get Current time
+      unsigned long CurrentTime=timestamp(NTP.h,NTP.m,NTP.s,NTP.ms);
+      
+      // overrule any of the above in case of configured alarms
+      for (int i=0;i<5;i++)
       {
-        LED.process();
-      }
-        
-    	// output current time if seconds value has changed
-    	if (NTP.s != lastSecond)
-    	{
-        // blink onboard LED if heartbeat is enabled
-        if (Config.heartbeat) digitalWrite(LED_BUILTIN, LOW);
+        if (Config.alarm[i].enabled) {
+          unsigned long StartTime=timestamp(Config.alarm[i].h,Config.alarm[i].m,0,0);
+          unsigned long EndTime=StartTime+Config.alarm[i].duration*60000;  // Duration is in minutes, 1 min = 60.000 msec.
 
-    		lastSecond = NTP.s;
-    
-        // calc uptime
-        int milliseconds  = millis();
-        long seconds=milliseconds/1000;
-        int msecs = milliseconds % 1000;
-        int secs = seconds % 60;
-        int mins = (seconds/60) % 60;
-        int hrs = (seconds/3600) % 24;
-        int days = (seconds/(3600*24));
-    
-
-    		DEBUG("%02i:%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, Free Cont Stack = %i, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
-    			  NTP.weekday, NTP.h, NTP.m, NTP.s, (int)Brightness.avg, (int)(Brightness.avg*100)%100,
-    			  ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getMaxFreeBlockSize(), ESP.getFreeContStack(), Brightness.value(),
-    			  days,hrs,mins,secs,msecs);
-        if (AlarmInProgress) {
-          DEBUG("Alarm in Progress at %2.2f%%\r\n",LED.AlarmProgress*100); 
+          if (EndTime<24*3600*1000) { // EndTime is the same day
+            if (CurrentTime>=StartTime && CurrentTime<EndTime && ( Config.alarm[i].type==AlarmType::always || 
+                                                                   Config.alarm[i].type==AlarmType::oneoff || 
+                                                                  (Config.alarm[i].type==AlarmType::weekend && (NTP.weekday==0 || NTP.weekday==6)) ||
+                                                                  (Config.alarm[i].type==AlarmType::workingdays && NTP.weekday>0 && NTP.weekday<6)))
+            {
+              Config.nightmode=false;
+              LED.setMode(Config.alarm[i].mode);
+              LED.AlarmProgress=(float) (CurrentTime-StartTime) / (float) (EndTime-StartTime); // Let the alarmhandling know how far we are in the progress
+              AlarmInProgress=true;
+              alarmstate=i;
+              alarmtype=Config.alarm[i].type;
+            }
+          } else { // Endtime is the next day, in which case we have to handle the rollover at 0.00, so check for every start en endtime if it's the correct working day
+            if (   (CurrentTime>StartTime && ( Config.alarm[i].type==AlarmType::always || // always 
+                                             Config.alarm[i].type==AlarmType::oneoff ||  // always
+                                            (Config.alarm[i].type==AlarmType::weekend && (NTP.weekday==0 || NTP.weekday==6)) || // Starttime in the evenings only on saturday and sunday
+                                            (Config.alarm[i].type==AlarmType::workingdays && NTP.weekday>0 && NTP.weekday<6) ) ) // Starttime in the week only from mon-fri
+                || (CurrentTime<EndTime-24*3600*1000 && ( Config.alarm[i].type==AlarmType::always || // always 
+                                                          Config.alarm[i].type==AlarmType::oneoff ||  // always
+                                                         (Config.alarm[i].type==AlarmType::weekend && (NTP.weekday==0 || NTP.weekday==6)) || // endtime in morning can only be sunday and monday morning
+                                                         (Config.alarm[i].type==AlarmType::workingdays && NTP.weekday>1 && NTP.weekday<7))) ) // endtime in morning can only be tue-sat
+            {
+              Config.nightmode=false;
+              LED.setMode(Config.alarm[i].mode);
+              alarmstate=i;
+              alarmtype=Config.alarm[i].type;
+              if (CurrentTime>StartTime) {
+                LED.AlarmProgress=(CurrentTime-StartTime)/(EndTime-StartTime); // Let the alarmhandling know how far we are in the progress
+              } else {
+                LED.AlarmProgress=(CurrentTime+24*3600*1000-StartTime)/(EndTime-StartTime); // Let the alarmhandling know how far we are in the progress
+              }
+              AlarmInProgress=true;
+            }
+          }
         }
-    	} else {
-          digitalWrite(LED_BUILTIN, HIGH); 
-    	}
-    
+      }
+
+      if (not AlarmInProgress)
+      {
+        // Check if we have to deactivate a one-off alarm
+        if (alarmstate!=255) {
+          if (Config.alarm[alarmstate].type==AlarmType::oneoff) {
+            Serial.printf("Deactivating alarm %i\r\n",alarmstate);
+            Config.alarm[alarmstate].enabled=false;
+            Config.saveDelayed();
+            alarmstate=255;
+          }
+        }
+        // display hourglass until time acquired from NTP Server
+        if (NTPTimeAcquired){
+          if (RecoverFromException) {
+            RecoverFromException=false;
+            LED.setMode(DisplayMode::plain);
+          } else {
+            LED.setMode(Config.defaultMode);
+          }
+        } else {
+          LED.setMode(DisplayMode::greenHourglass);
+        }
+      }
+  	}
+  
+    // update LEDs
+    LED.setBrightness(Brightness.value());
+    if (not RecoverFromException) 
+    {
+      LED.process();
+    }
+      
+  	// output current time if seconds value has changed
+  	if (NTP.s != lastSecond)
+  	{
+      // blink onboard LED if heartbeat is enabled
+      if (Config.heartbeat) digitalWrite(LED_BUILTIN, LOW);
+
+  		lastSecond = NTP.s;
+  
+      // calc uptime
+      int milliseconds  = millis();
+      long seconds=milliseconds/1000;
+      int msecs = milliseconds % 1000;
+      int secs = seconds % 60;
+      int mins = (seconds/60) % 60;
+      int hrs = (seconds/3600) % 24;
+      int days = (seconds/(3600*24));
+  
+
+  		DEBUG("%02i:%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, Free Cont Stack = %i, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
+  			  NTP.weekday, NTP.h, NTP.m, NTP.s, (int)Brightness.avg, (int)(Brightness.avg*100)%100,
+  			  ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getMaxFreeBlockSize(), ESP.getFreeContStack(), Brightness.value(),
+  			  days,hrs,mins,secs,msecs);
+      if (AlarmInProgress) {
+        DEBUG("Alarm in Progress at %2.2f%%\r\n",LED.AlarmProgress*100); 
+      }
+  	} else {
+        digitalWrite(LED_BUILTIN, HIGH); 
+  	}
 
 #ifndef NEOPIXELBUS
-      // does not work with NEOPIXELBUS, due to DMA method conflicting with incoming Serial
-    	if (Serial.available())
-    	{
-    		int incoming = Serial.read();
-    		switch (incoming)
-    		{
-    		case 'i':
-    			Serial.println("WordClock ESP8266 ready.");
-    			break;
-    
-    		case 'X':
-    			// WiFi.disconnect();
-    			ESP.reset();
-    			break;
-    
-        case 'E':
-          Serial.println("Startin exception");
-          int *test;
-          *test=5;
-          Serial.println("test = "+String(*test));
-          break;
-    
-        case 'S':
-          Serial.println("Trigger software watchdog");
-          wdt_disable();
-          wdt_enable(WDTO_15MS);
-          while (1) {}
-          break;
-    
-        case 'H':
-          Serial.println("Trigger hardware watchdog");
-          wdt_disable();
-          while (1) {}
-          break;
-    
-    
-    		default:
-    			Serial.printf("Unknown command '%c'\r\n", incoming);
-    			break;
-    		}
-    	}
+    // does not work with NEOPIXELBUS, due to DMA method conflicting with incoming Serial
+  	if (Serial.available())
+  	{
+  		int incoming = Serial.read();
+  		switch (incoming)
+  		{
+  		case 'i':
+  			Serial.println("WordClock ESP8266 ready.");
+  			break;
+  
+  		case 'X':
+  			// WiFi.disconnect();
+  			ESP.reset();
+  			break;
+  
+      case 'E':
+        Serial.println("Startin exception");
+        int *test;
+        *test=5;
+        Serial.println("test = "+String(*test));
+        break;
+  
+      case 'S':
+        Serial.println("Trigger software watchdog");
+        wdt_disable();
+        wdt_enable(WDTO_15MS);
+        while (1) {}
+        break;
+  
+      case 'H':
+        Serial.println("Trigger hardware watchdog");
+        wdt_disable();
+        while (1) {}
+        break;
+  
+  
+  		default:
+  			Serial.printf("Unknown command '%c'\r\n", incoming);
+  			break;
+  		}
+  	}
 #endif
-
-    }
   } 
 }
 // ./esptool.py --port /dev/tty.usbserial --baud 460800 write_flash --flash_size=8m 0 /var/folders/yh/bv744591099f3x24xbkc22zw0000gn/T/build006b1a55228a1b90dda210fcddb62452.tmp/test.ino.bin

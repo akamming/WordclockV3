@@ -364,10 +364,10 @@ void LEDFunctionsClass::process()
 		this->renderWifiManager();
 		break;
 	case DisplayMode::yellowHourglass:
-		this->renderHourglass(Config.hourglassState, false);
+		this->renderHourglass(false);
 		break;
 	case DisplayMode::greenHourglass:
-		this->renderHourglass(Config.hourglassState, true);
+		this->renderHourglass(true);
 		break;
 	case DisplayMode::update:
 		this->renderUpdate();
@@ -952,16 +952,23 @@ void LEDFunctionsClass::renderTime(uint8_t *target)
 //           window)
 // <- --
 //---------------------------------------------------------------------------------------
-void LEDFunctionsClass::renderHourglass(uint8_t animationStep, bool green)
+void LEDFunctionsClass::renderHourglass(bool green)
 {
+  if ((unsigned long) (millis()-this->lastUpdate)>100)
+  {
+    this->lastUpdate=millis();
+    if (++this->hourglassState >= HOURGLASS_ANIMATION_FRAMES)
+      this->hourglassState = 0;
+  }
+  
 	// colors in palette: black, white, yellow
 	palette_entry p[] = {{0, 0, 0}, {255, 255, 255}, {255, 255, 0}, {255, 255, 0}};
 
 	// delete red component in palette entry 3 to make this color green
 	if(green) p[3].r = 0;
 
-	if (animationStep >= HOURGLASS_ANIMATION_FRAMES) animationStep = 0;
-	this->set(hourglass_animation[animationStep], p, true);
+	if (this->hourglassState >= HOURGLASS_ANIMATION_FRAMES) this->hourglassState = 0;
+	this->set(hourglass_animation[this->hourglassState], p, true);
 }
 
 //---------------------------------------------------------------------------------------
