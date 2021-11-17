@@ -20,8 +20,11 @@
 
 #include <IPAddress.h>
 
+// constants
 #define NUM_PIXELS 114
 #define DEBUG 1
+#define EEPROM_SIZE 512
+#define CONFIGWRITETIMEOUT 10000
 
 enum class DisplayMode
 {
@@ -69,8 +72,6 @@ typedef struct _config_struct
   uint8_t animspeed;
 } config_struct;
 
-#define EEPROM_SIZE 512
-
 
 class ConfigClass
 {
@@ -84,6 +85,7 @@ public:
 	void load();
 	void reset();
   int Configsize();
+  void process();
 
 	// public configuration variables
 	palette_entry fg;
@@ -101,6 +103,7 @@ public:
 	int timeZone = 0;
 
 	int delayedWriteTimer = 0;
+  int lastMillis=0;
 
   t_alarm alarm[5];
 

@@ -59,7 +59,6 @@ int OTA_in_progress = 0;
 
 Ticker timer;
 int lastSecond = -1;
-int lastMillis=0;
 //---------------------------------------------------------------------------------------
 // Startup related variables
 //---------------------------------------------------------------------------------------
@@ -296,9 +295,6 @@ void setup()
 
   // Set NextTick to now
   NextTick=millis();
-
-  // set lastmillis
-  lastMillis=millis();
   
 }
 
@@ -318,18 +314,8 @@ void loop()
   // do web server stuff
   WebServer.process();
 
-  // decrement delayed EEPROM config timer
-  if(Config.delayedWriteTimer>0)
-  {
-    Config.delayedWriteTimer-=(unsigned long)(millis() - lastMillis);
-    lastMillis=millis();
-    if(Config.delayedWriteTimer <= 0) 
-    {
-      Config.delayedWriteTimer=0; // make sure we don't save to often.
-      DEBUG("Config timer expired, writing configuration.\r\n");
-      Config.save();
-    }
-  }
+  // do Config sutff
+  Config.process();
 
 	// do not continue if OTA update is in progress
 	// OTA callbacks drive the LED display mode and OTA progress

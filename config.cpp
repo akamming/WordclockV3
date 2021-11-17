@@ -66,8 +66,9 @@ ConfigClass::~ConfigClass()
 //---------------------------------------------------------------------------------------
 void ConfigClass::begin()
 {
-	EEPROM.begin(EEPROM_SIZE);
+  EEPROM.begin(EEPROM_SIZE);
 	this->load();
+  this->lastMillis=millis();
 }
 
 //---------------------------------------------------------------------------------------
@@ -81,7 +82,31 @@ void ConfigClass::begin()
 //---------------------------------------------------------------------------------------
 void ConfigClass::saveDelayed()
 {
-	this->delayedWriteTimer = 10000; // No of msecs to count down.
+	this->delayedWriteTimer = CONFIGWRITETIMEOUT; // No of msecs to count down.
+}
+
+//---------------------------------------------------------------------------------------
+// process
+//
+// handles any periodic handling.
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void ConfigClass::process()
+{
+  // decrement delayed EEPROM config timer
+  if(this->delayedWriteTimer>0)
+  {
+    this->delayedWriteTimer-=(unsigned long)(millis() - this->lastMillis);
+    this->lastMillis=millis();
+    if(this->delayedWriteTimer <= 0) 
+    {
+      this->delayedWriteTimer=0; // make sure we don't save to often.
+      Serial.println("Config timer expired, writing configuration.");
+      this->save();
+    }
+  }
 }
 
 //---------------------------------------------------------------------------------------
