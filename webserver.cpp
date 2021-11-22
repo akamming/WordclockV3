@@ -9,7 +9,7 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
+//g
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -33,7 +33,6 @@
 
 #define GETCONFIGMESSAGESIZE 1280
 #define INFOMESSAGESIZE 600
-
 
 //---------------------------------------------------------------------------------------
 // global instance
@@ -509,7 +508,7 @@ void WebServerClass::handleSetMode()
     if(this->server->arg("value") == "11") mode = DisplayMode::HorizontalStripes;
     if(this->server->arg("value") == "12") mode = DisplayMode::VerticalStripes;
     if(this->server->arg("value") == "13") mode = DisplayMode::RandomDots;
-    
+    if(this->server->arg("value") == "14") mode = DisplayMode::RandomStripes;
 	}
 
 	if(mode == DisplayMode::invalid)
@@ -876,6 +875,8 @@ void WebServerClass::handleGetConfig()
     displaymode = 12; break;
   case DisplayMode::RandomDots:
     displaymode = 13; break;
+  case DisplayMode::RandomStripes:
+    displaymode = 14; break;
   default:
     displaymode = 1; break;
   }

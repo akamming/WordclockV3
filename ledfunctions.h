@@ -107,6 +107,13 @@ private:
 	int lastH = -1;
   unsigned long lastFadeTick=0;
 
+  int X1 = 0;
+  int X2 = 10;
+  int Y1 = 0;
+  int Y2 = 9;
+
+  void drawDot(uint8_t *target, uint8_t x, uint8_t y, palette_entry palette);
+  void drawLine(uint8_t *target, int8_t x1, int8_t y1, int8_t x2, int8_t y2, palette_entry color);
 	void fillBackground(int seconds, int milliseconds, uint8_t *buf);
   void fillTime(int h, int m, uint8_t *target);
 	void renderRed();
@@ -130,6 +137,7 @@ private:
 	void prepareFlyingLetters(uint8_t *source);
   void renderExplosion();
   void renderRandomDots();
+  void renderRandomStripes();
   void renderStripes(uint8_t *target, bool Horizontal);
 	void prepareExplosion(uint8_t *source);
 	void fade();

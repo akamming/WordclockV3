@@ -424,6 +424,9 @@ void LEDFunctionsClass::process()
   case DisplayMode::RandomDots: 
     this->renderRandomDots();
     break;
+  case DisplayMode::RandomStripes: 
+    this->renderRandomStripes();
+    break;
 
 	case DisplayMode::fade:
 		this->renderTime(buf);
@@ -622,12 +625,60 @@ void LEDFunctionsClass::renderRandomDots()
     byte RandomDot=random(NUM_PIXELS);
     this->currentValues[RandomDot*3]=random(2)*255;
     this->currentValues[RandomDot*3+1]=random(2)*255;
-    this->currentValues[RandomDot*3+2]=random(2)*255;
+    this->currentValues[RandomDot*3+2]=random(2)*255; 
+
     this->lastUpdate=millis();
   }
   
   this->fade();
 }
+
+//---------------------------------------------------------------------------------------
+// renderRandomStripes
+//
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void LEDFunctionsClass::renderRandomStripes()
+{
+  if ((unsigned long)(millis() - this->lastUpdate) >= (100-Config.animspeed)*10) 
+  {
+    // set target
+    for (int i=0;i<NUM_PIXELS*3;i++)
+    {
+      this->targetValues[i]=0;
+    }
+
+    palette_entry color = { random(2)*255, random(2)*255, random(2)*255 };
+
+    this->drawLine(this->targetValues,this->X1,this->Y1,this->X2,this->Y2,Config.fg);
+
+    // calculate next coords
+    this->X1+=random(3)-1;
+    if (this->X1<0) this->X1=0;
+    if (this->X1>10) this->X1=10;
+
+    this->X2+=random(3)-1;
+    if (this->X2<0) this->X2=0;
+    if (this->X2>10) this->X2=10;
+
+    this->Y1+=random(3)-1;
+    if (this->Y1<0) this->Y1=0;
+    if (this->Y1>9) this->Y1=9;
+
+    this->Y2+=random(3)-1;
+    if (this->Y2<0) this->Y2=0;
+    if (this->Y2>9) this->Y2=9;
+
+
+    this->lastUpdate=millis();
+  }
+  
+  this->fade();
+}
+
+
 
 //---------------------------------------------------------------------------------------
 // fade
@@ -809,6 +860,58 @@ void LEDFunctionsClass::fillTime(int h, int m, uint8_t *target)
 //---------------------------------------------------------------------------------------
 #if 1 // rendering methods
 //---------------------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------------------
+// drawdot
+//
+// Draws a dot in a selected color
+//
+// -> target: buffer to be modified (either CurrentValues or TargetValues)
+//    x,y: coordinate
+//    palette: palette entry
+// <- --
+//---------------------------------------------------------------------------------------
+void LEDFunctionsClass::drawDot(uint8_t *target, uint8_t x, uint8_t y, palette_entry palette)
+{
+  // get mapping
+
+  int mapping = LEDFunctionsClass::mapping[y*11+x]*3;
+
+  targetValues[mapping]=palette.r;
+  targetValues[mapping+1]=palette.g;
+  targetValues[mapping+2]=palette.b;
+}
+
+//---------------------------------------------------------------------------------------
+// drawline
+//
+// Draws a line in a selected color
+//
+// -> target: buffer to be modified: Either currentvalues or targetvalues
+//    x1,y1: from coordinate
+//    x2,y2: to coordinate
+//    color: which color to draw
+// <- --
+//---------------------------------------------------------------------------------------
+void LEDFunctionsClass::drawLine(uint8_t *target, int8_t x1, int8_t y1, int8_t x2, int8_t y2, palette_entry color)
+{
+  // calculate 
+  // uint8_t number_of_dots = ( (abs(x2-x1)>abs(y2-y1)) ? abs(x2-x1) : abs(y2-y1)); // longest delta either in Y of X
+
+  int8_t TotalDeltaX=abs(x2-x1);
+  int8_t TotalDeltaY=abs(y2-y1);
+  int number_of_dots=(TotalDeltaX>TotalDeltaY)?TotalDeltaX:TotalDeltaY;
+  
+  float deltaX = ((float) (x2-x1)) / (float) number_of_dots;
+  float deltaY = ((float) (y2-y1)) / (float) number_of_dots;
+
+  for (int i=0;i<=number_of_dots;i++)
+  {
+    this->drawDot(target , x1+deltaX*i+0.499 , y1+deltaY*i+0.499 , color);
+  }
+}  
+
+
 
 //---------------------------------------------------------------------------------------
 // renderRandom

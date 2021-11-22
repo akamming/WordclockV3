@@ -30,7 +30,7 @@ enum class DisplayMode
 {
   plain, fade, flyingLettersVerticalUp, flyingLettersVerticalDown, explode,
   random, matrix, heart, fire, plasma, stars, wakeup, HorizontalStripes, VerticalStripes,
-  RandomDots, red, green, blue,
+  RandomDots, RandomStripes, red, green, blue,
   yellowHourglass, greenHourglass, update, updateComplete, updateError,
   wifiManager, invalid
 };
