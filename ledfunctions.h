@@ -71,8 +71,14 @@ public:
 	static const int height = 10;
 	uint8_t currentValues[NUM_PIXELS * 3];
   float AlarmProgress=0; // let the alarm know how much % of the time has passed
+
+  // Effect vars
   unsigned long lastUpdate=0; // for some effects
   int lastOffset=0; // for some effects
+  int X1 = 0;
+  int X2 = 10;
+  int Y1 = 0;
+  int Y2 = 9;
 
 #ifdef FASTLED
   CRGB leds[NUM_PIXELS]; // FastLed
@@ -107,10 +113,6 @@ private:
 	int lastH = -1;
   unsigned long lastFadeTick=0;
 
-  int X1 = 0;
-  int X2 = 10;
-  int Y1 = 0;
-  int Y2 = 9;
 
   void drawDot(uint8_t *target, uint8_t x, uint8_t y, palette_entry palette);
   void drawLine(uint8_t *target, int8_t x1, int8_t y1, int8_t x2, int8_t y2, palette_entry color);
@@ -138,6 +140,7 @@ private:
   void renderExplosion();
   void renderRandomDots();
   void renderRandomStripes();
+  void renderRotatingLine();
   void renderStripes(uint8_t *target, bool Horizontal);
 	void prepareExplosion(uint8_t *source);
 	void fade();

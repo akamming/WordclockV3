@@ -509,6 +509,12 @@ void WebServerClass::handleSetMode()
     if(this->server->arg("value") == "12") mode = DisplayMode::VerticalStripes;
     if(this->server->arg("value") == "13") mode = DisplayMode::RandomDots;
     if(this->server->arg("value") == "14") mode = DisplayMode::RandomStripes;
+    if(this->server->arg("value") == "15") 
+    {
+      mode = DisplayMode::RotatingLine;
+      LED.X1=0;
+      LED.Y1=0;
+    }
 	}
 
 	if(mode == DisplayMode::invalid)
@@ -877,6 +883,8 @@ void WebServerClass::handleGetConfig()
     displaymode = 13; break;
   case DisplayMode::RandomStripes:
     displaymode = 14; break;
+  case DisplayMode::RotatingLine:
+    displaymode = 15; break;
   default:
     displaymode = 1; break;
   }

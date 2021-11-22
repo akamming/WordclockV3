@@ -427,13 +427,15 @@ void LEDFunctionsClass::process()
   case DisplayMode::RandomStripes: 
     this->renderRandomStripes();
     break;
+  case DisplayMode::RotatingLine: 
+    this->renderRotatingLine();
+    break;
 
 	case DisplayMode::fade:
 		this->renderTime(buf);
 		this->set(buf, palette, false);
 		this->fade();
 		break;
-
     
 	case DisplayMode::plain:
 	default:
@@ -671,6 +673,73 @@ void LEDFunctionsClass::renderRandomStripes()
     if (this->Y2<0) this->Y2=0;
     if (this->Y2>9) this->Y2=9;
 
+
+    this->lastUpdate=millis();
+  }
+  
+  this->fade();
+}
+
+//---------------------------------------------------------------------------------------
+// renderRotatingLine
+//
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void LEDFunctionsClass::renderRotatingLine()
+{
+  if ((unsigned long)(millis() - this->lastUpdate) >= (100-Config.animspeed)*10) 
+  {
+    // set target
+    for (int i=0;i<NUM_PIXELS*3;i++)
+    {
+      this->targetValues[i]=0;
+    }
+
+    // palette_entry color = { random(2)*255, random(2)*255, random(2)*255 };
+    palette_entry color[] = {
+      {0, 0, 255},
+      {0, 255, 0},
+      {255, 0, 0},
+      {255, 0, 255},
+      {255, 255, 0},
+      {0, 255, 255},
+      {255, 255, 255}
+    };
+
+    // this->drawLine(this->targetValues,this->X1,this->Y1,10-this->X1,9-this->Y1,Config.fg);
+    this->drawLine(this->targetValues,this->X1,this->Y1,10-this->X1,9-this->Y1,color[random(7)]);
+
+    // calculate next coords
+    if (this->Y1==0) {
+      // we are on top row
+      if (this->X1==10) {
+        // we are on top right corner
+        this->Y1++;
+      } else {
+        // we are somewhere else on the top row
+        this->X1++;
+      }
+    } else if (this->Y1==9) {
+      // we are on bottom row
+      if (this->X1==0) {
+        // we are on bottom left corner
+        this->Y1--;
+      } else {
+        // we are somewhere else on bottom row
+        this->X1--;
+      }
+    } else {
+      // we are either on left or right col
+      if (this->X1==0) {
+        // we are on left col
+        this->Y1--;
+      } else {
+        // we are on tright col
+        this->Y1++;
+      }
+    }
 
     this->lastUpdate=millis();
   }
