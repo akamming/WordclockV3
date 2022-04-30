@@ -22,7 +22,6 @@
 
 // constants
 #define NUM_PIXELS 114
-#define DEBUG 1
 #define EEPROM_SIZE 512
 #define CONFIGWRITETIMEOUT 10000
 

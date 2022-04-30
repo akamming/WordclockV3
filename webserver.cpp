@@ -86,17 +86,11 @@ void WebServerClass::begin()
 	this->server->on("/loadconfig", std::bind(&WebServerClass::handleLoadConfig, this));
 	this->server->on("/setheartbeat", std::bind(&WebServerClass::handleSetHeartbeat, this));
 	this->server->on("/setntpserver", std::bind(&WebServerClass::handleSetNtpServer, this));
-	this->server->on("/h", std::bind(&WebServerClass::handleH, this));
-	this->server->on("/m", std::bind(&WebServerClass::handleM, this));
-	this->server->on("/r", std::bind(&WebServerClass::handleR, this));
-	this->server->on("/g", std::bind(&WebServerClass::handleG, this));
-	this->server->on("/b", std::bind(&WebServerClass::handleB, this));
   this->server->on("/setbrightness", std::bind(&WebServerClass::handleSetBrightness, this));
 	this->server->on("/getadc", std::bind(&WebServerClass::handleGetADC, this));
 	this->server->on("/setmode", std::bind(&WebServerClass::handleSetMode, this));
   this->server->on("/setanimspeed", std::bind(&WebServerClass::handleSetAnimSpeed, this));
 	this->server->on("/settimezone", std::bind(&WebServerClass::handleSetTimeZone, this));
-  this->server->on("/debug", std::bind(&WebServerClass::handleDebug, this));
   this->server->on("/resetwificredentials", std::bind(&WebServerClass::handleResetWifiCredentials, this));
   this->server->on("/factoryreset", std::bind(&WebServerClass::handleFactoryReset, this));
   this->server->on("/reset", std::bind(&WebServerClass::handleReset, this));
@@ -104,11 +98,18 @@ void WebServerClass::begin()
   this->server->on("/getconfig", std::bind(&WebServerClass::handleGetConfig, this));
   this->server->on("/setalarm", std::bind(&WebServerClass::handleSetAlarm, this));
   this->server->on("/sethostname", std::bind(&WebServerClass::handleSetHostname, this));
-  
+
 #ifdef DEBUG
+  this->server->on("/h", std::bind(&WebServerClass::handleH, this));
+  this->server->on("/m", std::bind(&WebServerClass::handleM, this));
+  this->server->on("/r", std::bind(&WebServerClass::handleR, this));
+  this->server->on("/g", std::bind(&WebServerClass::handleG, this));
+  this->server->on("/b", std::bind(&WebServerClass::handleB, this));
   this->server->on("/showcrashlog", std::bind(&WebServerClass::handleShowCrashLog, this));
   this->server->on("/clearcrashlog", std::bind(&WebServerClass::handleClearCrashLog, this));
+  this->server->on("/debug", std::bind(&WebServerClass::handleDebug, this));
 #endif
+  
 
 	this->server->onNotFound(std::bind(&WebServerClass::handleNotFound, this));
 
@@ -260,6 +261,46 @@ void WebServerClass::handleResetWifiCredentials()
   ESP.reset();
 }
 
+#ifdef DEBUG
+void WebServerClass::handleDebug()
+{
+  if(this->server->hasArg("led") &&
+         this->server->hasArg("r") &&
+         this->server->hasArg("g") &&
+         this->server->hasArg("b"))
+  {
+    int led = this->server->arg("led").toInt();
+    int r = this->server->arg("r").toInt();
+    int g = this->server->arg("g").toInt();
+    int b = this->server->arg("b").toInt();
+    if(led < 0) led = 0;
+    if(led >= NUM_PIXELS) led = NUM_PIXELS - 1;
+    if(r < 0) r = 0;
+    if(r > 255) r = 255;
+    if(g < 0) g = 0;
+    if(g > 255) g = 255;
+    if(b < 0) b = 0;
+    if(b > 255) b = 255;
+
+    LED.currentValues[led*3+0] = r;
+    LED.currentValues[led*3+1] = g;
+    LED.currentValues[led*3+2] = b;
+    LED.show();
+    Config.debugMode = 1;
+  }
+
+  if(this->server->hasArg("clear"))
+  {
+    for(int i=0; i<3*NUM_PIXELS; i++) LED.currentValues[i] = 0;
+    LED.show();
+  }
+
+  if(this->server->hasArg("end"))
+  {
+    Config.debugMode = 0;
+  }
+  this->server->send(200, "text/plain", "OK");
+}
 
 //---------------------------------------------------------------------------------------
 // handleM
@@ -332,6 +373,37 @@ void WebServerClass::handleB()
 }
 
 //---------------------------------------------------------------------------------------
+// handleCrashLog()
+//
+// Outputs the crashlog
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleShowCrashLog()
+{
+  char buffer[2048]="";
+  SaveCrash.print(buffer,sizeof(buffer));
+  this->server->send(200, "text/plain", buffer);
+}
+
+//---------------------------------------------------------------------------------------
+// clearCrashLog()
+//
+// clears the crashlog
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleClearCrashLog()
+{
+  SaveCrash.clear();
+  this->server->send(200, "text/plain", "OK");
+}
+
+#endif
+
+//---------------------------------------------------------------------------------------
 // handleSetBrightness
 //
 // Handles the /setbrightness request, sets LED matrix to selected brightness, 256 = auto
@@ -369,45 +441,6 @@ void WebServerClass::handleSetNightMode()
   }
 }
 
-void WebServerClass::handleDebug()
-{
-	if(this->server->hasArg("led") &&
-			   this->server->hasArg("r") &&
-			   this->server->hasArg("g") &&
-			   this->server->hasArg("b"))
-	{
-		int led = this->server->arg("led").toInt();
-		int r = this->server->arg("r").toInt();
-		int g = this->server->arg("g").toInt();
-		int b = this->server->arg("b").toInt();
-		if(led < 0) led = 0;
-		if(led >= NUM_PIXELS) led = NUM_PIXELS - 1;
-		if(r < 0) r = 0;
-		if(r > 255) r = 255;
-		if(g < 0) g = 0;
-		if(g > 255) g = 255;
-		if(b < 0) b = 0;
-		if(b > 255) b = 255;
-
-		LED.currentValues[led*3+0] = r;
-		LED.currentValues[led*3+1] = g;
-		LED.currentValues[led*3+2] = b;
-		LED.show();
-		Config.debugMode = 1;
-	}
-
-	if(this->server->hasArg("clear"))
-	{
-		for(int i=0; i<3*NUM_PIXELS; i++) LED.currentValues[i] = 0;
-		LED.show();
-	}
-
-	if(this->server->hasArg("end"))
-	{
-		Config.debugMode = 0;
-	}
-	this->server->send(200, "text/plain", "OK");
-}
 
 void WebServerClass::handleGetADC()
 {
@@ -968,35 +1001,3 @@ void WebServerClass::handleGetConfig()
   serializeJsonPretty(json, buf);
   this->server->send(200, "application/json", buf); 
 }
-
-#ifdef DEBUG
-//---------------------------------------------------------------------------------------
-// handleCrashLog()
-//
-// Outputs the crashlog
-//
-// -> --
-// <- --
-//---------------------------------------------------------------------------------------
-void WebServerClass::handleShowCrashLog()
-{
-  char buffer[2048]="";
-  SaveCrash.print(buffer,sizeof(buffer));
-  this->server->send(200, "text/plain", buffer);
-}
-
-
-//---------------------------------------------------------------------------------------
-// clearCrashLog()
-//
-// clears the crashlog
-//
-// -> --
-// <- --
-//---------------------------------------------------------------------------------------
-void WebServerClass::handleClearCrashLog()
-{
-  SaveCrash.clear();
-  this->server->send(200, "text/plain", "OK");
-}
-#endif

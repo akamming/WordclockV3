@@ -22,6 +22,10 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+// #define DEBUG 1 // Wheter or not to include DEBUGGING code
+
+
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <ArduinoOTA.h>
@@ -227,6 +231,7 @@ void setup()
   // WiFi.persistent(true);
 	WiFiManager wifiManager;
 	wifiManager.setAPCallback(configModeCallback);
+
   if (!wifiManager.autoConnect(Config.hostname))
 	{
 		Serial.println("failed to connect, timeout");
@@ -235,7 +240,7 @@ void setup()
 	}
 	Serial.println("WiFi connected");
 	Serial.println("IP address: ");
-	Serial.println(WiFi.localIP());
+	Serial.println(WiFi.localIP()); 
 
 	setLED(0, 0, 1);
 

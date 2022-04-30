@@ -45,12 +45,6 @@ private:
 	void handleSetMode();
 	void handleSetHeartbeat();
 	void handleInfo();
-	void handleH();
-	void handleM();
-	void handleR();
-	void handleG();
-	void handleB();
-	void handleDebug();
   void handleSetBrightness();
 	void handleGetADC();
 	void handleSetNtpServer();
@@ -66,6 +60,12 @@ private:
 #ifdef DEBUG
   void handleShowCrashLog();
   void handleClearCrashLog();
+  void handleH();
+  void handleM();
+  void handleR();
+  void handleG();
+  void handleB();
+  void handleDebug();
 #endif
 
 	void extractColor(char argName[], palette_entry& result);
