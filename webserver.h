@@ -19,9 +19,14 @@
 #define _WEBSERVER_H_
 
 #include <stdint.h>
+#ifdef ESP32
+#include <Wifi.h>
+#include <WebServer.h>
+#include <SPIFFS.h>
+#else
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-
+#endif
 #include "config.h"
 
 class WebServerClass
@@ -33,7 +38,11 @@ public:
 	void process();
 
 private:
+#ifdef ESP32
+   WebServer *server = NULL;
+#else
 	ESP8266WebServer *server = NULL;
+#endif
 
 	bool serveFile(const char url[]);
   bool endsWith(const char* what, const char* withwhat);
@@ -71,6 +80,6 @@ private:
 	void extractColor(char argName[], palette_entry& result);
 };
 
-extern WebServerClass WebServer;
+extern WebServerClass iWebServer;
 
 #endif

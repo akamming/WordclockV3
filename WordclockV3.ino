@@ -26,21 +26,26 @@
 // #define DEBUG 1 // Wheter or not to include DEBUGGING code
 
 
-#include <ESP8266WiFi.h>
+// #include <ESP8266WiFi.h>
+#ifdef ESP32
+#include <ESPmDNS.h>
+// #include <WebServer.h>
+#else
 #include <ESP8266mDNS.h>
+#include <ESP8266WebServer.h>
+#endif
 #include <ArduinoOTA.h>
 #include <Ticker.h>
 
 #include <DNSServer.h>
-#include <ESP8266WebServer.h>
 #include <WiFiManager.h>
 
+#include "config.h"
 #include "ledfunctions.h"
 #include "brightness.h"
 #include "ntp.h"
 #include "webserver.h"
-#include "config.h"
-#include "osapi.h"
+// #include "osapi.h"
 
 
 #define DEBUG(...) Serial.printf(__VA_ARGS__);
@@ -48,8 +53,9 @@
 #define LED_RED		15
 #define LED_GREEN	12
 #define LED_BLUE	13
+#ifndef ESP32
 #define LED_BUILTIN	2
-
+#endif
 
 //---------------------------------------------------------------------------------------
 // Network related variables
@@ -164,8 +170,10 @@ void setLED(unsigned char r, unsigned char g, unsigned char b)
 //---------------------------------------------------------------------------------------
 void setup()
 {
+#ifndef ESP32
   // enable watchdog
   wdt_enable(WDTO_8S);
+#endif
 
 	// ESP8266 LED
 	pinMode(LED_BUILTIN, OUTPUT);
@@ -186,13 +194,11 @@ void setup()
 	Serial.println();
 	Serial.println("ESP8266 WordClock setup() begin");
 
-	Serial.print("ESP.getResetReason(): ");
+#ifndef ESP32
+  Serial.print("ESP.getResetReason(): ");
 	Serial.println(ESP.getResetReason());
-	Serial.print("ESP.getResetInfo(): ");
-	Serial.println(ESP.getResetInfo());
-
- 
-
+  Serial.print("ESP.getResetInfo(): ");
+  Serial.println(ESP.getResetInfo());
   rst_info* rtc_info = ESP.getResetInfoPtr();
   Serial.println(rtc_info->reason);
 
@@ -209,6 +215,10 @@ void setup()
      Serial.printf("epc1=0x%08x,  epc2=0x%08x,  epc3=0x%08x,  excvaddr=0x%08x,  depc=0x%08x\n",
                      rtc_info->epc1,  rtc_info->epc2, rtc_info->epc3, rtc_info->excvaddr,  rtc_info->depc);//The address of  the last  crash is  printed,  which is  used  to debug garbled output.
   }
+#endif
+
+ 
+
 
 	// LEDs
   // Serial.println("Starting LED module");
@@ -236,13 +246,17 @@ void setup()
 	{
 		Serial.println("failed to connect, timeout");
 		delay(1000);
+#ifdef ESP32
+    ESP.restart();
+#else
 		ESP.reset();
-	}
+#endif
+  }
 	Serial.println("WiFi connected");
 	Serial.println("IP address: ");
 	Serial.println(WiFi.localIP()); 
 
-	setLED(0, 0, 1);
+	setLED(0, 1, 0);
 
 	// OTA update
 	Serial.println("Initializing OTA");
@@ -290,7 +304,7 @@ void setup()
 
 	// web server
 	Serial.println("Starting HTTP server");
-	WebServer.begin();
+	iWebServer.begin();
 
 //	telnetServer.begin();
 //	telnetServer.setNoDelay(true);
@@ -317,7 +331,7 @@ void loop()
   ArduinoOTA.handle();
 
   // do web server stuff
-  WebServer.process();
+  iWebServer.process();
 
   // do Config sutff
   Config.process();
@@ -429,7 +443,11 @@ void loop()
   	if (NTP.s != lastSecond)
   	{
       // blink onboard LED if heartbeat is enabled
+#ifdef ESP32
+      if (Config.heartbeat) digitalWrite(LED_BUILTIN, HIGH);
+#else
       if (Config.heartbeat) digitalWrite(LED_BUILTIN, LOW);
+#endif
 
   		lastSecond = NTP.s;
   
@@ -443,15 +461,25 @@ void loop()
       int days = (seconds/(3600*24));
   
 
-  		DEBUG("%02i:%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, Free Cont Stack = %i, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
-  			  NTP.weekday, NTP.h, NTP.m, NTP.s, (int)Brightness.avg, (int)(Brightness.avg*100)%100,
-  			  ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getMaxFreeBlockSize(), ESP.getFreeContStack(), Brightness.value(),
-  			  days,hrs,mins,secs,msecs);
+#ifdef ESP32
+      DEBUG("%02i:%02i:%02i:%02i, filtered ADC=%i.%02, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
+          NTP.weekday, NTP.h, NTP.m, NTP.s, (int)(Brightness.avg*100)%100,
+          Brightness.value(),days,hrs,mins,secs,msecs);
+#else
+      DEBUG("%02i:%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, Free Cont Stack = %i, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
+          NTP.weekday, NTP.h, NTP.m, NTP.s, (int)Brightness.avg, (int)(Brightness.avg*100)%100,
+          ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getMaxFreeBlockSize(), ESP.getFreeContStack(), Brightness.value(),
+          days,hrs,mins,secs,msecs);
+#endif
       if (AlarmInProgress) {
         DEBUG("Alarm in Progress at %2.2f%%\r\n",LED.AlarmProgress*100); 
       }
   	} else {
-        digitalWrite(LED_BUILTIN, HIGH); 
+#ifdef ESP32
+        digitalWrite(LED_BUILTIN, LOW);
+#else 
+        digitalWrite(LED_BUILTIN, LOW); 
+#endif
   	}
 
 #ifndef NEOPIXELBUS
@@ -467,7 +495,11 @@ void loop()
   
   		case 'X':
   			// WiFi.disconnect();
+#ifdef ESP32
+        ESP.restart();
+#else
   			ESP.reset();
+#endif
   			break;
   
       case 'E':
@@ -477,6 +509,7 @@ void loop()
         Serial.println("test = "+String(*test));
         break;
   
+#ifndef ESP32
       case 'S':
         Serial.println("Trigger software watchdog");
         wdt_disable();
@@ -489,7 +522,7 @@ void loop()
         wdt_disable();
         while (1) {}
         break;
-  
+#endif  
   
   		default:
   			Serial.printf("Unknown command '%c'\r\n", incoming);

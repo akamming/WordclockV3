@@ -37,7 +37,7 @@
 //---------------------------------------------------------------------------------------
 // global instance
 //---------------------------------------------------------------------------------------
-WebServerClass WebServer = WebServerClass();
+WebServerClass iWebServer = WebServerClass();
 #ifdef DEBUG
 EspSaveCrash SaveCrash;
 #endif
@@ -78,8 +78,11 @@ WebServerClass::~WebServerClass()
 void WebServerClass::begin()
 {
 	SPIFFS.begin();
-
-	this->server = new ESP8266WebServer(80);
+#ifdef ESP32
+  this->server = new WebServer(80);
+#else
+  this->server = new ESP8266WebServer(80);
+#endif
 	this->server->on("/setcolor", std::bind(&WebServerClass::handleSetColor, this));
 	this->server->on("/info", std::bind(&WebServerClass::handleInfo, this));
 	this->server->on("/saveconfig", std::bind(&WebServerClass::handleSaveConfig, this));
@@ -114,6 +117,7 @@ void WebServerClass::begin()
 	this->server->onNotFound(std::bind(&WebServerClass::handleNotFound, this));
 
   // Generic code which passess all webrequeststs.
+#ifndef ESP32
   this->server->addHook([](const String & method, const String & url, WiFiClient * client, ESP8266WebServer::ContentTypeFunction contentType) {
     /* (void)method;      // GET, PUT, ...
     (void)url;         // example: /root/myfile.html
@@ -124,6 +128,7 @@ void WebServerClass::begin()
 
     return ESP8266WebServer::CLIENT_REQUEST_CAN_CONTINUE;
   });
+#endif
  
 	this->server->begin();
 }
@@ -221,8 +226,11 @@ void WebServerClass::handleFactoryReset()
   this->server->send(200, "text/plain", "OK"); 
 
   delay(500); // wait half a second, then reset
-
+#ifdef ESP32
+  ESP.restart();
+#else
   ESP.reset();
+#endif
 }
 
 //---------------------------------------------------------------------------------------
@@ -240,7 +248,11 @@ void WebServerClass::handleReset()
   this->server->send(200, "text/plain", "OK"); 
   
   delay(500); // wait half a second, then reset
+#ifdef ESP32
+  ESP.restart();
+#else
   ESP.reset();
+#endif
 }
 
 
@@ -258,7 +270,12 @@ void WebServerClass::handleResetWifiCredentials()
   WiFiManager wifiManager;
   wifiManager.resetSettings();
   this->server->send(200, "text/plain", "OK");
+
+#ifdef ESP32
+  ESP.restart();
+#else 
   ESP.reset();
+#endif
 }
 
 #ifdef DEBUG
@@ -635,29 +652,22 @@ void WebServerClass::handleInfo()
 	json["sketchsize"] = ESP.getSketchSize();
 	json["sketchspace"] = ESP.getFreeSketchSpace();
 	json["cpufrequency"] = ESP.getCpuFreqMHz();
-	json["chipid"] = ESP.getChipId();
 	json["sdkversion"] = ESP.getSdkVersion();
+#ifdef ESP32
+  json["freeheap"] = ESP.getFreeHeap();
+  json["chiprevision"] = ESP.getChipRevision();
+#else
+  json["resetreason"] = ESP.getResetReason();
+  json["resetinfo"] = ESP.getResetInfo();
+  json["chipid"] = ESP.getChipId();
   json["coreversion"] = ESP.getCoreVersion ();
-	json["bootversion"] = ESP.getBootVersion();
-	json["bootmode"] = ESP.getBootMode();
-	json["flashid"] = ESP.getFlashChipId();
-	json["flashspeed"] = ESP.getFlashChipSpeed();
-	json["flashsize"] = ESP.getFlashChipRealSize();
-	json["resetreason"] = ESP.getResetReason();
-	json["resetinfo"] = ESP.getResetInfo();
+  json["bootversion"] = ESP.getBootVersion();
+  json["bootmode"] = ESP.getBootMode();
+  json["flashid"] = ESP.getFlashChipId();
+  json["flashspeed"] = ESP.getFlashChipSpeed();
+  json["flashsize"] = ESP.getFlashChipRealSize();
+#endif
   json["configsize"] = Config.Configsize();
-
-  int milliseconds  = millis();
-  long seconds=milliseconds/1000;
-  int msecs = milliseconds % 1000;
-  int secs = seconds % 60;
-  int mins = (seconds/60) % 60;
-  int hrs = (seconds/3600) % 24;
-  int days = (seconds/(3600*24));
-
-  char buffer[50];
-  sprintf(buffer, "%i days, %i hours, %i mins, %i seconds, %i milliseconds", days, hrs, mins, secs, msecs);
-  json["uptime"] = buffer;
 
   switch (NTP.weekday)
   {
@@ -678,10 +688,29 @@ void WebServerClass::handleInfo()
     default:
       json["CurrentDay"]="Unknown"; 
   }
+
+  int milliseconds  = millis();
+  long seconds=milliseconds/1000;
+  int msecs = milliseconds % 1000;
+  int secs = seconds % 60;
+  int mins = (seconds/60) % 60;
+  int hrs = (seconds/3600) % 24;
+  int days = (seconds/(3600*24));
+
+#ifdef ESP32
+  // for some reasons ESP32 crashes when using char buffers
+  json["uptime"] = String(days)+" days, "+String(hrs)+" hours, "+String(mins)+" mins, "+String(secs)+" seconds, "+String(msecs)+" milliseconds";
+  json["CurrentTime"] = String(NTP.h)+":"+String(NTP.m)+":"+String(NTP.s)+"."+String(NTP.ms);
+  json["CurrentDate"] = String(NTP.day)+"/"+String(NTP.month)+"/"+String(NTP.year);
+#else
+  char buffer[50];
+  sprintf(buffer, "%i days, %i hours, %i mins, %i seconds, %i milliseconds", days, hrs, mins, secs, msecs);
+  json["uptime"] = buffer;
   sprintf(buffer, "%02i:%02i:%02i.%03i",NTP.h,NTP.m,NTP.s,NTP.ms);
   json["CurrentTime"] = buffer;
   sprintf(buffer, "%i/%i/%i",NTP.day, NTP.month,NTP.year);
   json["CurrentDate"] = buffer;
+#endif
 
   String buf;
   serializeJsonPretty(json,buf);
@@ -725,9 +754,9 @@ void WebServerClass::extractColor(char argName[], palette_entry& result)
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSetColor()
 {
-  this->extractColor("fg", Config.fg);
-	this->extractColor("bg", Config.bg);
-	this->extractColor("s", Config.s);
+  this->extractColor((char *)"fg", Config.fg);
+	this->extractColor((char *)"bg", Config.bg);
+	this->extractColor((char *)"s", Config.s);
 	this->server->send(200, "text/plain", "OK");
 	Config.saveDelayed();
 }
@@ -860,7 +889,11 @@ void WebServerClass::handleSetHostname()
   {
     strncpy(Config.hostname,this->server->arg("value").c_str(),25);
     Config.save();
+#ifdef ESP32
+    ESP.restart();
+#else
     ESP.reset();
+#endif
     this->server->send(200, "text/plain", Config.hostname);
   } else {
     this->server->send(200, "text/plain", "invalid arg"); 

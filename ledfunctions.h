@@ -19,8 +19,10 @@
 #define _LEDFUNCTIONS_H_
 
 
-// #define FASTLED
+// #define FASTLED in case of ESP8266
+#ifndef ESP32
 #define NEOPIXELBUS 
+#endif
 
 #ifdef FASTLED
 #define FASTLED_INTERRUPT_RETRY_COUNT 1
