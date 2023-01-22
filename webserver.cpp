@@ -772,8 +772,59 @@ void WebServerClass::handleSetColor()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSaveConfig()
 {
-	Config.save();
-	this->server->send(200, "text/plain", "OK");
+  Serial.println("handleSaveConfig");
+  String Message;
+  
+  // for Debugging purposes
+  Serial.println("Handling Command: Number of args received: "+this->server->args());
+  for (int i = 0; i < this->server->args(); i++) {
+    Serial.println ("Argument "+String(i)+" -> "+this->server->argName(i)+": "+this->server->arg(i));
+  } 
+
+  // try to deserialize
+  StaticJsonDocument<1024> json;
+  DeserializationError error = deserializeJson(json, this->server->arg("plain"));
+  if (error) {
+    Message=String("Invalid JSON: ")+error.f_str();
+    this->server->send(500, "text/plain", Message.c_str());
+    return;
+  } else {
+    //save the custom parameters to FS
+    Serial.println("saving config");
+
+    // hostname
+    strncpy(Config.hostname,json["hostname"],CONFIGSTRINGSIZE);
+    // ntp server    
+    IPAddress ip;
+		if (ip.fromString(String(json["ntpserver"])))
+		{
+			// set IP address in config
+			Config.ntpserver = ip;
+
+			// set IP address in client
+			NTP.setServer(ip);
+		}
+
+    // Check if password was changed
+    if (json["mqttpass"]=="*****") {
+      json["mqttpass"]=Config.mqttpass;
+    }
+
+    // mqttsettings
+    Config.usemqtt=json["usemqtt"];
+    Config.usemqttauthentication=json["usemqttauthentication"];
+    strncpy(Config.mqttserver,json["mqttserver"],CONFIGSTRINGSIZE);
+    Config.mqttport=json["mqttport"];
+    strncpy(Config.mqttuser,json["mqttuser"],CONFIGSTRINGSIZE);
+    strncpy(Config.mqttpass,json["mqttpass"],CONFIGSTRINGSIZE);
+    Config.mqttpersistence=json["mqttretained"];
+
+    Config.save();
+    this->server->send(200, "text/plain", "New Config Saved");
+    delay(500); // wait for server send to finish
+    ESP.restart(); // restart
+
+  }
 }
 
 //---------------------------------------------------------------------------------------
@@ -1040,7 +1091,7 @@ void WebServerClass::handleGetConfig()
   json["mqttport"] =Config.mqttport;
   json["usemqttauthentication"] = Config.usemqttauthentication;
   json["mqttuser"] = Config.mqttuser;
-  json["mqttpass"] = Config.mqttpass;
+  json["mqttpass"] = "*****"; // always shown as 5 stars
 
   String buf;
   serializeJsonPretty(json, buf);
