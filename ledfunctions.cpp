@@ -1240,7 +1240,8 @@ const palette_entry LEDFunctionsClass::plasmaPalette[256] = {
 double _time = 0;
 void LEDFunctionsClass::renderPlasma()
 {
-  if ((unsigned long) (millis()-this->lastUpdate)>(100-Config.animspeed)*2)
+  // if ((unsigned long) (millis()-this->lastUpdate)>(100-Config.animspeed)*2)
+  if ((unsigned long) (millis()-this->lastUpdate)>10)
   {
     this->lastUpdate=millis();
     int color;

@@ -222,7 +222,11 @@ void setup()
 
 	// LEDs
   // Serial.println("Starting LED module");
+#ifdef ESP32
+  LED.begin(16);
+#else
   LED.begin(D6);
+#endif
   if (not RecoverFromException) 
   { 
     LED.setMode(DisplayMode::yellowHourglass);
@@ -241,6 +245,7 @@ void setup()
   // WiFi.persistent(true);
 	WiFiManager wifiManager;
 	wifiManager.setAPCallback(configModeCallback);
+  wifiManager.setHostname("Wordclock");
 
   if (!wifiManager.autoConnect(Config.hostname))
 	{
@@ -462,9 +467,9 @@ void loop()
   
 
 #ifdef ESP32
-      DEBUG("%02i:%02i:%02i:%02i, filtered ADC=%i.%02, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
-          NTP.weekday, NTP.h, NTP.m, NTP.s, (int)(Brightness.avg*100)%100,
-          Brightness.value(),days,hrs,mins,secs,msecs);
+      DEBUG("%02i:%02i:%02i:%02i, filtered ADC=%i.%02, brightness=%i, Free Heap = %i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
+          NTP.weekday, NTP.h, NTP.m, NTP.s, (int)(Brightness.avg*100)%100, 
+          Brightness.value(),ESP.getFreeHeap(), days,hrs,mins,secs,msecs);
 #else
       DEBUG("%02i:%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, Free Cont Stack = %i, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
           NTP.weekday, NTP.h, NTP.m, NTP.s, (int)Brightness.avg, (int)(Brightness.avg*100)%100,

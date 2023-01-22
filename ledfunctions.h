@@ -18,11 +18,7 @@
 #ifndef _LEDFUNCTIONS_H_
 #define _LEDFUNCTIONS_H_
 
-
-// #define FASTLED in case of ESP8266
-#ifndef ESP32
-#define NEOPIXELBUS 
-#endif
+#define NEOPIXELBUS
 
 #ifdef FASTLED
 #define FASTLED_INTERRUPT_RETRY_COUNT 1
@@ -84,11 +80,14 @@ public:
 
 #ifdef FASTLED
   CRGB leds[NUM_PIXELS]; // FastLed
+  const char* UsedLedLib="Fastled";
 #elif defined(NEOPIXELBUS)
   NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod> *strip = NULL;
+  const char* UsedLedLib="NeoPixelBus";
   // NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> *strip = NULL;
 #else
   Adafruit_NeoPixel *pixels = NULL;
+  const char* UsedLedLib="Adafruit NeoPixel";
 #endif
 
 private:

@@ -223,283 +223,271 @@
 
             function heartbeatEnableChanged()
             {
-            var enabled = 0;
-            var heartbeatCheckbox = document.getElementById("heartbeat");
-            if(heartbeatCheckbox.checked == true) enabled = 1;
-
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", "http://" + location.hostname + "/setheartbeat?value=" + enabled, true);
-            xhttp.send();
+                var enabled = 0;
+                var heartbeatCheckbox = document.getElementById("heartbeat");
+                if(heartbeatCheckbox.checked == true) enabled = 1;
+                var xhttp = new XMLHttpRequest();
+                xhttp.open("GET", "http://" + location.hostname + "/setheartbeat?value=" + enabled, true);
+                xhttp.send();
             }
 
             function nightmodeEnableChanged()
             {
-            var enabled = 0;
-            var heartbeatCheckbox = document.getElementById("nightmode");
-            if(heartbeatCheckbox.checked == true) enabled = 1;
-
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", "http://" + location.hostname + "/setnightmode?value=" + enabled, true);
-            xhttp.send();
+                var enabled = 0;
+                var heartbeatCheckbox = document.getElementById("nightmode");
+                if(heartbeatCheckbox.checked == true) enabled = 1;
+                var xhttp = new XMLHttpRequest();
+                xhttp.open("GET", "http://" + location.hostname + "/setnightmode?value=" + enabled, true);
+                xhttp.send();
             }
 
             function displayModeChanged()
             {
-            var displayModeCombo = document.getElementById("displaymode");
-            var newMode = displayModeCombo.selectedIndex;
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", "http://" + location.hostname + "/setmode?value=" + newMode, true);
-            xhttp.send();
+                var displayModeCombo = document.getElementById("displaymode");
+                var newMode = displayModeCombo.selectedIndex;
+                var xhttp = new XMLHttpRequest();
+                xhttp.open("GET", "http://" + location.hostname + "/setmode?value=" + newMode, true);
+                xhttp.send();
             }
 
             function timeZoneChanged()
             {
-            var newTimeZone;
-            var timeZoneCombo = document.getElementById("timezone");
-            switch(timeZoneCombo.selectedIndex)
-            {
-            case 0:
-            newTimeZone = -12; break;
-            case 1:
-            newTimeZone = -11; break;
-            case 2:
-            newTimeZone = -10; break;
-            case 3:
-            newTimeZone = -9; break;
-            case 4:
-            newTimeZone = -8; break;
-            case 5:
-            newTimeZone = -7; break;
-            case 6:
-            newTimeZone = -6; break;
-            case 7:
-            newTimeZone = -5; break;
-            case 8:
-            newTimeZone = -4; break;
-            case 9:
-            newTimeZone = -3; break;
-            case 10:
-            newTimeZone = -2; break;
-            case 11:
-            newTimeZone = -1; break;
-            case 12:
-            newTimeZone = 0; break;
-            case 13:
-            newTimeZone = 1; break;
-            case 14:
-            newTimeZone = 2; break;
-            case 15:
-            newTimeZone = 3; break;
-            case 16:
-            newTimeZone = 4; break;
-            case 17:
-            newTimeZone = 5; break;
-            case 18:
-            newTimeZone = 6; break;
-            case 19:
-            newTimeZone = 7; break;
-            case 20:
-            newTimeZone = 8; break;
-            case 21:
-            newTimeZone = 9; break;
-            case 22:
-            newTimeZone = 10; break;
-            case 23:
-            newTimeZone = 11; break;
-            case 24:
-            newTimeZone = 12; break;
-            case 25:
-            newTimeZone = 13; break;
-            case 26:
-            newTimeZone = 14; break;
-            default:
-            newTimeZone = 0;
-            break;
-            }
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", "http://" + location.hostname + "/settimezone?value=" + newTimeZone, true);
-            xhttp.send();
+                var newTimeZone;
+                var timeZoneCombo = document.getElementById("timezone");
+                switch(timeZoneCombo.selectedIndex) {
+                    case 0:
+                        newTimeZone = -12; break;
+                    case 1:
+                        newTimeZone = -11; break;
+                    case 2:
+                        newTimeZone = -10; break;
+                    case 3:
+                        newTimeZone = -9; break;
+                    case 4:
+                        newTimeZone = -8; break;
+                    case 5:
+                        newTimeZone = -7; break;
+                    case 6:
+                        newTimeZone = -6; break;
+                    case 7:
+                        newTimeZone = -5; break;
+                    case 8:
+                        newTimeZone = -4; break;
+                    case 9:
+                        newTimeZone = -3; break;
+                    case 10:
+                        newTimeZone = -2; break;
+                    case 11:
+                        newTimeZone = -1; break;
+                    case 12:
+                        newTimeZone = 0; break;
+                    case 13:
+                        newTimeZone = 1; break;
+                    case 14:
+                        newTimeZone = 2; break;
+                    case 15:
+                        newTimeZone = 3; break;
+                    case 16:
+                        newTimeZone = 4; break;
+                    case 17:
+                        newTimeZone = 5; break;
+                    case 18:
+                        newTimeZone = 6; break;
+                    case 19:
+                        newTimeZone = 7; break;
+                    case 20:
+                        newTimeZone = 8; break;
+                    case 21:
+                        newTimeZone = 9; break;
+                    case 22:
+                        newTimeZone = 10; break;
+                    case 23:
+                        newTimeZone = 11; break;
+                    case 24:
+                        newTimeZone = 12; break;
+                    case 25:
+                        newTimeZone = 13; break;
+                    case 26:
+                        newTimeZone = 14; break;
+                    default:
+                        newTimeZone = 0;
+                    break;
+                }
+                var xhttp = new XMLHttpRequest();
+                xhttp.open("GET", "http://" + location.hostname + "/settimezone?value=" + newTimeZone, true);
+                xhttp.send();
             }
 
             function updateButton(id, text, r, g, b)
             {
-            button = document.getElementById(id);
-            button.jscolor.fromRGB(r, g, b);
-            button.innerHTML = text;
-            return button.jscolor.toString();
+                button = document.getElementById(id);
+                button.jscolor.fromRGB(r, g, b);
+                button.innerHTML = text;
+                return button.jscolor.toString();
             }
 
             function loadConfig()
             {
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function()
-            {
-            if(xhttp.readyState == 4 && xhttp.status == 200)
-            {
-            console.log("received " + xhttp.responseText);
-            const json = JSON.parse(xhttp.responseText);
-            newBackground = updateButton('backgroundColorButton', 'Achtergrond', json.backgroundcolor.r, json.backgroundcolor.g, json.backgroundcolor.b);
-            newForeground = updateButton('foregroundColorButton', 'Voorgrond', json.foregroundcolor.r, json.foregroundcolor.g, json.foregroundcolor.b);
-            newSeconds = updateButton('secondsColorButton', 'Seconden', json.secondscolor.r, json.secondscolor.g, json.secondscolor.b);
-            lastBackground = newBackground;
-            lastForeground = newForeground;
-            lastSeconds = newSeconds;
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function()
+                {
+                    if(xhttp.readyState == 4 && xhttp.status == 200)
+                    {
+                        console.log("received " + xhttp.responseText);
+                        const json = JSON.parse(xhttp.responseText);
+                        newBackground = updateButton('backgroundColorButton', 'Achtergrond', json.backgroundcolor.r, json.backgroundcolor.g, json.backgroundcolor.b);
+                        newForeground = updateButton('foregroundColorButton', 'Voorgrond', json.foregroundcolor.r, json.foregroundcolor.g, json.foregroundcolor.b);
+                        newSeconds = updateButton('secondsColorButton', 'Seconden', json.secondscolor.r, json.secondscolor.g, json.secondscolor.b);
+                        lastBackground = newBackground;
+                        lastForeground = newForeground;
+                        lastSeconds = newSeconds;
 
-            document.getElementById('ntpserver').value = json.NTPServer;
-            document.getElementById('hostname').value = json.hostname;
-            document.getElementById('displaymode').selectedIndex = json.displaymode;
-            document.getElementById('heartbeat').checked = json.heartbeat;
-            document.getElementById('nightmode').checked = json.nightmode;
-            document.getElementById('timezone').selectedIndex = json.timezone + 12;
-            document.getElementById('brightness').value = json.Brightness;
-            document.getElementById('animspeed').value = json.animspeed;
+                        document.getElementById('ntpserver').value = json.NTPServer;
+                        document.getElementById('hostname').value = json.hostname;
+                        document.getElementById('displaymode').selectedIndex = json.displaymode;
+                        document.getElementById('heartbeat').checked = json.heartbeat;
+                        document.getElementById('nightmode').checked = json.nightmode;
+                        document.getElementById('timezone').selectedIndex = json.timezone + 12;
+                        document.getElementById('brightness').value = json.Brightness;
+                        document.getElementById('animspeed').value = json.animspeed;
 
-            for (let i = 0; i < 5; i++) 
-            {
-            document.getElementById('a'+i.toString()+'time').value = json.Alarm[i].time;
-            document.getElementById('a'+i.toString()+'duration').value = json.Alarm[i].duration;
-            document.getElementById('a'+i.toString()+'mode').value = json.Alarm[i].mode;
-            document.getElementById('a'+i.toString()+'enabled').checked = json.Alarm[i].enabled;
-            document.getElementById('a'+i.toString()+'type').value = json.Alarm[i].type;
-            }   
-
+                        for (let i = 0; i < 5; i++) 
+                        {
+                            document.getElementById('a'+i.toString()+'time').value = json.Alarm[i].time;
+                            document.getElementById('a'+i.toString()+'duration').value = json.Alarm[i].duration;
+                            document.getElementById('a'+i.toString()+'mode').value = json.Alarm[i].mode;
+                            document.getElementById('a'+i.toString()+'enabled').checked = json.Alarm[i].enabled;
+                            document.getElementById('a'+i.toString()+'type').value = json.Alarm[i].type;
+                        }   
+                    }
+                };
+                xhttp.open("GET", "http://" + location.hostname + "/getconfig", true);
+                xhttp.send();
             }
-            };
-            xhttp.open("GET", "http://" + location.hostname + "/getconfig", true);
-            xhttp.send();
-            }
-
 
             function sendColorTimer()
             {
-            var update = false;
+                var update = false;
+                if(newBackground != '' && newBackground != lastBackground)
+                {
+                    lastBackground = newBackground;
+                    update = true;
+                }
+                if(newForeground != '' && newForeground != lastForeground)
+                {
+                    lastForeground = newForeground;
+                    update = true;
+                }
+                if(newSeconds != '' && newSeconds != lastSeconds)
+                {
+                    lastSeconds = newSeconds;
+                    update = true;
+                }
 
-            if(newBackground != '' && newBackground != lastBackground)
-            {
-            lastBackground = newBackground;
-            update = true;
-            }
-            if(newForeground != '' && newForeground != lastForeground)
-            {
-            lastForeground = newForeground;
-            update = true;
-            }
-            if(newSeconds != '' && newSeconds != lastSeconds)
-            {
-            lastSeconds = newSeconds;
-            update = true;
-            }
+                if(newSeconds == '' || newBackground == '' || newForeground == '')
+                {
+                    update = false;
+                }
 
-            if(newSeconds == '' || newBackground == '' || newForeground == '')
-            {
-            update = false;
-            }
+                if(update == true)
+                {
+                    var request = "http://" + location.hostname + "/setcolor?"
+                        + "bg=" + newBackground
+                        + "&fg=" + newForeground
+                        + "&s=" + newSeconds;
+                    var xhttp = new XMLHttpRequest();
+                    xhttp.open("GET", request, true);
+                    xhttp.send();
+                }
 
-            if(update == true)
-            {
-            var request = "http://" + location.hostname + "/setcolor?"
-            + "bg=" + newBackground
-            + "&fg=" + newForeground
-            + "&s=" + newSeconds;
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", request, true);
-            xhttp.send();
-            }
-
-            timer = setTimeout(sendColorTimer, 250);
+                timer = setTimeout(sendColorTimer, 250);
             }
 
             function isValidIP(ip)
             {
-            var s = ip.split('.');
-            if(s.length != 4) return false;
-            for(var i=0; i<3; i++)
-            {
-            if(s[i] == '') return false;
-            if(isNaN(s[i])) return false;
-            var n = parseInt(s[i]);
-            if(n < 0 || n > 255) return false;
-            }
-            return true;
+                var s = ip.split('.');
+                if(s.length != 4) return false;
+                for(var i=0; i<3; i++)
+                {
+                    if(s[i] == '') return false;
+                    if(isNaN(s[i])) return false;
+                    var n = parseInt(s[i]);
+                    if(n < 0 || n > 255) return false;
+                }
+                return true;
             }
 
             function saveSettings()
             {
-            var server = document.getElementById('ntpserver').value;
-            var hostname = document.getElementById('hostname').value;
-            if(!isValidIP(server))
-            {
-            alert("Ongeldig IP Adres!");
-            return;
-            }
+                var server = document.getElementById('ntpserver').value;
+                var hostname = document.getElementById('hostname').value;
+                if(!isValidIP(server))
+                {
+                    alert("Ongeldig IP Adres!");
+                    return;
+                }
 
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", "http://" + location.hostname + "/setntpserver?ip=" + server, true);
-            xhttp.send();
+                var xhttp = new XMLHttpRequest();
+                xhttp.open("GET", "http://" + location.hostname + "/setntpserver?ip=" + server, true);
+                xhttp.send();
 
-            var xhttp2 = new XMLHttpRequest();
-            xhttp2.open("GET", "http://" + location.hostname + "/sethostname?value=" + hostname, true);
-            xhttp2.send();
-
-
+                var xhttp2 = new XMLHttpRequest();
+                xhttp2.open("GET", "http://" + location.hostname + "/sethostname?value=" + hostname, true);
+                xhttp2.send();
             }
 
             function reset()
             {
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", "http://" + location.hostname + "/reset", true);
-            xhttp.send();
+                var xhttp = new XMLHttpRequest();
+                xhttp.open("GET", "http://" + location.hostname + "/reset", true);
+                xhttp.send();
             }
 
             function resetWifiCredentials()
             {
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", "http://" + location.hostname + "/resetwificredentials", true);
-            xhttp.send();
+                var xhttp = new XMLHttpRequest();
+                xhttp.open("GET", "http://" + location.hostname + "/resetwificredentials", true);
+                xhttp.send();
             }
 
             function factoryReset()
             {
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", "http://" + location.hostname + "/factoryreset", true);
-            xhttp.send();
+                var xhttp = new XMLHttpRequest();
+                xhttp.open("GET", "http://" + location.hostname + "/factoryreset", true);
+                xhttp.send();
             }
 
             function brightnessChanged(slidevalue)
             {
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", "http://" + location.hostname + "/setbrightness?value=" + slidevalue, true);
-            xhttp.send();
+                var xhttp = new XMLHttpRequest();
+                xhttp.open("GET", "http://" + location.hostname + "/setbrightness?value=" + slidevalue, true);
+                xhttp.send();
             }
 
             function animspeedChanged(slidevalue)
             {
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", "http://" + location.hostname + "/setanimspeed?value=" + slidevalue, true);
-            xhttp.send();
+                var xhttp = new XMLHttpRequest();
+                xhttp.open("GET", "http://" + location.hostname + "/setanimspeed?value=" + slidevalue, true);
+                xhttp.send();
             }
 
             function alarmChanged(index)
             {
-            var xhttp = new XMLHttpRequest();
-            var time = document.getElementById('a'+index.toString()+'time').value;
-            var mode = document.getElementById('a'+index.toString()+'mode').value;
-            var type = document.getElementById('a'+index.toString()+'type').value;
-            var duration = document.getElementById('a'+index.toString()+'duration').value;
-            var enabled = "off";
-            if(document.getElementById('a'+index.toString()+'enabled').checked == true) enabled = "on";
-            xhttp.open("GET", "http://" + location.hostname + "/setalarm?number=" + index.toString() + "&time="+time+"&mode="+mode+"&enabled="+enabled+"&duration="+duration+"&type="+type, true);
-            xhttp.send();
+                var xhttp = new XMLHttpRequest();
+                var time = document.getElementById('a'+index.toString()+'time').value;
+                var mode = document.getElementById('a'+index.toString()+'mode').value;
+                var type = document.getElementById('a'+index.toString()+'type').value;
+                var duration = document.getElementById('a'+index.toString()+'duration').value;
+                var enabled = "off";
+                if(document.getElementById('a'+index.toString()+'enabled').checked == true) enabled = "on";
+                xhttp.open("GET", "http://" + location.hostname + "/setalarm?number=" + index.toString() + "&time="+time+"&mode="+mode+"&enabled="+enabled+"&duration="+duration+"&type="+type, true);
+                xhttp.send();
             }
-
 
             function loadSettings()
             {
-            loadConfig();
+                loadConfig();
             }
-
         </script>
-
-
 </body>
 </html>
