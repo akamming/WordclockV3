@@ -24,6 +24,7 @@
 #define NUM_PIXELS 114
 #define EEPROM_SIZE 512
 #define CONFIGWRITETIMEOUT 10000
+#define CONFIGSTRINGSIZE 25
 
 enum class DisplayMode
 {
@@ -67,10 +68,16 @@ typedef struct _config_struct
   uint32_t brightnessOverride;
   bool nightmode;
   t_alarm alarm[5];
-  char hostname[25];
+  char hostname[CONFIGSTRINGSIZE];
   uint8_t animspeed;
+  bool usemqtt;
+  bool mqttpersistence;
+  char mqttserver[CONFIGSTRINGSIZE];
+  int mqttport;
+  bool usemqttauthentication = false;
+  char mqttuser[CONFIGSTRINGSIZE];
+  char mqttpass[CONFIGSTRINGSIZE];
 } config_struct;
-
 
 class ConfigClass
 {
@@ -106,8 +113,17 @@ public:
 
   t_alarm alarm[5];
 
-  char hostname[25];
+  char hostname[CONFIGSTRINGSIZE];
   uint8_t animspeed=50; // value from 1..100
+
+  // MQTT Settingds
+  bool usemqtt;
+  bool mqttpersistence;
+  char mqttserver[CONFIGSTRINGSIZE];
+  int mqttport;
+  bool usemqttauthentication = false;
+  char mqttuser[CONFIGSTRINGSIZE];
+  char mqttpass[CONFIGSTRINGSIZE];
 
 private:
 	// copy of EEPROM content

@@ -148,8 +148,17 @@ void ConfigClass::save()
   for (int i=0; i<5;i++)
     this->config->alarm[i]=this->alarm[i];
 
-  strncpy(this->config->hostname,this->hostname,25);
+  strncpy(this->config->hostname,this->hostname,CONFIGSTRINGSIZE);
   this->config->animspeed=this->animspeed;
+
+  // mqtt settings
+  this->config->usemqtt = this->usemqtt; 
+  this->config->mqttpersistence = this->mqttpersistence;
+  strncpy(this->config->mqttserver,this->mqttserver,CONFIGSTRINGSIZE);
+  this->config->mqttport = this->mqttport;
+  this->config->usemqttauthentication=this->usemqttauthentication;
+  strncpy(this->config->mqttuser,this->mqttuser,CONFIGSTRINGSIZE);
+  strncpy(this->config->mqttpass,this->mqttpass,CONFIGSTRINGSIZE);
 
 	for (int i = 0; i < EEPROM_SIZE; i++)
 		EEPROM.write(i, this->eeprom_data[i]);
@@ -218,6 +227,14 @@ void ConfigClass::reset()
 
   this->animspeed = 50; // just a default value, should be between 1 and 100
 
+  // mqtt settings
+  this->usemqtt = false; 
+  this->mqttpersistence = false;
+  strcpy(this->mqttserver,"");
+  this->mqttport = 1883;
+  this->usemqttauthentication = false;
+  strcpy(this->mqttuser,"");
+  strcpy(this->mqttpass,"");
 }
 
 //---------------------------------------------------------------------------------------
@@ -255,6 +272,19 @@ void ConfigClass::load()
   for (int i=0; i<5;i++)
     this->alarm[i]=this->config->alarm[i];
   
-  strncpy(this->hostname,this->config->hostname,25);
+  strncpy(this->hostname,this->config->hostname,CONFIGSTRINGSIZE);
+  this->hostname[CONFIGSTRINGSIZE]='\0'; // prevent crash by forcing 0 termination
   this->animspeed = this->config->animspeed;
+
+    // mqtt settings
+  this->usemqtt = this->config->usemqtt; 
+  this->mqttpersistence = this->config->mqttpersistence;
+  strncpy(this->mqttserver,this->config->mqttserver,CONFIGSTRINGSIZE);
+  this->mqttserver[CONFIGSTRINGSIZE]='\0';  // prevent crash by forcing 0 termination
+  this->mqttport = this->config->mqttport;
+  this->usemqttauthentication = this->config->usemqttauthentication;
+  strncpy(this->mqttuser,this->config->mqttuser,CONFIGSTRINGSIZE);
+  this->mqttuser[CONFIGSTRINGSIZE]='\0';// prevent crash by forcing 0 termination
+  strncpy(this->mqttpass,this->config->mqttpass,CONFIGSTRINGSIZE);
+  this->mqttpass[CONFIGSTRINGSIZE]='\0'; // prevent crash by forcing 0 termination
 }

@@ -31,7 +31,7 @@
 #include "EspSaveCrash.h"
 #endif
 
-#define GETCONFIGMESSAGESIZE 1280
+#define GETCONFIGMESSAGESIZE 2000
 #define INFOMESSAGESIZE 600
 
 //---------------------------------------------------------------------------------------
@@ -220,9 +220,10 @@ void WebServerClass::handleFactoryReset()
   Config.reset();
   Config.save();
 
-  Serial.println("Resetting Wifi Credentials");
+  /* Serial.println("Resetting Wifi Credentials");
   WiFiManager wifiManager;
-  wifiManager.resetSettings(); 
+  wifiManager.resetSettings(); */
+
   this->server->send(200, "text/plain", "OK"); 
 
   delay(500); // wait half a second, then reset
@@ -653,8 +654,8 @@ void WebServerClass::handleInfo()
 	json["sketchspace"] = ESP.getFreeSketchSpace();
 	json["cpufrequency"] = ESP.getCpuFreqMHz();
 	json["sdkversion"] = ESP.getSdkVersion();
+  json["usedledlibrary"] = LED.UsedLedLib;
 #ifdef ESP32
-  json["freeheap"] = ESP.getFreeHeap();
   json["chiprevision"] = ESP.getChipRevision();
 #else
   json["resetreason"] = ESP.getResetReason();
@@ -983,7 +984,6 @@ void WebServerClass::handleGetConfig()
   json["Brightness"] = Brightness.brightnessOverride;
   json["hostname"] = Config.hostname;
 
-  
   JsonArray Alarm = json.createNestedArray("Alarm");
   for (int i=0;i<5;i++) {
     String alarmmode,alarmtype;
@@ -1030,6 +1030,18 @@ void WebServerClass::handleGetConfig()
     alarmobject["enabled"]=Config.alarm[i].enabled;  
     alarmobject["type"]=alarmtype;
   }
+
+  json["hostname"] = Config.hostname;
+
+  // mqtt settings
+  json["usemqtt"] = Config.usemqtt; 
+  json["mqttpersistence"] = Config.mqttpersistence;
+  json["mqttserver"] = Config.mqttserver;
+  json["mqttport"] =Config.mqttport;
+  json["usemqttauthentication"] = Config.usemqttauthentication;
+  json["mqttuser"] = Config.mqttuser;
+  json["mqttpass"] = Config.mqttpass;
+
   String buf;
   serializeJsonPretty(json, buf);
   this->server->send(200, "application/json", buf); 
