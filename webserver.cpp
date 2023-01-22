@@ -822,7 +822,11 @@ void WebServerClass::handleSaveConfig()
     Config.save();
     this->server->send(200, "text/plain", "New Config Saved");
     delay(500); // wait for server send to finish
-    ESP.restart(); // restart
+#ifdef ESP32
+    ESP.restart();
+#else
+    ESP.reset();
+#endif
 
   }
 }
