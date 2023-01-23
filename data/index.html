@@ -471,7 +471,7 @@
             xhttp.setRequestHeader("Content-Type", "application/json");
             xhttp.onreadystatechange = function () {
                 if (xhttp.readyState === 4 && xhttp.status === 200) {
-                    alert("New Config sent, device is rebooting");
+                    alert("Config verzonden. Klok is aan het herstarten")
                 } else {
                     if (xhttp.readyState === 4) {
                         alert("some error sending the config (" + xhttp.status + ")");
@@ -491,7 +491,6 @@
 
             var data = JSON.stringify(obj);
             xhttp.send(data);
-            alert("Config verzonden. Klok herstart..")
         }
 
         function reset() {
