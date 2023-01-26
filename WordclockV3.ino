@@ -46,7 +46,7 @@
 #include "ntp.h"
 #include "webserver.h"
 // #include "osapi.h"
-
+#include "mqtt.h"
 
 #define DEBUG(...) Serial.printf(__VA_ARGS__);
 
@@ -217,9 +217,6 @@ void setup()
   }
 #endif
 
- 
-
-
 	// LEDs
   // Serial.println("Starting LED module");
 #ifdef ESP32
@@ -311,8 +308,11 @@ void setup()
 	Serial.println("Starting HTTP server");
 	iWebServer.begin();
 
-//	telnetServer.begin();
-//	telnetServer.setNoDelay(true);
+  // MQTT
+  MQTT.begin();
+
+  //	telnetServer.begin();
+  //	telnetServer.setNoDelay(true);
 
 	startup = false;
 	Serial.println("Startup complete.");
@@ -340,6 +340,9 @@ void loop()
 
   // do Config sutff
   Config.process();
+
+  // do MQTT stuff
+  MQTT.process();
 
 	// do not continue if OTA update is in progress
 	// OTA callbacks drive the LED display mode and OTA progress

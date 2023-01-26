@@ -20,11 +20,14 @@
 
 #include <IPAddress.h>
 
+
+
 // constants
 #define NUM_PIXELS 114
 #define EEPROM_SIZE 512
 #define CONFIGWRITETIMEOUT 10000
 #define CONFIGSTRINGSIZE 25
+
 
 enum class DisplayMode
 {

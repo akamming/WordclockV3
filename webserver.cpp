@@ -24,6 +24,7 @@
 #include "ledfunctions.h"
 #include "brightness.h"
 #include "webserver.h"
+#include "mqtt.h"
 #include "ntp.h"
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
 
@@ -669,6 +670,7 @@ void WebServerClass::handleInfo()
   json["flashsize"] = ESP.getFlashChipRealSize();
 #endif
   json["configsize"] = Config.Configsize();
+  json["MQTTConnected"] = MQTT.connected(); // ? "Yes " : "No" ;
 
   switch (NTP.weekday)
   {
