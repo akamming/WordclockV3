@@ -105,6 +105,8 @@ void MqttClass::PublishMQTTDimmer(const char* uniquename)
   // Publish config message
   MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+"/light/"+String(Config.hostname)+"/"+String(uniquename)+"/config").c_str(),conf,Config.mqttpersistence);
 
+  // Make sure we receive commands
+  MQ.subscribe((String(Config.hostname)+"/light/"+String(uniquename)+"/set").c_str());
 }
 
 //---------------------------------------------------------------------------------------
@@ -208,4 +210,32 @@ void MqttClass::reconnect()
 
 void MqttClass::MQTTcallback(char* topic, byte* payload, unsigned int length) 
 {
+  // get vars from callback
+  String topicstr=String(topic);
+  char payloadstr[256];
+  strncpy(payloadstr,(char *)payload,length);
+  payloadstr[length]='\0';
+
+  // decode payload
+  StaticJsonDocument<256> doc;
+  DeserializationError error = deserializeJson(doc, payloadstr);
+
+  if (error) {
+    MQ.publish("log/topic",topicstr.c_str());
+    MQ.publish("log/payload",payloadstr);
+    MQ.publish("log/length",String(length).c_str());
+    MQ.publish("log/error","Deserialisation failed");
+  } else {
+    // main switch: The name of the light = config.hostname 
+    if (topicstr.equals((String(Config.hostname)+"/light/"+String(Config.hostname)+"/set").c_str())) {
+      // we have a match: let's decode
+      if (doc.containsKey("state")) Config.nightmode = String(doc["state"]).equals("ON") ? false: true;
+      if (doc.containsKey("brightness")) Brightness.brightnessOverride = doc["brightness"];
+    } else {
+      MQ.publish("log/topic",topicstr.c_str());
+      MQ.publish("log/payload",payloadstr);
+      MQ.publish("log/length",String(length).c_str());
+      MQ.publish("log/command","unknown topic");
+    }
+  }
 }
