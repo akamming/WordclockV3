@@ -4,10 +4,9 @@
 #ifndef _MQTT_H_
 #define _MQTT_H_
 
-#include <ESP8266WiFi.h>
-#include <PubSubClient.h>         // MQTT library
-#include "config.h"
 
+
+#define MQTTAUTODISCOVERYTOPIC "homeassistant"
 
 class MqttClass
 {
@@ -19,8 +18,17 @@ public:
   void reconnect();
   bool connected();
 
+
 private:
   static void MQTTcallback(char* topic, byte* payload, unsigned int length);
+  void PublishAllMQTTSensors();
+  void PublishMQTTDimmer(const char* uniquename);
+  void UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t Mod);
+
+  // vars to remember the last status
+  bool mqtt_nightmode = false;
+  uint32_t mqtt_brightness = 0;
+
 
 };
 
