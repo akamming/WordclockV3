@@ -305,6 +305,58 @@ void MqttClass::reconnect()
   } 
 }
 
+//---------------------------------------------------------------------------------------
+// ProcessColorCommand
+//
+// Calculate new value based on old value and command
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+palette_entry ProcessColorCommand(palette_entry OldColor, char* payloadstr)
+{
+  palette_entry NewColor;
+
+  // decode payload
+  StaticJsonDocument<256> doc;
+  DeserializationError error = deserializeJson(doc, payloadstr);
+
+  if (error) {
+    MQ.publish("log/payload",payloadstr);
+    MQ.publish("log/error","Deserialisation failed");
+  } else {
+    if (doc.containsKey("state") && String(doc["state"]).equals("OFF")) {
+      NewColor = {0,0,0}; // switch off if we have an off command     
+    } else {
+      // see if we have to process the color, at least remember old brightness and maxcolor
+      uint8_t brightness = MaxColor(OldColor);
+      uint8_t maxcolor = brightness;
+
+      // overrule brightness if specified
+      if (doc.containsKey("brightness")) brightness=doc["brightness"];
+
+      // check if we have to update the color and maxcolor
+      if (doc.containsKey("color")) {
+        JsonObject color = doc["color"];
+        NewColor={color["r"],color["g"],color["b"]};
+        maxcolor=MaxColor(NewColor); // reset maxcolor to new value
+      } else {
+        NewColor=OldColor;
+      }
+
+      // do the final colorcorrection based on brightness
+      if (maxcolor==0) { 
+        // prevent division by zero
+        NewColor={brightness,brightness,brightness};
+      } else {
+        //update the brightness if we received a new one
+        // apply the new brightness
+        NewColor={NewColor.r*brightness/maxcolor,NewColor.g*brightness/maxcolor,NewColor.b*brightness/maxcolor};
+      }
+    }
+  }
+  return NewColor;
+} 
 
 
 //---------------------------------------------------------------------------------------
@@ -324,27 +376,32 @@ void MqttClass::MQTTcallback(char* topic, byte* payload, unsigned int length)
   strncpy(payloadstr,(char *)payload,length);
   payloadstr[length]='\0';
 
-  // decode payload
-  StaticJsonDocument<256> doc;
-  DeserializationError error = deserializeJson(doc, payloadstr);
+  // main switch: The name of the light = config.hostname 
+  if (topicstr.equals(DimmerCommandTopic(Config.hostname) ) ) {
+    // decode payload
+    StaticJsonDocument<256> doc;
+    DeserializationError error = deserializeJson(doc, payloadstr);
 
-  if (error) {
-    MQ.publish("log/topic",topicstr.c_str());
-    MQ.publish("log/payload",payloadstr);
-    MQ.publish("log/length",String(length).c_str());
-    MQ.publish("log/error","Deserialisation failed");
-  } else {
-    // main switch: The name of the light = config.hostname 
-    if (topicstr.equals(DimmerCommandTopic(Config.hostname) ) ) {
+    if (error) {
+      MQ.publish("log/topic",topicstr.c_str());
+      MQ.publish("log/payload",payloadstr);
+      MQ.publish("log/length",String(length).c_str());
+      MQ.publish("log/error","Deserialisation failed");
+    } else {
       // we have a match: let's decode
       if (doc.containsKey("state")) Config.nightmode = String(doc["state"]).equals("ON") ? false: true;
       if (doc.containsKey("brightness")) Brightness.brightnessOverride = doc["brightness"];
-    } else {
+    } 
+  } else if (topicstr.equals(DimmerCommandTopic(FOREGROUNDNAME) ) ) {
+    Config.fg=ProcessColorCommand(Config.fg, payloadstr); 
+  } else if (topicstr.equals(DimmerCommandTopic(BACKGROUNDNAME) ) ) {
+    Config.bg=ProcessColorCommand(Config.bg, payloadstr); 
+  } else if (topicstr.equals(DimmerCommandTopic(SECONDSNAME) ) ) {
+    Config.s=ProcessColorCommand(Config.s, payloadstr); 
+  } else {
       MQ.publish("log/topic",topicstr.c_str());
       MQ.publish("log/payload",payloadstr);
       MQ.publish("log/length",String(length).c_str());
       MQ.publish("log/command","unknown topic");
-    }
-  }
-  Config.saveDelayed();
+  } Config.saveDelayed();
 }

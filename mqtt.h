@@ -30,6 +30,7 @@ private:
   void PublishMQTTDimmer(const char* uniquename, bool SupportRGB);
   void UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t brightness);
   void UpdateMQTTColorDimmer(const char* uniquename, palette_entry Color);
+  // palette_entry ProcessColorCommand(palette_entry OldColor, char* payloadstr);
 
 
   // vars to remember the last status
