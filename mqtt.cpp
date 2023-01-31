@@ -78,6 +78,20 @@ void MqttClass::process()
   }
 }
 
+
+//---------------------------------------------------------------------------------------
+// CommandTopic
+//
+// Returns a string with the commandtopic for a devicename
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+String DimmerCommandTopic(const char* DeviceName)
+{
+  return String(Config.hostname)+String("/light/")+String(DeviceName)+String("/set");
+}
+
 //---------------------------------------------------------------------------------------
 // PublishMQTTDimmer
 //
@@ -95,7 +109,7 @@ void MqttClass::PublishMQTTDimmer(const char* uniquename)
   // Construct JSON config message
   json["name"] = uniquename;
   json["unique_id"] = String(Config.hostname)+"_"+uniquename;
-  json["cmd_t"] = String(Config.hostname)+"/light/"+String(uniquename)+"/set";
+  json["cmd_t"] = DimmerCommandTopic(uniquename);
   json["stat_t"] = String(Config.hostname)+"/light/"+String(uniquename)+"/state";
   json["schema"] = "json";
   json["brightness"] = true;
@@ -106,7 +120,7 @@ void MqttClass::PublishMQTTDimmer(const char* uniquename)
   MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+"/light/"+String(Config.hostname)+"/"+String(uniquename)+"/config").c_str(),conf,Config.mqttpersistence);
 
   // Make sure we receive commands
-  MQ.subscribe((String(Config.hostname)+"/light/"+String(uniquename)+"/set").c_str());
+  MQ.subscribe(DimmerCommandTopic(uniquename).c_str());
 }
 
 //---------------------------------------------------------------------------------------
@@ -227,7 +241,7 @@ void MqttClass::MQTTcallback(char* topic, byte* payload, unsigned int length)
     MQ.publish("log/error","Deserialisation failed");
   } else {
     // main switch: The name of the light = config.hostname 
-    if (topicstr.equals((String(Config.hostname)+"/light/"+String(Config.hostname)+"/set").c_str())) {
+    if (topicstr.equals(DimmerCommandTopic(Config.hostname) ) ) {
       // we have a match: let's decode
       if (doc.containsKey("state")) Config.nightmode = String(doc["state"]).equals("ON") ? false: true;
       if (doc.containsKey("brightness")) Brightness.brightnessOverride = doc["brightness"];
@@ -238,4 +252,5 @@ void MqttClass::MQTTcallback(char* topic, byte* payload, unsigned int length)
       MQ.publish("log/command","unknown topic");
     }
   }
+  Config.saveDelayed();
 }
