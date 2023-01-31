@@ -3,10 +3,15 @@
 
 #ifndef _MQTT_H_
 #define _MQTT_H_
+#include "config.h"
 
 
 
 #define MQTTAUTODISCOVERYTOPIC "homeassistant"
+#define FOREGROUNDNAME "Foreground"
+#define BACKGROUNDNAME "Background"
+#define SECONDSNAME "Seconds"
+#define CONNECTTIMEOUT 60000 // only try to connect once a minute
 
 class MqttClass
 {
@@ -22,13 +27,19 @@ public:
 private:
   static void MQTTcallback(char* topic, byte* payload, unsigned int length);
   void PublishAllMQTTSensors();
-  void PublishMQTTDimmer(const char* uniquename);
-  void UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t Mod);
+  void PublishMQTTDimmer(const char* uniquename, bool SupportRGB);
+  void UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t brightness);
+  void UpdateMQTTColorDimmer(const char* uniquename, palette_entry Color);
+
 
   // vars to remember the last status
   bool mqtt_nightmode = false;
   uint32_t mqtt_brightness = 0;
+  palette_entry bg;
+	palette_entry fg;
+	palette_entry s;
 
+  unsigned long lastconnectcheck;
 
 };
 
