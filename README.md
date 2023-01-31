@@ -24,8 +24,7 @@ plus several added features
 - wakeuplight function
 - nightmode
 - plugin available for [domoticz integration](https://github.com/akamming/Domoticz-WordClock) 
-
-
+- MQTT Autodiscovery for integration in Domoticz and home assistant (no need for above plugin anymore)
 
 ## original text readme:
 
