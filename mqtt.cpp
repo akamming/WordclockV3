@@ -88,6 +88,9 @@ void MqttClass::process()
 {
   MQ.loop();
   this->reconnect();
+  if ((millis()-this->lastmqttpublication)>PUBLISHTIMEOUT) {
+    this->PublishAllMQTTSensors();
+  }
   if (MQ.connected()) {
     // Check if values changed, and if yes: communicate
     if (this->mqtt_brightness!=Brightness.brightnessOverride or this->mqtt_nightmode != Config.nightmode) {
@@ -232,10 +235,36 @@ void MqttClass::UpdateMQTTColorDimmer(const char* uniquename, palette_entry Colo
 //---------------------------------------------------------------------------------------
 void MqttClass::PublishAllMQTTSensors()
 {
-  this->PublishMQTTDimmer(Config.hostname,false);
-  this->PublishMQTTDimmer(FOREGROUNDNAME,true);
-  this->PublishMQTTDimmer(BACKGROUNDNAME,true);
-  this->PublishMQTTDimmer(SECONDSNAME,true);
+  if (MQ.connected()) {
+    // make sure don't publish to often
+    this->lastmqttpublication=millis();
+
+    // publish the autodiscovery messages
+    this->PublishMQTTDimmer(Config.hostname,false);
+    this->PublishMQTTDimmer(FOREGROUNDNAME,true);
+    this->PublishMQTTDimmer(BACKGROUNDNAME,true);
+    this->PublishMQTTDimmer(SECONDSNAME,true);
+
+
+    // Trick the program to communicatie in the next run by making sure the mqtt cached values are set to the "wrong" values
+    this->mqtt_brightness = Brightness.brightnessOverride==50 ? 51 : 50;  
+    this->mqtt_nightmode = Config.nightmode ? false : true ;
+    if (isSameColor(Config.fg,{0,0,0})) {
+      this->fg={1,1,1};
+    } else {
+      this->fg={0,0,0};
+    }       
+    if (isSameColor(Config.bg,{0,0,0})) {
+      this->bg={1,1,1};
+    } else {
+      this->bg={0,0,0};
+    } 
+    if (isSameColor(Config.s,{0,0,0})) {
+      this->s={1,1,1};
+    } else {
+      this->s={0,0,0};
+    }       
+  }
 }
 
 
@@ -277,25 +306,6 @@ void MqttClass::reconnect()
       if (mqttconnected) {
         Serial.println("Connect succeeded");
         this->PublishAllMQTTSensors();
-
-        // Make sure MQTT cache has different values in cache, so communication is forced in next loop.
-        this->mqtt_brightness = Brightness.brightnessOverride==50 ? 51 : 50;  
-        this->mqtt_nightmode = Config.nightmode ? false : true ;
-        if (isSameColor(Config.fg,{0,0,0})) {
-          this->fg={1,1,1};
-        } else {
-          this->fg={0,0,0};
-        }       
-        if (isSameColor(Config.bg,{0,0,0})) {
-          this->bg={1,1,1};
-        } else {
-          this->bg={0,0,0};
-        } 
-        if (isSameColor(Config.s,{0,0,0})) {
-          this->s={1,1,1};
-        } else {
-          this->s={0,0,0};
-        }       
 
       } else {
         Serial.print("failed, rc=");

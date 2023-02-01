@@ -12,6 +12,7 @@
 #define BACKGROUNDNAME "Background"
 #define SECONDSNAME "Seconds"
 #define CONNECTTIMEOUT 60000 // only try to connect once a minute
+#define PUBLISHTIMEOUT 600000 // publish the sensors at least every 10 minutes 
 
 class MqttClass
 {
@@ -41,6 +42,7 @@ private:
 	palette_entry s;
 
   unsigned long lastconnectcheck;
+  unsigned long lastmqttpublication;
 
 };
 
