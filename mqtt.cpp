@@ -114,6 +114,20 @@ void MqttClass::process()
 }
 
 //---------------------------------------------------------------------------------------
+// PublishStatus
+//
+// publishes a status message
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void MqttClass::PublishStatus(const char* status)
+{
+  if (MQ.connected()) MQ.publish((String(Config.hostname)+"/status").c_str(),status,Config.mqttpersistence);
+}
+
+
+//---------------------------------------------------------------------------------------
 // CommandTopic
 //
 // Returns a string with the commandtopic for a devicename
@@ -145,11 +159,23 @@ void MqttClass::PublishMQTTDimmer(const char* uniquename, bool SupportRGB)
   json["unique_id"] = String(Config.hostname)+"_"+uniquename;
   json["cmd_t"] = DimmerCommandTopic(uniquename);
   json["stat_t"] = String(Config.hostname)+"/light/"+String(uniquename)+"/state";
+  // json["avty_t"] =  String(Config.hostname)+"/status",
   json["schema"] = "json";
   json["brightness"] = true;
   if (SupportRGB) {
+    json["clrm"] = true;
     json["supported_color_modes"][0] = "rgb";
   }
+  JsonObject dev = json.createNestedObject("dev");
+  String MAC = WiFi.macAddress();
+  MAC.replace(":", "");
+  // dev["ids"] = "3e6105e37e8d";
+  dev["ids"] = MAC;
+  dev["name"] = Config.hostname;
+  dev["sw"] = String(Config.hostname)+"_"+String(__DATE__)+"_"+String(__TIME__);
+  dev["mdl"] = "d1_mini";
+  dev["mf"] = "espressif";
+
   char conf[512];
   serializeJson(json, conf);  // conf now contains the json
 
@@ -238,6 +264,9 @@ void MqttClass::PublishAllMQTTSensors()
   if (MQ.connected()) {
     // make sure don't publish to often
     this->lastmqttpublication=millis();
+
+    // let the environment know we're online
+    this->PublishStatus("online");
 
     // publish the autodiscovery messages
     this->PublishMQTTDimmer(Config.hostname,false);
@@ -399,8 +428,11 @@ void MqttClass::MQTTcallback(char* topic, byte* payload, unsigned int length)
       MQ.publish("log/error","Deserialisation failed");
     } else {
       // we have a match: let's decode
+      if (doc.containsKey("brightness")) {
+        Brightness.brightnessOverride = doc["brightness"];
+        if (Brightness.brightnessOverride>0) Config.nightmode = false; // undo nightmode when a brightness level >0 is set
+      }
       if (doc.containsKey("state")) Config.nightmode = String(doc["state"]).equals("ON") ? false: true;
-      if (doc.containsKey("brightness")) Brightness.brightnessOverride = doc["brightness"];
     } 
   } else if (topicstr.equals(DimmerCommandTopic(FOREGROUNDNAME) ) ) {
     Config.fg=ProcessColorCommand(Config.fg, payloadstr); 

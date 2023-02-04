@@ -226,6 +226,7 @@ void WebServerClass::handleFactoryReset()
   wifiManager.resetSettings(); */
 
   this->server->send(200, "text/plain", "OK"); 
+  MQTT.PublishStatus("offline");
 
   delay(500); // wait half a second, then reset
 #ifdef ESP32
@@ -246,6 +247,7 @@ void WebServerClass::handleFactoryReset()
 void WebServerClass::handleReset() 
 {
   Serial.println("Manual reboot");
+  MQTT.PublishStatus("offline");
 
   this->server->send(200, "text/plain", "OK"); 
   
@@ -271,6 +273,7 @@ void WebServerClass::handleResetWifiCredentials()
   Serial.println("Resetting Wifi Credentials");
   WiFiManager wifiManager;
   wifiManager.resetSettings();
+  MQTT.PublishStatus("offline");
   this->server->send(200, "text/plain", "OK");
 
 #ifdef ESP32
@@ -822,6 +825,8 @@ void WebServerClass::handleSaveConfig()
     Config.mqttpersistence=json["mqttretained"];
 
     Config.save();
+    MQTT.PublishStatus("offline");
+
     this->server->send(200, "text/plain", "New Config Saved");
     delay(500); // wait for server send to finish
 #ifdef ESP32
@@ -946,6 +951,8 @@ void WebServerClass::handleSetHostname()
   if(this->server->hasArg("value"))
   {
     strncpy(Config.hostname,this->server->arg("value").c_str(),25);
+    MQTT.PublishStatus("offline");
+
     Config.save();
 #ifdef ESP32
     ESP.restart();

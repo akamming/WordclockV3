@@ -18,10 +18,11 @@
 #ifndef _LEDFUNCTIONS_H_
 #define _LEDFUNCTIONS_H_
 
+// #define FASTLED
 #define NEOPIXELBUS
 
 #ifdef FASTLED
-#define FASTLED_INTERRUPT_RETRY_COUNT 1
+// #define FASTLED_INTERRUPT_RETRY_COUNT 1
 #include <FastLED.h> // FastLED
 #elif defined(NEOPIXELBUS)
 #include <NeoPixelBus.h>

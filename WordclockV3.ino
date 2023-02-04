@@ -222,7 +222,8 @@ void setup()
 #ifdef ESP32
   LED.begin(16);
 #else
-  LED.begin(D6);
+  // LED.begin(D6);
+  LED.begin(3);
 #endif
   if (not RecoverFromException) 
   { 
@@ -267,6 +268,7 @@ void setup()
 	// ArduinoOTA.setPassword("WordClock");
 	ArduinoOTA.onStart([]()
 	{
+    MQTT.PublishStatus("offline");
 		LED.setMode(DisplayMode::update);
 		Config.updateProgress = 0;
     Config.nightmode=false;

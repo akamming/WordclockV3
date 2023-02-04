@@ -23,6 +23,7 @@ public:
 	void process();
   void reconnect();
   bool connected();
+  void PublishStatus(const char* status);
 
 
 private:
@@ -31,8 +32,6 @@ private:
   void PublishMQTTDimmer(const char* uniquename, bool SupportRGB);
   void UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t brightness);
   void UpdateMQTTColorDimmer(const char* uniquename, palette_entry Color);
-  // palette_entry ProcessColorCommand(palette_entry OldColor, char* payloadstr);
-
 
   // vars to remember the last status
   bool mqtt_nightmode = false;
