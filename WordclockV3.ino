@@ -243,6 +243,7 @@ void setup()
   // WiFi.persistent(true);
 	WiFiManager wifiManager;
 	wifiManager.setAPCallback(configModeCallback);
+  wifiManager.setConnectTimeout(180);
   wifiManager.setHostname("Wordclock");
 
   if (!wifiManager.autoConnect(Config.hostname))
