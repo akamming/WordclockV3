@@ -273,18 +273,18 @@ void ConfigClass::load()
     this->alarm[i]=this->config->alarm[i];
   
   strncpy(this->hostname,this->config->hostname,CONFIGSTRINGSIZE);
-  this->hostname[CONFIGSTRINGSIZE]='\0'; // prevent crash by forcing 0 termination
+  this->hostname[CONFIGSTRINGSIZE-1]='\0'; // prevent crash by forcing 0 termination
   this->animspeed = this->config->animspeed;
 
     // mqtt settings
   this->usemqtt = this->config->usemqtt; 
   this->mqttpersistence = this->config->mqttpersistence;
   strncpy(this->mqttserver,this->config->mqttserver,CONFIGSTRINGSIZE);
-  this->mqttserver[CONFIGSTRINGSIZE]='\0';  // prevent crash by forcing 0 termination
+  this->mqttserver[CONFIGSTRINGSIZE-1]='\0';  // prevent crash by forcing 0 termination
   this->mqttport = this->config->mqttport;
   this->usemqttauthentication = this->config->usemqttauthentication;
   strncpy(this->mqttuser,this->config->mqttuser,CONFIGSTRINGSIZE);
-  this->mqttuser[CONFIGSTRINGSIZE]='\0';// prevent crash by forcing 0 termination
+  this->mqttuser[CONFIGSTRINGSIZE-1]='\0';// prevent crash by forcing 0 termination
   strncpy(this->mqttpass,this->config->mqttpass,CONFIGSTRINGSIZE);
-  this->mqttpass[CONFIGSTRINGSIZE]='\0'; // prevent crash by forcing 0 termination
+  this->mqttpass[CONFIGSTRINGSIZE-1]='\0'; // prevent crash by forcing 0 termination
 }
