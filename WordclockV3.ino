@@ -146,8 +146,9 @@ void configModeCallback(WiFiManager *myWiFiManager)
 //---------------------------------------------------------------------------------------
 void NtpCallback(uint8_t _wd, uint8_t _h, uint8_t _m, uint8_t _s, uint8_t _ms)
 {
-	Serial.println("NtpCallback()");
+	Serial.printf("NtpCallback(%2i,%2i,%2i,%2i,%2i)\n",_wd,_h,_m,_s,_ms);
   NTPTimeAcquired=true;
+
 
   // TODO: Stop startup interrupt
 }
