@@ -152,7 +152,8 @@ String DimmerCommandTopic(const char* DeviceName)
 void MqttClass::PublishMQTTDimmer(const char* uniquename, bool SupportRGB)
 {
   Serial.println("PublishMQTTDimmer");
-  StaticJsonDocument<512> json;
+  // StaticJsonDocument<512> json;
+  JsonDocument json;
 
   // Construct JSON config message
   json["name"] = uniquename;
@@ -224,7 +225,7 @@ void MqttClass::UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t  Mo
 void MqttClass::UpdateMQTTColorDimmer(const char* uniquename, palette_entry Color)
 {
   Serial.println("UpdateMQTTDimmer");
-  StaticJsonDocument<512> json;
+  JsonDocument json;
   uint8_t brightness = MaxColor(Color);
 
   // Construct JSON config message
@@ -357,7 +358,7 @@ palette_entry ProcessColorCommand(palette_entry OldColor, char* payloadstr)
   palette_entry NewColor;
 
   // decode payload
-  StaticJsonDocument<256> doc;
+  JsonDocument doc;
   DeserializationError error = deserializeJson(doc, payloadstr);
 
   if (error) {
@@ -418,7 +419,7 @@ void MqttClass::MQTTcallback(char* topic, byte* payload, unsigned int length)
   // main switch: The name of the light = config.hostname 
   if (topicstr.equals(DimmerCommandTopic(Config.hostname) ) ) {
     // decode payload
-    StaticJsonDocument<256> doc;
+    JsonDocument doc;
     DeserializationError error = deserializeJson(doc, payloadstr);
 
     if (error) {
