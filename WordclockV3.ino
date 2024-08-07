@@ -25,7 +25,6 @@
 
 // #define DEBUG 1 // Wheter or not to include DEBUGGING code
 
-
 // #include <ESP8266WiFi.h>
 #ifdef ESP32
 #include <ESPmDNS.h>
@@ -48,7 +47,6 @@
 // #include "osapi.h"
 #include "mqtt.h"
 
-#define DEBUG(...) Serial.printf(__VA_ARGS__);
 
 #define LED_RED		15
 #define LED_GREEN	12
@@ -330,7 +328,6 @@ void setup()
 //-----------------------------------------------------------------------------------
 void loop()
 {
-  
   bool AlarmInProgress = false;
   // handle NTP
   NTP.process();
@@ -473,17 +470,17 @@ void loop()
   
 
 #ifdef ESP32
-      DEBUG("%02i:%02i:%02i:%02i, filtered ADC=%i.%02, brightness=%i, Free Heap = %i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
+      Serial.printf("%02i:%02i:%02i:%02i, filtered ADC=%i.%02, brightness=%i, Free Heap = %i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
           NTP.weekday, NTP.h, NTP.m, NTP.s, (int)(Brightness.avg*100)%100, 
           Brightness.value(),ESP.getFreeHeap(), days,hrs,mins,secs,msecs);
 #else
-      DEBUG("%02i:%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, Free Cont Stack = %i, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
+      Serial.printf("%02i:%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, Free Cont Stack = %i, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
           NTP.weekday, NTP.h, NTP.m, NTP.s, (int)Brightness.avg, (int)(Brightness.avg*100)%100,
           ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getMaxFreeBlockSize(), ESP.getFreeContStack(), Brightness.value(),
           days,hrs,mins,secs,msecs);
 #endif
       if (AlarmInProgress) {
-        DEBUG("Alarm in Progress at %2.2f%%\r\n",LED.AlarmProgress*100); 
+        Serial.printf("Alarm in Progress at %2.2f%%\r\n",LED.AlarmProgress*100); 
       }
   	} else {
 #ifdef ESP32
@@ -543,6 +540,3 @@ void loop()
 #endif
   } 
 }
-// ./esptool.py --port /dev/tty.usbserial --baud 460800 write_flash --flash_size=8m 0 /var/folders/yh/bv744591099f3x24xbkc22zw0000gn/T/build006b1a55228a1b90dda210fcddb62452.tmp/test.ino.bin
-// FlashSize 1M (128k SPIFFS)
-// C:\Python27\python.exe "C:\Program Files\esptool\espota.py" --ip=192.168.178.95 --port=8266 --progress --file=${workspace_loc}\${project_path}\Release\${project_name}.bin
