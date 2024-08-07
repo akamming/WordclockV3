@@ -1,6 +1,12 @@
 //MQTTClass
 // by Arnold
+#ifdef ESP32
+#include <Wifi.h>
+#include <WebServer.h>
+#else
 #include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
+#endif
 #include <PubSubClient.h>         // MQTT library
 #include "mqtt.h"
 #include "brightness.h"

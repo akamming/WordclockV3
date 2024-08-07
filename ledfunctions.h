@@ -83,9 +83,13 @@ public:
   CRGB leds[NUM_PIXELS]; // FastLed
   const char* UsedLedLib="Fastled";
 #elif defined(NEOPIXELBUS)
+#ifdef ESP32
+  NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> *strip = NULL;
+#else
   NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod> *strip = NULL;
-  const char* UsedLedLib="NeoPixelBus";
   // NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> *strip = NULL;
+#endif
+  const char* UsedLedLib="NeoPixelBus";
 #else
   Adafruit_NeoPixel *pixels = NULL;
   const char* UsedLedLib="Adafruit NeoPixel";

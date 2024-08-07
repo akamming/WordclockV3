@@ -28,7 +28,8 @@
 // #include <ESP8266WiFi.h>
 #ifdef ESP32
 #include <ESPmDNS.h>
-// #include <WebServer.h>
+// #include <Wifi.h>
+#include <WebServer.h>
 #else
 #include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
@@ -43,7 +44,7 @@
 #include "ledfunctions.h"
 #include "brightness.h"
 #include "ntp.h"
-#include "webserver.h"
+#include "iwebserver.h"
 // #include "osapi.h"
 #include "mqtt.h"
 
@@ -220,7 +221,6 @@ void setup()
 #ifdef ESP32
   LED.begin(16);
 #else
-  // LED.begin(D6);
   LED.begin(3);
 #endif
   if (not RecoverFromException) 
