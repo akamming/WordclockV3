@@ -546,7 +546,8 @@ void LEDFunctionsClass::set(const uint8_t *buf, palette_entry palette[],
   if (Config.nightmode) {
     palette_entry nightpalette[] = {
       {0, 0, 0},
-      {0, 0, 2*(255/this->brightness)},
+      // {0, 0, 2*(255/this->brightness)},
+      {0, 0, 2},
       {0, 0, 0}
     };
     this->setBuffer(this->targetValues, buf, nightpalette);
@@ -619,7 +620,7 @@ void LEDFunctionsClass::setBuffer(uint8_t *target, const uint8_t *source,
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderRandomDots()
 {
-  if ((unsigned long)(millis() - this->lastUpdate) >= (100-Config.animspeed)*10) 
+  if ((unsigned long)(millis() - this->lastUpdate) >= (unsigned)(100-Config.animspeed)*10) 
   {
     // set target
     for (int i=0;i<NUM_PIXELS*3;i++)
@@ -648,7 +649,7 @@ void LEDFunctionsClass::renderRandomDots()
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderRandomStripes()
 {
-  if ((unsigned long)(millis() - this->lastUpdate) >= (100-Config.animspeed)*10) 
+  if ((unsigned long)(millis() - this->lastUpdate) >= (unsigned)(100-Config.animspeed)*10) 
   {
     // set target
     for (int i=0;i<NUM_PIXELS*3;i++)
@@ -656,9 +657,10 @@ void LEDFunctionsClass::renderRandomStripes()
       this->targetValues[i]=0;
     }
 
-    palette_entry color = { random(2)*255, random(2)*255, random(2)*255 };
+    palette_entry color = { (uint8_t)(random(2)*255), (uint8_t)(random(2)*255), (uint8_t)(random(2)*255) };
 
-    this->drawLine(this->targetValues,this->X1,this->Y1,this->X2,this->Y2,Config.fg);
+    // this->drawLine(this->targetValues,this->X1,this->Y1,this->X2,this->Y2,Config.fg);
+    this->drawLine(this->targetValues,this->X1,this->Y1,this->X2,this->Y2,color);
 
     // calculate next coords
     this->X1+=random(3)-1;
@@ -693,7 +695,7 @@ void LEDFunctionsClass::renderRandomStripes()
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderRotatingLine()
 {
-  if ((unsigned long)(millis() - this->lastUpdate) >= (100-Config.animspeed)*10) 
+  if ((unsigned long)(millis() - this->lastUpdate) >= (unsigned)(100-Config.animspeed)*10) 
   {
     // set target
     for (int i=0;i<NUM_PIXELS*3;i++)
@@ -950,9 +952,13 @@ void LEDFunctionsClass::drawDot(uint8_t *target, uint8_t x, uint8_t y, palette_e
 
   int mapping = LEDFunctionsClass::mapping[y*11+x]*3;
 
-  targetValues[mapping]=palette.r;
+  /* targetValues[mapping]=palette.r;
   targetValues[mapping+1]=palette.g;
-  targetValues[mapping+2]=palette.b;
+  targetValues[mapping+2]=palette.b; */
+  target[mapping]=palette.r;
+  target[mapping+1]=palette.g;
+  target[mapping+2]=palette.b;
+  
 }
 
 //---------------------------------------------------------------------------------------
@@ -1008,7 +1014,7 @@ void LEDFunctionsClass::renderRandom(uint8_t *target)
       {255, 255, 255}
     };
 
-  if ((unsigned long)(millis() - this->lastUpdate) >= (100-Config.animspeed)*20) 
+  if ((unsigned long)(millis() - this->lastUpdate) >= (unsigned)(100-Config.animspeed)*20) 
   {
     for (int i=0;i<NUM_PIXELS;i++)
     {
@@ -1047,7 +1053,7 @@ void LEDFunctionsClass::renderStripes(uint8_t *target, bool Horizontal)
   };
 
   
-  if ((unsigned long)(millis() - this->lastUpdate) >= (100-Config.animspeed)*20) 
+  if ((unsigned long)(millis() - this->lastUpdate) >= (unsigned)(100-Config.animspeed)*20) 
   {
     byte TargetCol=random(8);
     // fill 4 dots
@@ -1157,7 +1163,7 @@ void LEDFunctionsClass::renderHourglass(bool green)
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderMatrix()
 {
-  if ((unsigned long) (millis()-this->lastUpdate)>(100-Config.animspeed))
+  if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(100-Config.animspeed))
   {
     this->lastUpdate=millis();
   	// clear buffer
@@ -1276,7 +1282,7 @@ void LEDFunctionsClass::renderPlasma()
 
 void LEDFunctionsClass::renderFire()
 {
-  if ((unsigned long) (millis()-this->lastUpdate)>(100-Config.animspeed))
+  if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(100-Config.animspeed))
   {
     this->lastUpdate=millis();
     int f;
@@ -1322,7 +1328,7 @@ void LEDFunctionsClass::renderFire()
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderStars()
 {
-  if ((unsigned long) (millis()-this->lastUpdate)>(100-Config.animspeed))
+  if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(100-Config.animspeed))
   {
     this->lastUpdate=millis();
   	// clear buffer
@@ -1342,9 +1348,9 @@ void LEDFunctionsClass::renderStars()
 //---------------------------------------------------------------------------------------
 palette_entry LEDFunctionsClass::blendedColor(palette_entry from_color, palette_entry to_color, float progress)
 {
-  palette_entry resulting_color = { from_color.r + progress*(to_color.r - from_color.r), 
-                                    from_color.g + progress*(to_color.g - from_color.g), 
-                                    from_color.b + progress*(to_color.b - from_color.b) };  
+  palette_entry resulting_color = { (uint8_t)(from_color.r + progress*(to_color.r - from_color.r)), 
+                                    (uint8_t)(from_color.g + progress*(to_color.g - from_color.g)), 
+                                    (uint8_t)(from_color.b + progress*(to_color.b - from_color.b)) };  
   return resulting_color;
 }
 
@@ -1413,7 +1419,7 @@ void LEDFunctionsClass::renderWakeup()
   }
 
   // set the other colors
-  palette[1]={ 0,0, 2*(255/this->brightness) }; // time words in nightmode color
+  palette[1]={ 0,0, 2 }; // time words in nightmode color
 #ifndef USE_SUN
   palette[0]= palette[2]; // don't show seconds
 #endif
@@ -1432,7 +1438,7 @@ void LEDFunctionsClass::renderWakeup()
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderHeart()
 {
-  if ((unsigned long) (millis()-this->lastUpdate)>(100-Config.animspeed))
+  if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(100-Config.animspeed))
   {
     this->lastUpdate=millis();
   	palette_entry palette[2];
@@ -1546,7 +1552,7 @@ void LEDFunctionsClass::prepareExplosion(uint8_t *source)
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderExplosion()
 {
-  if ((unsigned long) (millis()-this->lastUpdate)>(100-Config.animspeed))
+  if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(100-Config.animspeed))
   {
     this->lastUpdate=millis();
   	std::vector<Particle*> particlesToKeep;
@@ -1692,7 +1698,7 @@ void LEDFunctionsClass::prepareFlyingLetters(uint8_t *source)
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderFlyingLetters()
 {
-  if ((unsigned long) (millis()-this->lastUpdate)>(100-Config.animspeed))
+  if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(100-Config.animspeed))
   {
     this->lastUpdate=millis();
   	uint8_t buf[NUM_PIXELS];
