@@ -322,7 +322,7 @@ void LEDFunctionsClass::begin(int pin)
   // FastLED.addLeds<NEOPIXEL, pin>(this->leds, NUM_PIXELS);  // GRB ordering is assumed
   FastLED.addLeds<NEOPIXEL, 3>(this->leds, NUM_PIXELS);  // GRB ordering is assumed
 #elif defined(NEOPIXELBUS)
-  // this->strip = new NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod>(NUM_PIXELS,D6);
+  // this->strip = new NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod>(NUM_PIXELS,RX);
   // this->strip = new NeoPixelBus<NeoGrbFeature, NeoEsp8266Dmx512Method>(NUM_PIXELS,3);
   this->strip = new NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod>(NUM_PIXELS);
   // this->strip = new NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma400KbpsMethod>(NUM_PIXELS);

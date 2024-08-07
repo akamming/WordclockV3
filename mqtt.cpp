@@ -152,7 +152,6 @@ String DimmerCommandTopic(const char* DeviceName)
 void MqttClass::PublishMQTTDimmer(const char* uniquename, bool SupportRGB)
 {
   Serial.println("PublishMQTTDimmer");
-  // StaticJsonDocument<512> json;
   JsonDocument json;
 
   // Construct JSON config message
@@ -167,7 +166,7 @@ void MqttClass::PublishMQTTDimmer(const char* uniquename, bool SupportRGB)
     json["clrm"] = true;
     json["supported_color_modes"][0] = "rgb";
   }
-  JsonObject dev = json.createNestedObject("dev");
+  JsonObject dev = json["dev"].to<JsonObject>();
   String MAC = WiFi.macAddress();
   MAC.replace(":", "");
   // dev["ids"] = "3e6105e37e8d";
@@ -198,7 +197,7 @@ void MqttClass::PublishMQTTDimmer(const char* uniquename, bool SupportRGB)
 void MqttClass::UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t  Mod)
 {
   Serial.println("UpdateMQTTDimmer");
-  StaticJsonDocument<512> json;
+  JsonDocument json;
 
   // Construct JSON config message
   json["state"]=Value ? "ON" : "OFF";
@@ -231,7 +230,7 @@ void MqttClass::UpdateMQTTColorDimmer(const char* uniquename, palette_entry Colo
   // Construct JSON config message
   json["color_mode"] = "rgb";
   json["brightness"]=brightness;
-  JsonObject color = json.createNestedObject("color");
+  JsonObject color = json["color"].to<JsonObject>();
   if (brightness==0) {
     json["state"] = "OFF";  
     color["r"] = 0;
@@ -276,7 +275,7 @@ void MqttClass::PublishAllMQTTSensors()
     this->PublishMQTTDimmer(SECONDSNAME,true);
 
 
-    // Trick the program to communicatie in the next run by making sure the mqtt cached values are set to the "wrong" values
+    // Trick the program to communicate in the next run by making sure the mqtt cached values are set to the "wrong" values
     this->mqtt_brightness = Brightness.brightnessOverride==50 ? 51 : 50;  
     this->mqtt_nightmode = Config.nightmode ? false : true ;
     if (isSameColor(Config.fg,{0,0,0})) {

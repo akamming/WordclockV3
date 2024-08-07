@@ -78,7 +78,7 @@ WebServerClass::~WebServerClass()
 //---------------------------------------------------------------------------------------
 void WebServerClass::begin()
 {
-	SPIFFS.begin();
+	LittleFS.begin();
 #ifdef ESP32
   this->server = new WebServer(80);
 #else
@@ -186,9 +186,9 @@ bool WebServerClass::serveFile(const char url[])
 	} else {
     sprintf(path,"%s",url);
 	}
-	if (SPIFFS.exists(path))
+	if (LittleFS.exists(path))
 	{
-		File file = SPIFFS.open(path, "r");
+		File file = LittleFS.open(path, "r");
     if (this->server->hasArg("download")) this->server->streamFile(file, "application/octet-stream");
 		else if (this->endsWith(path,".htm") or this->endsWith(path,".html")) this->server->streamFile(file, "text/html");
     else if (this->endsWith(path,".css") ) this->server->streamFile(file, "text/css");
@@ -652,7 +652,7 @@ void WebServerClass::handleSetNtpServer()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleInfo()
 {
-	DynamicJsonDocument json(512);
+	JsonDocument json;
 	json["heap"] = ESP.getFreeHeap();
 	json["sketchsize"] = ESP.getSketchSize();
 	json["sketchspace"] = ESP.getFreeSketchSpace();
@@ -787,7 +787,7 @@ void WebServerClass::handleSaveConfig()
   } 
 
   // try to deserialize
-  StaticJsonDocument<1024> json;
+  JsonDocument json;
   DeserializationError error = deserializeJson(json, this->server->arg("plain"));
   if (error) {
     Message=String("Invalid JSON: ")+error.f_str();
@@ -978,7 +978,7 @@ void WebServerClass::handleSetHostname()
 void WebServerClass::handleGetConfig()
 {
 
-  DynamicJsonDocument json(GETCONFIGMESSAGESIZE);
+  JsonDocument json;
 
 
   int displaymode = 0;
@@ -1020,17 +1020,17 @@ void WebServerClass::handleGetConfig()
     displaymode = 1; break;
   }
  
-  JsonObject background = json.createNestedObject("backgroundcolor");
+  JsonObject background = json["backgroundcolor"].to<JsonObject>();
   background["r"] = Config.bg.r;
   background["g"] = Config.bg.g;
   background["b"] = Config.bg.b;
 
-  JsonObject foreground = json.createNestedObject("foregroundcolor");
+  JsonObject foreground = json["foregroundcolor"].to<JsonObject>();
   foreground["r"] = Config.fg.r;
   foreground["g"] = Config.fg.g;
   foreground["b"] = Config.fg.b;
 
-  JsonObject seconds = json.createNestedObject("secondscolor");
+  JsonObject seconds = json["secondscolor"].to<JsonObject>();
   seconds["r"] = Config.s.r;
   seconds["g"] = Config.s.g;
   seconds["b"] = Config.s.b;
@@ -1048,7 +1048,7 @@ void WebServerClass::handleGetConfig()
   json["Brightness"] = Brightness.brightnessOverride;
   json["hostname"] = Config.hostname;
 
-  JsonArray Alarm = json.createNestedArray("Alarm");
+  JsonArray Alarm = json["Alarm"].to<JsonArray>();
   for (int i=0;i<5;i++) {
     String alarmmode,alarmtype;
   
@@ -1087,7 +1087,7 @@ void WebServerClass::handleGetConfig()
     char timestr[6];
     sprintf(timestr,"%02d:%02d",Config.alarm[i].h,Config.alarm[i].m);
 
-    JsonObject alarmobject = Alarm.createNestedObject();
+    JsonObject alarmobject = Alarm.add<JsonObject>();
     alarmobject["time"]=timestr;
     alarmobject["duration"]=Config.alarm[i].duration;  
     alarmobject["mode"]=alarmmode;  
