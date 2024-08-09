@@ -546,8 +546,7 @@ void LEDFunctionsClass::set(const uint8_t *buf, palette_entry palette[],
   if (Config.nightmode) {
     palette_entry nightpalette[] = {
       {0, 0, 0},
-      // {0, 0, 2*(255/this->brightness)},
-      {0, 0, 2},
+      {0, 0, (uint8_t)(2*(255/this->brightness))},
       {0, 0, 0}
     };
     this->setBuffer(this->targetValues, buf, nightpalette);
@@ -1419,7 +1418,7 @@ void LEDFunctionsClass::renderWakeup()
   }
 
   // set the other colors
-  palette[1]={ 0,0, 2 }; // time words in nightmode color
+  palette[1]={ 0,0, (uint8_t)(2*(255/this->brightness)) }; // time words in nightmode color
 #ifndef USE_SUN
   palette[0]= palette[2]; // don't show seconds
 #endif
