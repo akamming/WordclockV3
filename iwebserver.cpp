@@ -709,7 +709,7 @@ void WebServerClass::handleInfo()
   json["CurrentTime"] = String(NTP.h)+":"+String(NTP.m)+":"+String(NTP.s)+"."+String(NTP.ms);
   json["CurrentDate"] = String(NTP.day)+"/"+String(NTP.month)+"/"+String(NTP.year);
 #else
-  char buffer[50];
+  char buffer[100];
   sprintf(buffer, "%i days, %i hours, %i mins, %i seconds, %i milliseconds", days, hrs, mins, secs, msecs);
   json["uptime"] = buffer;
   sprintf(buffer, "%02i:%02i:%02i.%03i",NTP.h,NTP.m,NTP.s,NTP.ms);
