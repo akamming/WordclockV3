@@ -169,7 +169,7 @@ void MqttClass::PublishMQTTDimmer(const char* uniquename, bool SupportRGB)
   json["schema"] = "json";
   json["brightness"] = true;
   if (SupportRGB) {
-    json["clrm"] = true;
+    // json["clrm"] = true;
     json["supported_color_modes"][0] = "rgb";
   }
   JsonObject dev = json["dev"].to<JsonObject>();
