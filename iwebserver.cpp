@@ -102,6 +102,9 @@ void WebServerClass::begin()
   this->server->on("/getconfig", std::bind(&WebServerClass::handleGetConfig, this));
   this->server->on("/setalarm", std::bind(&WebServerClass::handleSetAlarm, this));
   this->server->on("/sethostname", std::bind(&WebServerClass::handleSetHostname, this));
+  this->server->on("/upload", HTTP_GET, std::bind(&WebServerClass::sendUploadForm, this));  
+  this->server->on("/upload", HTTP_POST, std::bind(&WebServerClass::sendOK, this), std::bind(&WebServerClass::handleFileUpload, this));
+
 
 #ifdef DEBUG
   this->server->on("/h", std::bind(&WebServerClass::handleH, this));
@@ -133,6 +136,73 @@ void WebServerClass::begin()
  
 	this->server->begin();
 }
+
+//---------------------------------------------------------------------------------------
+// sendOK
+//
+// Sends 200 code to user
+//
+//---------------------------------------------------------------------------------------
+void WebServerClass::sendOK()
+{
+  Serial.println("sendOK");
+
+  this->server->send(200);       //Response to the HTTP request
+}
+
+//---------------------------------------------------------------------------------------
+// sendUploadForm
+//
+// Sends uploadform back to user
+//
+//---------------------------------------------------------------------------------------
+void WebServerClass::sendUploadForm()
+{
+  Serial.println("sendUploadForm");
+
+  this->server->send(200, "text/html", (String("Use this form to upload index.html, favicon.ico and index.css<BR /><BR />")+String(HTTP_UPLOAD_FORM)).c_str());       //Response to the HTTP request
+}
+
+//---------------------------------------------------------------------------------------
+// handleFileUpload
+//
+// Store file on LittleFS 
+//
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleFileUpload(){ // upload a new file to the LittleFS
+  HTTPUpload& upload = this->server->upload();
+  if(upload.status == UPLOAD_FILE_START){
+    Serial.println("Upload file start");
+    String filename = upload.filename;
+    if(!filename.startsWith("/")) filename = "/"+filename;
+    Serial.print("handleFileUpload Name: "); Serial.println(filename);
+    Serial.println("HandleFileUpload Name "+filename);
+    fsUploadFile = LittleFS.open(filename, "w");            // Open the file for writing in LittleFS (create if it doesn't exist)
+    if (!fsUploadFile) {
+      this->server->send(500, "text/plain", "500: couldn't create file");
+    }
+    filename = String();
+  } else if(upload.status == UPLOAD_FILE_WRITE){
+    Serial.println("Upload file write");
+    if(fsUploadFile)
+      fsUploadFile.write(upload.buf, upload.currentSize); // Write the received bytes to the file
+  } else if(upload.status == UPLOAD_FILE_END){
+    Serial.println("Upload file end");
+    if(fsUploadFile) {                                    // If the file was successfully created
+      fsUploadFile.close();                               // Close the file again
+      Serial.print("handleFileUpload Size: "); 
+      Serial.println(upload.totalSize);
+      // server.send(200, "text/plain", "File succesfully uploaded");
+      this->server->send(200, "text/html", (String(upload.filename)+
+                                      String(" succesfully uploaded (")+
+                                      String(upload.totalSize)+String(" bytes), do you want to upload another file?<BR /><BR />")+
+                                      String(HTTP_UPLOAD_FORM)).c_str()); // send form to upload another file
+    } else {
+      this->server->send(500, "text/plain", "500: couldn't create file");
+    }
+  }
+}
+
 
 //---------------------------------------------------------------------------------------
 // endsWith
@@ -469,8 +539,8 @@ void WebServerClass::handleGetADC()
   
 	int __attribute__ ((unused)) temp = Brightness.value(); // to trigger A/D conversion
 
-  char buf[5];
-  sprintf(buf,"%s",Brightness.avg);
+  char buf[318];
+  sprintf(buf,"%f",Brightness.avg);
 	this->server->send(200, "text/plain", buf);
 }
 
@@ -1084,7 +1154,7 @@ void WebServerClass::handleGetConfig()
         alarmtype="Onbekend"; break;
     }
 
-    char timestr[6];
+    char timestr[12];
     sprintf(timestr,"%02d:%02d",Config.alarm[i].h,Config.alarm[i].m);
 
     JsonObject alarmobject = Alarm.add<JsonObject>();

@@ -30,6 +30,11 @@
 #include "config.h"
 #include <LittleFS.h>               // Filesystem
 
+// uploadform
+const char HTTP_UPLOAD_FORM[] PROGMEM = "<form method=\"post\" enctype=\"multipart/form-data\"><input type=\"file\" name=\"name\"><input class=\"button\" type=\"submit\" value=\"Upload\"></form>";
+
+
+
 class WebServerClass
 {
 public:
@@ -44,6 +49,10 @@ private:
 #else
 	ESP8266WebServer *server = NULL;
 #endif
+
+  // object for uploading files
+  File fsUploadFile;
+
 
 	bool serveFile(const char url[]);
   bool endsWith(const char* what, const char* withwhat);
@@ -66,6 +75,9 @@ private:
   void handleSetAlarm();
   void handleSetHostname();
   void handleSetAnimSpeed();
+  void sendUploadForm();
+  void handleFileUpload();
+  void sendOK();
 
 #ifdef DEBUG
   void handleShowCrashLog();
