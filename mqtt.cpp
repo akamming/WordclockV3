@@ -582,6 +582,53 @@ palette_entry ProcessColorCommand(palette_entry OldColor, char* payloadstr)
   return NewColor;
 } 
 
+//---------------------------------------------------------------------------------------
+// 
+//
+// Calculate new value based on old value and command
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+DisplayMode GetDisplayModeFromPayload(String payload)
+{
+  if (payload=="plain") {
+    return DisplayMode::plain; 
+  } else if (payload=="fade") {
+    return DisplayMode::fade;
+  } else if (payload=="flyingLettersVerticalUp") {
+    return DisplayMode::flyingLettersVerticalUp;
+  } else if (payload=="flyingLettersVerticalDown") {
+    return DisplayMode::flyingLettersVerticalDown; 
+  } else if (payload=="explode") {
+    return DisplayMode::explode;
+  } else if (payload=="wakeup") {
+    return DisplayMode::wakeup;
+  } else if (payload=="matrix") {
+    return DisplayMode::matrix;
+  } else if (payload=="heart") {
+    return DisplayMode::heart;
+  } else if (payload=="fire") {
+    return DisplayMode::fire;
+  } else if (payload=="stars") {
+    return DisplayMode::stars;
+  } else if (payload=="random") {
+    return DisplayMode::random;
+  } else if (payload=="HorizontalStripes") {
+    return DisplayMode::HorizontalStripes;
+  } else if (payload=="VerticalStripes") {
+    return DisplayMode::VerticalStripes;
+  } else if (payload=="RandomDots") {
+    return DisplayMode::RandomDots;
+  } else if (payload=="RandomStripes") {
+    return DisplayMode::RandomStripes;
+  } else if (payload=="RotatingLine") {
+    return DisplayMode::RotatingLine;
+  } else  {
+    Serial.println("Unknown display mode received by mqtt");
+    return DisplayMode::plain;
+  } 
+}
 
 //---------------------------------------------------------------------------------------
 // MQTTCallback
@@ -625,6 +672,8 @@ void MqttClass::MQTTcallback(char* topic, byte* payload, unsigned int length)
     Config.bg=ProcessColorCommand(Config.bg, payloadstr); 
   } else if (topicstr.equals(DimmerCommandTopic(SECONDSNAME) ) ) {
     Config.s=ProcessColorCommand(Config.s, payloadstr); 
+  } else if (topicstr.equals(SelectorCommandTopic(MODENAME) ) ) {
+    Config.defaultMode = GetDisplayModeFromPayload(payloadstr);
   } else {
       MQ.publish("log/topic",topicstr.c_str());
       MQ.publish("log/payload",payloadstr);
