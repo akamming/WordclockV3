@@ -11,6 +11,7 @@
 #define FOREGROUNDNAME "Foreground"
 #define BACKGROUNDNAME "Background"
 #define SECONDSNAME "Seconds"
+#define MODENAME "Mode"
 #define CONNECTTIMEOUT 60000 // only try to connect once a minute
 #define PUBLISHTIMEOUT 600000 // publish the sensors at least every 10 minutes 
 
@@ -24,14 +25,18 @@ public:
   void reconnect();
   bool connected();
   void PublishStatus(const char* status);
+  void Debug(const char* status);
 
 
 private:
   static void MQTTcallback(char* topic, byte* payload, unsigned int length);
   void PublishAllMQTTSensors();
   void PublishMQTTDimmer(const char* uniquename, bool SupportRGB);
+  void PublishMQTTModeSelect(const char* uniquename);
   void UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t brightness);
   void UpdateMQTTColorDimmer(const char* uniquename, palette_entry Color);
+  void UpdateMQTTModeSelector(const char* uniquename, DisplayMode mode);
+
 
   // vars to remember the last status
   bool mqtt_nightmode = false;
@@ -39,6 +44,7 @@ private:
   palette_entry bg;
 	palette_entry fg;
 	palette_entry s;
+  DisplayMode mqttDisplayMode;
 
   unsigned long lastconnectcheck;
   unsigned long lastmqttpublication;

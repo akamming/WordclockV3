@@ -77,7 +77,7 @@ MqttClass::~MqttClass()
 void MqttClass::begin()
 {
   MQ.setServer(Config.mqttserver, Config.mqttport); // server details
-  MQ.setBufferSize(512); // discovery messages are longer than default max buffersize(!)
+  MQ.setBufferSize(2048); // discovery messages are longer than default max buffersize(!)
   MQ.setCallback(MQTTcallback); // listen to callbacks
   this->lastconnectcheck = millis()-CONNECTTIMEOUT-10; // force try to connect immediately
 }
@@ -116,8 +116,26 @@ void MqttClass::process()
       this->s=Config.s;
       this->UpdateMQTTColorDimmer(SECONDSNAME, this->s);
     }
+    if (this->mqttDisplayMode!=Config.defaultMode) {
+      this->mqttDisplayMode=Config.defaultMode;
+      this->UpdateMQTTModeSelector(MODENAME,this->mqttDisplayMode);
+    }
   }
 }
+
+//---------------------------------------------------------------------------------------
+// Debug
+//
+// publishes a debug message
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void MqttClass::Debug(const char* status)
+{
+  if (MQ.connected()) MQ.publish((String(Config.hostname)+"/debug").c_str(),status,Config.mqttpersistence);
+}
+
 
 //---------------------------------------------------------------------------------------
 // PublishStatus
@@ -134,9 +152,9 @@ void MqttClass::PublishStatus(const char* status)
 
 
 //---------------------------------------------------------------------------------------
-// CommandTopic
+// DimmerCommandTopic
 //
-// Returns a string with the commandtopic for a devicename
+// Returns a string with the Dimmer commandtopic for a devicename
 //
 // -> --
 // <- --
@@ -145,6 +163,97 @@ String DimmerCommandTopic(const char* DeviceName)
 {
   return String(Config.hostname)+String("/light/")+String(DeviceName)+String("/set");
 }
+
+//---------------------------------------------------------------------------------------
+// SelectorCommandTopic
+//
+// Returns a string with the Dimmer commandtopic for a devicename
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+String SelectorCommandTopic(const char* DeviceName)
+{
+  return String(Config.hostname)+String("/select/")+String(DeviceName)+String("/set");
+}
+
+//---------------------------------------------------------------------------------------
+// addDeviceToJson
+//
+// Add device to discovery message
+//
+// -> --
+//    *json : Adress of the json object you are modiging
+// <- --
+//---------------------------------------------------------------------------------------
+void addDeviceToJson(JsonDocument *json) {
+  JsonObject dev = (*json)["dev"].to<JsonObject>();
+  String MAC = WiFi.macAddress();
+  MAC.replace(":", "");
+  dev["ids"] = MAC;
+  dev["name"] = Config.hostname;
+  dev["sw"] = String(Config.hostname)+"_"+String(__DATE__)+"_"+String(__TIME__);
+  dev["mdl"] = "d1_mini";
+  dev["mf"] = "espressif";
+}
+
+//---------------------------------------------------------------------------------------
+// PublishMQTTModeSelect
+//
+// Publish autodiscoverymessage for MQTT Selector
+//
+// -> --
+//    uniquename = name of the switch
+//    options = array of const char* with the options in the selector 
+// <- --
+//---------------------------------------------------------------------------------------
+
+void MqttClass::PublishMQTTModeSelect(const char* uniquename)
+{
+  Serial.println("PublishMQTTModeSelect");
+  JsonDocument json;
+
+  // Construct JSON config message
+  json["name"] = uniquename;
+  json["unique_id"] = String(Config.hostname)+"_"+uniquename;
+  json["cmd_t"] = SelectorCommandTopic(uniquename); 
+  json["stat_t"] = String(Config.hostname)+"/select/"+String(uniquename)+"/state";
+  json["platform"] = "select";
+  // json["val_tpl"] = "{{ value_json.mode }}";
+
+  JsonArray options = json["options"].to<JsonArray>();
+  options.add("plain");
+  options.add("fade");  
+  options.add("flyingLettersVerticalUp");
+  options.add("flyingLettersVerticalDown");
+  options.add("explode");
+  options.add("plasma");
+  options.add("matrix");
+  options.add("heart");
+  options.add("fire");
+  options.add("stars");
+  options.add("random");
+  options.add("HorizontalStripes");
+  options.add("VerticalStripes");
+  options.add("RandomDots");
+  options.add("RandomStripes");
+  options.add("RotatingLine");
+
+  addDeviceToJson(&json); // Add Device details to discovery message
+
+  char conf[1024];
+  serializeJson(json, conf);  // conf now contains the json
+
+  // Publish config message
+  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+"/select/"+String(Config.hostname)+"/"+String(uniquename)+"/config").c_str(),conf,Config.mqttpersistence);
+
+  // Make sure we receive commands
+  MQ.subscribe(SelectorCommandTopic(uniquename).c_str());
+
+   this->Debug((String(MQTTAUTODISCOVERYTOPIC)+"/select/"+String(Config.hostname)+"/"+String(uniquename)+"/config").c_str());
+   this->Debug(conf);
+}
+
 
 //---------------------------------------------------------------------------------------
 // PublishMQTTDimmer
@@ -172,15 +281,8 @@ void MqttClass::PublishMQTTDimmer(const char* uniquename, bool SupportRGB)
     // json["clrm"] = true;
     json["supported_color_modes"][0] = "rgb";
   }
-  JsonObject dev = json["dev"].to<JsonObject>();
-  String MAC = WiFi.macAddress();
-  MAC.replace(":", "");
-  // dev["ids"] = "3e6105e37e8d";
-  dev["ids"] = MAC;
-  dev["name"] = Config.hostname;
-  dev["sw"] = String(Config.hostname)+"_"+String(__DATE__)+"_"+String(__TIME__);
-  dev["mdl"] = "d1_mini";
-  dev["mf"] = "espressif";
+
+  addDeviceToJson(&json); // Add Device details to discovery message
 
   char conf[512];
   serializeJson(json, conf);  // conf now contains the json
@@ -191,6 +293,81 @@ void MqttClass::PublishMQTTDimmer(const char* uniquename, bool SupportRGB)
   // Make sure we receive commands
   MQ.subscribe(DimmerCommandTopic(uniquename).c_str());
 }
+
+//---------------------------------------------------------------------------------------
+// UpdateMQTTModeSelector
+//
+// Update an MQTT Mode Selector
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void MqttClass::UpdateMQTTModeSelector(const char* uniquename, DisplayMode mode)
+{
+  Serial.println("UpdateMQTTModeSelector");
+
+  String displaymode;
+  
+  switch(mode)
+  {
+  case DisplayMode::plain:
+    displaymode="plain";
+    break;
+  case DisplayMode::fade:
+    displaymode="fade"; 
+    break;
+  case DisplayMode::flyingLettersVerticalUp:
+    displaymode="flyingLettersVerticalUp"; 
+    break;
+  case DisplayMode::flyingLettersVerticalDown:
+    displaymode="flyingLettersVerticalDown"; 
+    break;
+  case DisplayMode::explode:
+    displaymode="explode"; 
+    break;
+  case DisplayMode::wakeup:
+    displaymode="wakeup"; 
+    break;
+  case DisplayMode::matrix:
+    displaymode="matrix"; 
+    break;
+  case DisplayMode::heart:
+    displaymode="heart"; 
+    break;
+  case DisplayMode::fire:
+    displaymode="fire"; 
+    break;
+  case DisplayMode::stars:
+    displaymode="stars"; 
+    break;
+  case DisplayMode::random:
+    displaymode="random"; 
+    break;
+  case DisplayMode::HorizontalStripes:
+    displaymode="HorizontalStripes"; 
+    break;
+  case DisplayMode::VerticalStripes:
+    displaymode="VerticalStripes"; 
+    break;
+  case DisplayMode::RandomDots:
+    displaymode="RandomDots"; 
+    break;
+  case DisplayMode::RandomStripes:
+    displaymode="RandomStripes"; 
+    break;
+  case DisplayMode::RotatingLine:
+    displaymode="RotatingLine"; 
+    break;
+  default:
+    displaymode="unknown"; 
+    break;
+  }
+
+  // publish state message
+  MQ.publish((String(Config.hostname)+"/select/"+String(uniquename)+"/state").c_str(),displaymode.c_str(),Config.mqttpersistence);
+}
+
+
 
 //---------------------------------------------------------------------------------------
 // UpdateMQTTDimmer
@@ -279,6 +456,7 @@ void MqttClass::PublishAllMQTTSensors()
     this->PublishMQTTDimmer(FOREGROUNDNAME,true);
     this->PublishMQTTDimmer(BACKGROUNDNAME,true);
     this->PublishMQTTDimmer(SECONDSNAME,true);
+    this->PublishMQTTModeSelect(MODENAME);
 
 
     // Trick the program to communicate in the next run by making sure the mqtt cached values are set to the "wrong" values
@@ -298,7 +476,8 @@ void MqttClass::PublishAllMQTTSensors()
       this->s={1,1,1};
     } else {
       this->s={0,0,0};
-    }       
+    }           
+    this->mqttDisplayMode = Config.defaultMode == DisplayMode::fade ? DisplayMode::explode : DisplayMode::fade; 
   }
 }
 
@@ -370,7 +549,7 @@ palette_entry ProcessColorCommand(palette_entry OldColor, char* payloadstr)
     MQ.publish("log/payload",payloadstr);
     MQ.publish("log/error","Deserialisation failed");
   } else {
-    if (doc.containsKey("state") && String(doc["state"]).equals("OFF")) {
+    if (doc["state"].is<const char*>() && String(doc["state"]).equals("OFF")) {
       NewColor = {0,0,0}; // switch off if we have an off command     
     } else {
       // see if we have to process the color, at least remember old brightness and maxcolor
@@ -378,10 +557,10 @@ palette_entry ProcessColorCommand(palette_entry OldColor, char* payloadstr)
       uint8_t maxcolor = brightness;
 
       // overrule brightness if specified
-      if (doc.containsKey("brightness")) brightness=doc["brightness"];
+      if (doc["brightness"].is<unsigned int>()) brightness=doc["brightness"];
 
       // check if we have to update the color and maxcolor
-      if (doc.containsKey("color")) {
+      if (doc["color"].is<JsonObject>()) {
         JsonObject color = doc["color"];
         NewColor={color["r"],color["g"],color["b"]};
         maxcolor=MaxColor(NewColor); // reset maxcolor to new value
@@ -434,11 +613,11 @@ void MqttClass::MQTTcallback(char* topic, byte* payload, unsigned int length)
       MQ.publish("log/error","Deserialisation failed");
     } else {
       // we have a match: let's decode
-      if (doc.containsKey("brightness")) {
+      if (doc["brightness"].is<unsigned int>()) {
         Brightness.brightnessOverride = doc["brightness"];
         if (Brightness.brightnessOverride>0) Config.nightmode = false; // undo nightmode when a brightness level >0 is set
       }
-      if (doc.containsKey("state")) Config.nightmode = String(doc["state"]).equals("ON") ? false: true;
+      if (doc["state"].is<const char*>()) Config.nightmode = String(doc["state"]).equals("ON") ? false: true;
     } 
   } else if (topicstr.equals(DimmerCommandTopic(FOREGROUNDNAME) ) ) {
     Config.fg=ProcessColorCommand(Config.fg, payloadstr); 
