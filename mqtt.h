@@ -12,8 +12,9 @@
 #define BACKGROUNDNAME "Background"
 #define SECONDSNAME "Seconds"
 #define MODENAME "Mode"
+#define ANIMATIONSPEEDNAME "AnimationSpeed"
 #define CONNECTTIMEOUT 60000 // only try to connect once a minute
-#define PUBLISHTIMEOUT 600000 // publish the sensors at least every 10 minutes 
+#define PUBLISHTIMEOUT 3600000 // publish the sensors at least every hour 
 
 class MqttClass
 {
@@ -33,9 +34,12 @@ private:
   void PublishAllMQTTSensors();
   void PublishMQTTDimmer(const char* uniquename, bool SupportRGB);
   void PublishMQTTModeSelect(const char* uniquename);
+  void PublishMQTTNumber(const char* uniquename, int min, int max, float step, bool isSlider);
   void UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t brightness);
   void UpdateMQTTColorDimmer(const char* uniquename, palette_entry Color);
   void UpdateMQTTModeSelector(const char* uniquename, DisplayMode mode);
+  void UpdateMQTTNumber(const char* uniquename, uint8_t Mod);
+
 
 
   // vars to remember the last status
@@ -45,6 +49,7 @@ private:
 	palette_entry fg;
 	palette_entry s;
   DisplayMode mqttDisplayMode;
+  uint8_t mqtt_animspeed;
 
   unsigned long lastconnectcheck;
   unsigned long lastmqttpublication;

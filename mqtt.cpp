@@ -104,6 +104,10 @@ void MqttClass::process()
       this->mqtt_nightmode= Config.nightmode;
       this->UpdateMQTTDimmer(Config.hostname,this->mqtt_nightmode ? false : true,this->mqtt_brightness);
     }
+    if (this->mqtt_animspeed!=Config.animspeed) {
+      this->mqtt_animspeed=Config.animspeed;
+      this->UpdateMQTTNumber(ANIMATIONSPEEDNAME, this->mqtt_animspeed);
+    }
     if (!isSameColor(Config.fg,this->fg)) {
       this->fg=Config.fg;
       this->UpdateMQTTColorDimmer(FOREGROUNDNAME, this->fg);
@@ -162,6 +166,19 @@ void MqttClass::PublishStatus(const char* status)
 String DimmerCommandTopic(const char* DeviceName)
 {
   return String(Config.hostname)+String("/light/")+String(DeviceName)+String("/set");
+}
+
+//---------------------------------------------------------------------------------------
+// NumberCommandTopic
+//
+// Returns a string with the Dimmer commandtopic for a devicename
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+String NumberCommandTopic(const char* DeviceName)
+{
+  return String(Config.hostname)+String("/number/")+String(DeviceName)+String("/set");
 }
 
 //---------------------------------------------------------------------------------------
@@ -278,7 +295,6 @@ void MqttClass::PublishMQTTDimmer(const char* uniquename, bool SupportRGB)
   json["schema"] = "json";
   json["brightness"] = true;
   if (SupportRGB) {
-    // json["clrm"] = true;
     json["supported_color_modes"][0] = "rgb";
   }
 
@@ -293,6 +309,48 @@ void MqttClass::PublishMQTTDimmer(const char* uniquename, bool SupportRGB)
   // Make sure we receive commands
   MQ.subscribe(DimmerCommandTopic(uniquename).c_str());
 }
+
+//---------------------------------------------------------------------------------------
+// PublishMQTTDimmer
+//
+// Publish autodiscoverymessage for MQTT Dimmer switch
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+
+void MqttClass::PublishMQTTNumber(const char* uniquename, int min, int max, float step, bool isSlider)
+{
+  Serial.println("PublishMQTTNumber");
+  JsonDocument json;
+
+  // Construct JSON config message
+  json["name"] = uniquename;
+  json["unique_id"] = String(Config.hostname)+"_"+uniquename;
+  json["cmd_t"] = NumberCommandTopic(uniquename);
+  json["stat_t"] = String(Config.hostname)+"/number/"+String(uniquename)+"/state";
+  json["min"] = min;
+  json["max"] = max;
+  json["step"] = step;
+  if (isSlider) {
+    json["mode"] = "slider"; 
+  } else {
+    json["mode"] = "box";
+  }
+
+
+  addDeviceToJson(&json); // Add Device details to discovery message
+
+  char conf[512];
+  serializeJson(json, conf);  // conf now contains the json
+
+  // Publish config message
+  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+"/number/"+String(Config.hostname)+"/"+String(uniquename)+"/config").c_str(),conf,Config.mqttpersistence);
+
+  // Make sure we receive commands
+  MQ.subscribe(NumberCommandTopic(uniquename).c_str());
+}
+
 
 //---------------------------------------------------------------------------------------
 // UpdateMQTTModeSelector
@@ -404,6 +462,28 @@ void MqttClass::UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t  Mo
 // -> --
 // <- --
 //---------------------------------------------------------------------------------------
+void MqttClass::UpdateMQTTNumber(const char* uniquename, uint8_t Mod)
+{
+  Serial.println("UpdateMQTTDimmer");
+  // JsonDocument json;
+
+  // Construct JSON config message
+  //  json["value"]=Mod;
+  //char state[128];
+  // serializeJson(json, state);  // state now contains the json
+
+  // publish state message
+  MQ.publish((String(Config.hostname)+"/number/"+String(uniquename)+"/state").c_str(),String(Mod).c_str(),Config.mqttpersistence);
+}
+
+//---------------------------------------------------------------------------------------
+// UpdateMQTTDimmer
+//
+// Update an MQTT Dimer switch
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
 void MqttClass::UpdateMQTTColorDimmer(const char* uniquename, palette_entry Color)
 {
   Serial.println("UpdateMQTTDimmer");
@@ -456,11 +536,12 @@ void MqttClass::PublishAllMQTTSensors()
     this->PublishMQTTDimmer(FOREGROUNDNAME,true);
     this->PublishMQTTDimmer(BACKGROUNDNAME,true);
     this->PublishMQTTDimmer(SECONDSNAME,true);
+    this->PublishMQTTNumber(ANIMATIONSPEEDNAME,1,100,1,true);
     this->PublishMQTTModeSelect(MODENAME);
 
-
     // Trick the program to communicate in the next run by making sure the mqtt cached values are set to the "wrong" values
-    this->mqtt_brightness = Brightness.brightnessOverride==50 ? 51 : 50;  
+    this->mqtt_brightness = Brightness.brightnessOverride==50 ? 51 : 50;
+    this->mqtt_animspeed = Config.animspeed==50 ? 51 : 50;  
     this->mqtt_nightmode = Config.nightmode ? false : true ;
     if (isSameColor(Config.fg,{0,0,0})) {
       this->fg={1,1,1};
@@ -666,6 +747,8 @@ void MqttClass::MQTTcallback(char* topic, byte* payload, unsigned int length)
       }
       if (doc["state"].is<const char*>()) Config.nightmode = String(doc["state"]).equals("ON") ? false: true;
     } 
+  } else if (topicstr.equals(NumberCommandTopic(ANIMATIONSPEEDNAME))) {
+    Config.animspeed = String(payloadstr).toInt();
   } else if (topicstr.equals(DimmerCommandTopic(FOREGROUNDNAME) ) ) {
     Config.fg=ProcessColorCommand(Config.fg, payloadstr); 
   } else if (topicstr.equals(DimmerCommandTopic(BACKGROUNDNAME) ) ) {
