@@ -683,6 +683,8 @@ DisplayMode GetDisplayModeFromPayload(String payload)
     return DisplayMode::flyingLettersVerticalDown; 
   } else if (payload=="explode") {
     return DisplayMode::explode;
+  } else if (payload=="plasma") {
+    return DisplayMode::plasma;
   } else if (payload=="wakeup") {
     return DisplayMode::wakeup;
   } else if (payload=="matrix") {

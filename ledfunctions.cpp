@@ -1002,7 +1002,7 @@ void LEDFunctionsClass::drawLine(uint8_t *target, int8_t x1, int8_t y1, int8_t x
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderRandom(uint8_t *target)
 {
-    palette_entry palette[] = {
+    /* palette_entry palette[] = {
       {0, 0, 0},
       {255, 0, 0},
       {0, 255, 0},
@@ -1011,13 +1011,48 @@ void LEDFunctionsClass::renderRandom(uint8_t *target)
       {255, 0, 255},
       {0, 255, 255},
       {255, 255, 255}
+    }; */
+
+    palette_entry palette[] = {
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
+      {random(256), random(256), random(256)},
     };
 
   if ((unsigned long)(millis() - this->lastUpdate) >= (unsigned)(100-Config.animspeed)*20) 
   {
     for (int i=0;i<NUM_PIXELS;i++)
     {
-      target[i]=random(8);
+      target[i]=random(64);
     }
     this->lastUpdate=millis();
     this->set(target, palette, false);
