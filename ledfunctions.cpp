@@ -766,7 +766,7 @@ void LEDFunctionsClass::renderRotatingLine()
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::fade()
 {
-  if ((unsigned long)(millis() - this->lastFadeTick) >= 15) 
+  if ((unsigned long)(millis() - this->lastFadeTick) >= FADEINTERVAL) 
   {
     this->lastFadeTick=millis();
     
@@ -1162,7 +1162,8 @@ void LEDFunctionsClass::renderHourglass(bool green)
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderMatrix()
 {
-  if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(100-Config.animspeed))
+  // if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(100-Config.animspeed))
+  if ((unsigned long) (millis()-this->lastUpdate)>MATRIXINTERVAL)
   {
     this->lastUpdate=millis();
   	// clear buffer
@@ -1281,7 +1282,7 @@ void LEDFunctionsClass::renderPlasma()
 
 void LEDFunctionsClass::renderFire()
 {
-  if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(100-Config.animspeed))
+  if ((unsigned long) (millis()-this->lastUpdate)>FIREINTERVAL)
   {
     this->lastUpdate=millis();
     int f;
@@ -1437,7 +1438,8 @@ void LEDFunctionsClass::renderWakeup()
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderHeart()
 {
-  if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(100-Config.animspeed))
+//   if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(100-Config.animspeed))
+  if ((unsigned long) (millis()-this->lastUpdate)>RENDERHEARTINTERVAL)
   {
     this->lastUpdate=millis();
   	palette_entry palette[2];
@@ -1551,7 +1553,8 @@ void LEDFunctionsClass::prepareExplosion(uint8_t *source)
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderExplosion()
 {
-  if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(100-Config.animspeed))
+  // if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(100-Config.animspeed))
+  if ((unsigned long) (millis()-this->lastUpdate)>EXPLODEINTERVAL)
   {
     this->lastUpdate=millis();
   	std::vector<Particle*> particlesToKeep;
@@ -1697,7 +1700,8 @@ void LEDFunctionsClass::prepareFlyingLetters(uint8_t *source)
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderFlyingLetters()
 {
-  if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(100-Config.animspeed))
+  // if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(100-Config.animspeed))
+  if ((unsigned long) (millis()-this->lastUpdate)>FLYINGLETTERSINTERVAL)
   {
     this->lastUpdate=millis();
   	uint8_t buf[NUM_PIXELS];

@@ -54,6 +54,13 @@ typedef struct _xy_t
 #define NUM_BRIGHTNESS_CURVES 2
 #define DEFAULTICKTIME 20
 
+#define FADEINTERVAL 15
+#define RENDERHEARTINTERVAL 10
+#define MATRIXINTERVAL 10
+#define FLYINGLETTERSINTERVAL 10
+#define EXPLODEINTERVAL 15
+#define FIREINTERVAL 100
+
 class LEDFunctionsClass
 {
 public:
