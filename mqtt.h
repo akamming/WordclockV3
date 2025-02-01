@@ -13,6 +13,7 @@
 #define SECONDSNAME "Seconds"
 #define MODENAME "Mode"
 #define ANIMATIONSPEEDNAME "AnimationSpeed"
+#define DEBUGNAME "Debug"
 #define CONNECTTIMEOUT 60000 // only try to connect once a minute
 #define PUBLISHTIMEOUT 3600000 // publish the sensors at least every hour 
 
@@ -39,6 +40,9 @@ private:
   void UpdateMQTTColorDimmer(const char* uniquename, palette_entry Color);
   void UpdateMQTTModeSelector(const char* uniquename, DisplayMode mode);
   void UpdateMQTTNumber(const char* uniquename, uint8_t Mod);
+  void UpdateMQTTText(const char* uniquename, const char* text);
+  void PublishMQTTSwitch(const char* uniquename);
+  void PublishMQTTText(const char* uniquename);
 
 
 

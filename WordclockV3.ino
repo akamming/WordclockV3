@@ -475,10 +475,14 @@ void loop()
           NTP.weekday, NTP.h, NTP.m, NTP.s, (int)(Brightness.avg*100)%100, 
           Brightness.value(),ESP.getFreeHeap(), days,hrs,mins,secs,msecs);
 #else
-      Serial.printf("%02i:%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, Free Cont Stack = %i, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
+      char buffer[256];
+
+      sprintf(buffer,"%02i:%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, Free Cont Stack = %i, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
           NTP.weekday, NTP.h, NTP.m, NTP.s, (int)Brightness.avg, (int)(Brightness.avg*100)%100,
           ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getMaxFreeBlockSize(), ESP.getFreeContStack(), Brightness.value(),
           days,hrs,mins,secs,msecs);
+      Serial.printf(buffer);
+      MQTT.Debug(buffer);
 #endif
       if (AlarmInProgress) {
         Serial.printf("Alarm in Progress at %2.2f%%\r\n",LED.AlarmProgress*100); 

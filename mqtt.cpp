@@ -80,6 +80,7 @@ void MqttClass::begin()
   MQ.setBufferSize(2048); // discovery messages are longer than default max buffersize(!)
   MQ.setCallback(MQTTcallback); // listen to callbacks
   this->lastconnectcheck = millis()-CONNECTTIMEOUT-10; // force try to connect immediately
+  this->reconnect();
 }
 
 //---------------------------------------------------------------------------------------
@@ -137,7 +138,7 @@ void MqttClass::process()
 //---------------------------------------------------------------------------------------
 void MqttClass::Debug(const char* status)
 {
-  if (MQ.connected()) MQ.publish((String(Config.hostname)+"/debug").c_str(),status,Config.mqttpersistence);
+  if (MQ.connected()) this->UpdateMQTTText(DEBUGNAME,status);
 }
 
 
@@ -171,7 +172,7 @@ String DimmerCommandTopic(const char* DeviceName)
 //---------------------------------------------------------------------------------------
 // NumberCommandTopic
 //
-// Returns a string with the Dimmer commandtopic for a devicename
+// Returns a string with the Number commandtopic for a devicename
 //
 // -> --
 // <- --
@@ -179,6 +180,19 @@ String DimmerCommandTopic(const char* DeviceName)
 String NumberCommandTopic(const char* DeviceName)
 {
   return String(Config.hostname)+String("/number/")+String(DeviceName)+String("/set");
+}
+
+//---------------------------------------------------------------------------------------
+// TextCommandTopic
+//
+// Returns a string with the Text commandtopic for a devicename
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+String TextCommandTopic(const char* DeviceName)
+{
+  return String(Config.hostname)+String("/text/")+String(DeviceName)+String("/set");
 }
 
 //---------------------------------------------------------------------------------------
@@ -266,9 +280,6 @@ void MqttClass::PublishMQTTModeSelect(const char* uniquename)
 
   // Make sure we receive commands
   MQ.subscribe(SelectorCommandTopic(uniquename).c_str());
-
-   this->Debug((String(MQTTAUTODISCOVERYTOPIC)+"/select/"+String(Config.hostname)+"/"+String(uniquename)+"/config").c_str());
-   this->Debug(conf);
 }
 
 
@@ -311,9 +322,9 @@ void MqttClass::PublishMQTTDimmer(const char* uniquename, bool SupportRGB)
 }
 
 //---------------------------------------------------------------------------------------
-// PublishMQTTDimmer
+// PublishMQTTNumber
 //
-// Publish autodiscoverymessage for MQTT Dimmer switch
+// Publish autodiscoverymessage for MQTT Number
 //
 // -> --
 // <- --
@@ -349,6 +360,74 @@ void MqttClass::PublishMQTTNumber(const char* uniquename, int min, int max, floa
 
   // Make sure we receive commands
   MQ.subscribe(NumberCommandTopic(uniquename).c_str());
+}
+
+//---------------------------------------------------------------------------------------
+// PublishMQTTText
+//
+// Publish autodiscoverymessage for MQTT Text
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+
+void MqttClass::PublishMQTTText(const char* uniquename)
+{
+  Serial.println("PublishMQTTNumber");
+  JsonDocument json;
+
+  // Construct JSON config message
+  json["name"] = uniquename;
+  json["unique_id"] = String(Config.hostname)+"_"+uniquename;
+  json["cmd_t"] = TextCommandTopic(uniquename);
+  json["stat_t"] = String(Config.hostname)+"/text/"+String(uniquename)+"/state";
+
+
+  addDeviceToJson(&json); // Add Device details to discovery message
+
+  char conf[512];
+  serializeJson(json, conf);  // conf now contains the json
+
+  // Publish config message
+  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+"/text/"+String(Config.hostname)+"/"+String(uniquename)+"/config").c_str(),conf,Config.mqttpersistence);
+
+  // Make sure we receive commands
+  MQ.subscribe(TextCommandTopic(uniquename).c_str());
+}
+
+
+
+
+//---------------------------------------------------------------------------------------
+// PublishMQTTNumber
+//
+// Publish autodiscoverymessage for MQTT Number
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+
+void MqttClass::PublishMQTTSwitch(const char* uniquename)
+{
+  Serial.println("PublishMQTTSwitch");
+  JsonDocument json;
+
+  // Construct JSON config message
+  json["name"] = uniquename;
+  json["unique_id"] = String(Config.hostname)+"_"+uniquename;
+  json["cmd_t"] = String(Config.hostname)+"/light/"+String(uniquename)+"/set";
+  json["stat_t"] = String(Config.hostname)+"/light/"+String(uniquename)+"/state";
+
+  addDeviceToJson(&json);
+
+  char conf[512];
+  serializeJson(json, conf);  // conf now contains the json
+
+  // Publish config message
+  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+"/light/"+String(Config.hostname)+"/"+String(uniquename)+"/config").c_str(),conf,Config.mqttpersistence);
+
+  // subscribe if need to listen to commands
+  MQ.subscribe((String(Config.hostname)+"/light/"+String(uniquename)+"/set").c_str());
 }
 
 
@@ -457,7 +536,7 @@ void MqttClass::UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t  Mo
 //---------------------------------------------------------------------------------------
 // UpdateMQTTDimmer
 //
-// Update an MQTT Dimer switch
+// Update an MQTT Number
 //
 // -> --
 // <- --
@@ -475,6 +554,23 @@ void MqttClass::UpdateMQTTNumber(const char* uniquename, uint8_t Mod)
   // publish state message
   MQ.publish((String(Config.hostname)+"/number/"+String(uniquename)+"/state").c_str(),String(Mod).c_str(),Config.mqttpersistence);
 }
+
+//---------------------------------------------------------------------------------------
+// UpdateMQTTText
+//
+// Update an MQTT Text
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void MqttClass::UpdateMQTTText(const char* uniquename, const char* text)
+{
+  Serial.println("UpdateMQTTText");
+ 
+  // publish state message
+  MQ.publish((String(Config.hostname)+"/text/"+String(uniquename)+"/state").c_str(),text,Config.mqttpersistence);
+}
+
 
 //---------------------------------------------------------------------------------------
 // UpdateMQTTDimmer
@@ -538,6 +634,7 @@ void MqttClass::PublishAllMQTTSensors()
     this->PublishMQTTDimmer(SECONDSNAME,true);
     this->PublishMQTTNumber(ANIMATIONSPEEDNAME,1,100,1,true);
     this->PublishMQTTModeSelect(MODENAME);
+    this->PublishMQTTText(DEBUGNAME);
 
     // Trick the program to communicate in the next run by making sure the mqtt cached values are set to the "wrong" values
     this->mqtt_brightness = Brightness.brightnessOverride==50 ? 51 : 50;
@@ -599,7 +696,7 @@ void MqttClass::reconnect()
         mqttconnected = MQ.connect(Config.hostname);
       }
       if (mqttconnected) {
-        Serial.println("Connect succeeded");
+        this->Debug("Connect succeeded");
         this->PublishAllMQTTSensors();
 
       } else {
