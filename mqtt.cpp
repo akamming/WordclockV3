@@ -125,6 +125,10 @@ void MqttClass::process()
       this->mqttDisplayMode=Config.defaultMode;
       this->UpdateMQTTModeSelector(MODENAME,this->mqttDisplayMode);
     }
+    if (this->debugging != this->mqtt_debugging) {
+      this->UpdateMQTTSwitch(DEBUGNAME,debugging);
+      mqtt_debugging=debugging;
+    }
   }
 }
 
@@ -138,7 +142,7 @@ void MqttClass::process()
 //---------------------------------------------------------------------------------------
 void MqttClass::Debug(const char* status)
 {
-  if (MQ.connected()) this->UpdateMQTTText(DEBUGNAME,status);
+  if (MQ.connected() and this->debugging) this->UpdateMQTTText(DEBUGNAME,status);
 }
 
 
@@ -180,6 +184,19 @@ String DimmerCommandTopic(const char* DeviceName)
 String NumberCommandTopic(const char* DeviceName)
 {
   return String(Config.hostname)+String("/number/")+String(DeviceName)+String("/set");
+}
+
+//---------------------------------------------------------------------------------------
+// SwitchCommandTopic
+//
+// Returns a string with the Switch commandtopic for a devicename
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+String SwitchCommandTopic(const char* DeviceName)
+{
+  return String(Config.hostname)+String("/light/")+String(DeviceName)+String("/set");
 }
 
 //---------------------------------------------------------------------------------------
@@ -534,7 +551,7 @@ void MqttClass::UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t  Mo
 }
 
 //---------------------------------------------------------------------------------------
-// UpdateMQTTDimmer
+// UpdateMQTTNumber
 //
 // Update an MQTT Number
 //
@@ -544,16 +561,27 @@ void MqttClass::UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t  Mo
 void MqttClass::UpdateMQTTNumber(const char* uniquename, uint8_t Mod)
 {
   Serial.println("UpdateMQTTDimmer");
-  // JsonDocument json;
-
-  // Construct JSON config message
-  //  json["value"]=Mod;
-  //char state[128];
-  // serializeJson(json, state);  // state now contains the json
 
   // publish state message
   MQ.publish((String(Config.hostname)+"/number/"+String(uniquename)+"/state").c_str(),String(Mod).c_str(),Config.mqttpersistence);
 }
+
+//---------------------------------------------------------------------------------------
+// UpdateMQTTSwitch
+//
+// Update an MQTT Switch
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void MqttClass::UpdateMQTTSwitch(const char* uniquename, bool Value)
+{
+  Serial.println("UpdateMQTTSwitch");
+
+  // publish state message
+  MQ.publish((String(Config.hostname)+"/light/"+String(uniquename)+"/state").c_str(),Value?"ON":"OFF",Config.mqttpersistence);
+}
+
 
 //---------------------------------------------------------------------------------------
 // UpdateMQTTText
@@ -635,6 +663,7 @@ void MqttClass::PublishAllMQTTSensors()
     this->PublishMQTTNumber(ANIMATIONSPEEDNAME,1,100,1,true);
     this->PublishMQTTModeSelect(MODENAME);
     this->PublishMQTTText(DEBUGNAME);
+    this->PublishMQTTSwitch(DEBUGNAME);
 
     // Trick the program to communicate in the next run by making sure the mqtt cached values are set to the "wrong" values
     this->mqtt_brightness = Brightness.brightnessOverride==50 ? 51 : 50;
@@ -856,6 +885,12 @@ void MqttClass::MQTTcallback(char* topic, byte* payload, unsigned int length)
     Config.s=ProcessColorCommand(Config.s, payloadstr); 
   } else if (topicstr.equals(SelectorCommandTopic(MODENAME) ) ) {
     Config.defaultMode = GetDisplayModeFromPayload(payloadstr);
+  } else if (topicstr.equals(SwitchCommandTopic(DEBUGNAME) ) ) {
+    if (String(payloadstr).equals("ON")) {
+      MQTT.debugging=true;
+     } else {
+      MQTT.debugging=false;
+    } 
   } else {
       MQ.publish("log/topic",topicstr.c_str());
       MQ.publish("log/payload",payloadstr);
