@@ -29,7 +29,6 @@ public:
   void PublishStatus(const char* status);
   void Debug(const char* status);
 
-
 private:
   static void MQTTcallback(char* topic, byte* payload, unsigned int length);
   void PublishAllMQTTSensors();

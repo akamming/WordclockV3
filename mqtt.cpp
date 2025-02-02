@@ -196,7 +196,7 @@ String NumberCommandTopic(const char* DeviceName)
 //---------------------------------------------------------------------------------------
 String SwitchCommandTopic(const char* DeviceName)
 {
-  return String(Config.hostname)+String("/light/")+String(DeviceName)+String("/set");
+  return String(Config.hostname)+String("/switch/")+String(DeviceName)+String("/set");
 }
 
 //---------------------------------------------------------------------------------------
@@ -432,8 +432,8 @@ void MqttClass::PublishMQTTSwitch(const char* uniquename)
   // Construct JSON config message
   json["name"] = uniquename;
   json["unique_id"] = String(Config.hostname)+"_"+uniquename;
-  json["cmd_t"] = String(Config.hostname)+"/light/"+String(uniquename)+"/set";
-  json["stat_t"] = String(Config.hostname)+"/light/"+String(uniquename)+"/state";
+  json["cmd_t"] = SwitchCommandTopic(uniquename);
+  json["stat_t"] = String(Config.hostname)+"/switch/"+String(uniquename)+"/state";
 
   addDeviceToJson(&json);
 
@@ -441,10 +441,10 @@ void MqttClass::PublishMQTTSwitch(const char* uniquename)
   serializeJson(json, conf);  // conf now contains the json
 
   // Publish config message
-  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+"/light/"+String(Config.hostname)+"/"+String(uniquename)+"/config").c_str(),conf,Config.mqttpersistence);
+  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+"/switch/"+String(Config.hostname)+"/"+String(uniquename)+"/config").c_str(),conf,Config.mqttpersistence);
 
   // subscribe if need to listen to commands
-  MQ.subscribe((String(Config.hostname)+"/light/"+String(uniquename)+"/set").c_str());
+  MQ.subscribe(SwitchCommandTopic(uniquename).c_str());
 }
 
 
@@ -560,7 +560,7 @@ void MqttClass::UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t  Mo
 //---------------------------------------------------------------------------------------
 void MqttClass::UpdateMQTTNumber(const char* uniquename, uint8_t Mod)
 {
-  Serial.println("UpdateMQTTDimmer");
+  Serial.println("UpdateMQTTNumber");
 
   // publish state message
   MQ.publish((String(Config.hostname)+"/number/"+String(uniquename)+"/state").c_str(),String(Mod).c_str(),Config.mqttpersistence);
@@ -579,7 +579,7 @@ void MqttClass::UpdateMQTTSwitch(const char* uniquename, bool Value)
   Serial.println("UpdateMQTTSwitch");
 
   // publish state message
-  MQ.publish((String(Config.hostname)+"/light/"+String(uniquename)+"/state").c_str(),Value?"ON":"OFF",Config.mqttpersistence);
+  MQ.publish((String(Config.hostname)+"/switch/"+String(uniquename)+"/state").c_str(),Value?"ON":"OFF",Config.mqttpersistence);
 }
 
 
@@ -601,7 +601,7 @@ void MqttClass::UpdateMQTTText(const char* uniquename, const char* text)
 
 
 //---------------------------------------------------------------------------------------
-// UpdateMQTTDimmer
+// UpdateMQTTColorDimmer
 //
 // Update an MQTT Dimer switch
 //
@@ -610,7 +610,7 @@ void MqttClass::UpdateMQTTText(const char* uniquename, const char* text)
 //---------------------------------------------------------------------------------------
 void MqttClass::UpdateMQTTColorDimmer(const char* uniquename, palette_entry Color)
 {
-  Serial.println("UpdateMQTTDimmer");
+  Serial.println("UpdateMQTTColorDimmer");
   JsonDocument json;
   uint8_t brightness = MaxColor(Color);
 
