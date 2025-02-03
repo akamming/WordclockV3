@@ -19,14 +19,14 @@
 #define _CONFIG_H_
 
 #include <IPAddress.h>
-
-
+#include <ArduinoJson.h>
 
 // constants
 #define NUM_PIXELS 114
 #define EEPROM_SIZE 512
 #define CONFIGWRITETIMEOUT 10000
 #define CONFIGSTRINGSIZE 25
+#define CONFIGFILE  "/config.json"                // name of the config file on the SPIFFS image
 
 
 enum class DisplayMode
@@ -93,6 +93,7 @@ public:
 	void saveDelayed();
 	void load();
 	void reset();
+  JsonDocument json();
   int Configsize();
   void process();
 

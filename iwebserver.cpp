@@ -78,7 +78,7 @@ WebServerClass::~WebServerClass()
 //---------------------------------------------------------------------------------------
 void WebServerClass::begin()
 {
-	LittleFS.begin();
+	// LittleFS.begin(); // Also called by Config, so can be removed here
 #ifdef ESP32
   this->server = new WebServer(80);
 #else
@@ -100,6 +100,7 @@ void WebServerClass::begin()
   this->server->on("/reset", std::bind(&WebServerClass::handleReset, this));
   this->server->on("/setnightmode", std::bind(&WebServerClass::handleSetNightMode, this));
   this->server->on("/getconfig", std::bind(&WebServerClass::handleGetConfig, this));
+  this->server->on("/config.json", std::bind(&WebServerClass::handleGetConfig, this));
   this->server->on("/setalarm", std::bind(&WebServerClass::handleSetAlarm, this));
   this->server->on("/sethostname", std::bind(&WebServerClass::handleSetHostname, this));
   this->server->on("/upload", HTTP_GET, std::bind(&WebServerClass::sendUploadForm, this));  
@@ -270,7 +271,8 @@ bool WebServerClass::serveFile(const char url[])
     else if (this->endsWith(path,".pdf") ) this->server->streamFile(file, "application./x-pdf");
     else if (this->endsWith(path,".zip") ) this->server->streamFile(file, "application./x-zip");
     else if (this->endsWith(path,".gz") ) this->server->streamFile(file, "application./x-gzip");
-    else this->server->streamFile(file, "text/plain");
+    else if (this->endsWith(path,".json") ) this->server->streamFile(file, "application/json");
+     else this->server->streamFile(file, "text/plain");
 		file.close();
 		return true;
 	}
@@ -1047,134 +1049,11 @@ void WebServerClass::handleSetHostname()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleGetConfig()
 {
+  // Get Config
+  JsonDocument json = Config.json();
 
-  JsonDocument json;
-
-
-  int displaymode = 0;
-  switch(Config.defaultMode)
-  {
-  case DisplayMode::plain:
-    displaymode = 0; break;
-  case DisplayMode::fade:
-    displaymode = 1; break;
-  case DisplayMode::flyingLettersVerticalUp:
-    displaymode = 2; break;
-  case DisplayMode::flyingLettersVerticalDown:
-    displaymode = 3; break;
-  case DisplayMode::explode:
-    displaymode = 4; break;
-  case DisplayMode::wakeup:
-    displaymode = 5; break;
-  case DisplayMode::matrix:
-    displaymode = 6; break;
-  case DisplayMode::heart:
-    displaymode = 7; break;
-  case DisplayMode::fire:
-    displaymode = 8; break;
-  case DisplayMode::stars:
-    displaymode = 9; break;
-  case DisplayMode::random:
-    displaymode = 10; break;
-  case DisplayMode::HorizontalStripes:
-    displaymode = 11; break;
-  case DisplayMode::VerticalStripes:
-    displaymode = 12; break;
-  case DisplayMode::RandomDots:
-    displaymode = 13; break;
-  case DisplayMode::RandomStripes:
-    displaymode = 14; break;
-  case DisplayMode::RotatingLine:
-    displaymode = 15; break;
-  default:
-    displaymode = 1; break;
-  }
- 
-  JsonObject background = json["backgroundcolor"].to<JsonObject>();
-  background["r"] = Config.bg.r;
-  background["g"] = Config.bg.g;
-  background["b"] = Config.bg.b;
-
-  JsonObject foreground = json["foregroundcolor"].to<JsonObject>();
-  foreground["r"] = Config.fg.r;
-  foreground["g"] = Config.fg.g;
-  foreground["b"] = Config.fg.b;
-
-  JsonObject seconds = json["secondscolor"].to<JsonObject>();
-  seconds["r"] = Config.s.r;
-  seconds["g"] = Config.s.g;
-  seconds["b"] = Config.s.b;
-
-
-  json["displaymode"] =  displaymode;
-  json["animspeed"] = Config.animspeed;
-  json["timezone"] = Config.timeZone;
-  json["nightmode"] = Config.nightmode;
-  json["heartbeat"] = Config.heartbeat==1;
-  char NTPServer[20];
-  sprintf(NTPServer,"%u.%u.%u.%u",Config.ntpserver[0],Config.ntpserver[1],Config.ntpserver[2],Config.ntpserver[3]);
-
-  json["NTPServer"] = NTPServer;
-  json["Brightness"] = Brightness.brightnessOverride;
-  json["hostname"] = Config.hostname;
-
-  JsonArray Alarm = json["Alarm"].to<JsonArray>();
-  for (int i=0;i<5;i++) {
-    String alarmmode,alarmtype;
-  
-    switch(Config.alarm[i].mode)
-    {
-    case DisplayMode::matrix:
-      alarmmode = "matrix"; break;
-    case DisplayMode::plasma:
-      alarmmode = "plasma"; break;
-    case DisplayMode::fire:
-      alarmmode  = "fire"; break;
-    case DisplayMode::heart:
-      alarmmode = "heart"; break;
-    case DisplayMode::stars:
-      alarmmode = "stars"; break;
-    case DisplayMode::wakeup:
-      alarmmode = "wakeup"; break;
-    default:
-      alarmmode = "unknown"; break;
-    }
-
-    switch(Config.alarm[i].type)
-    {
-      case AlarmType::oneoff:
-        alarmtype="Eenmalig"; break;
-      case AlarmType::always:
-        alarmtype="Altijd"; break;
-      case AlarmType::weekend:
-        alarmtype="Weekend"; break;
-      case AlarmType::workingdays:
-        alarmtype="Werkdagen"; break;
-      default:
-        alarmtype="Onbekend"; break;
-    }
-
-    char timestr[12];
-    sprintf(timestr,"%02d:%02d",Config.alarm[i].h,Config.alarm[i].m);
-
-    JsonObject alarmobject = Alarm.add<JsonObject>();
-    alarmobject["time"]=timestr;
-    alarmobject["duration"]=Config.alarm[i].duration;  
-    alarmobject["mode"]=alarmmode;  
-    alarmobject["enabled"]=Config.alarm[i].enabled;  
-    alarmobject["type"]=alarmtype;
-  }
-
-  json["hostname"] = Config.hostname;
-
-  // mqtt settings
-  json["usemqtt"] = Config.usemqtt; 
-  json["mqttpersistence"] = Config.mqttpersistence;
-  json["mqttserver"] = Config.mqttserver;
-  json["mqttport"] =Config.mqttport;
-  json["usemqttauthentication"] = Config.usemqttauthentication;
-  json["mqttuser"] = Config.mqttuser;
-  json["mqttpass"] = "*****"; // always shown as 5 stars
+  // Overrulle password with 5 stars
+  json["mqttpass"] = "*****"; 
 
   String buf;
   serializeJsonPretty(json, buf);
