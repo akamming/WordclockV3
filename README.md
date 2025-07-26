@@ -26,6 +26,73 @@ plus several added features
 - plugin available for [domoticz integration](https://github.com/akamming/Domoticz-WordClock) 
 - MQTT Autodiscovery for integration in Domoticz and home assistant (no need for above plugin anymore)
 
+# WordClock V3 - PlatformIO Project
+
+## Prerequisites
+
+### Installing Visual Studio Code
+1. Download and install [Visual Studio Code](https://code.visualstudio.com/)
+2. Launch VSCode after installation
+
+### Installing PlatformIO Extension
+1. Open VSCode
+2. Go to Extensions (Ctrl+Shift+X)
+3. Search for "PlatformIO IDE"
+4. Install the PlatformIO IDE extension by PlatformIO
+5. Restart VSCode when prompted
+
+## Hardware
+- Wemos D1 Mini (ESP8266)
+- WS2812B LED Strip
+- Additional components as needed
+
+## Project Setup
+
+### Opening the Project
+1. Open VSCode
+2. Click "File" → "Open Folder"
+3. Navigate to and select the WordclockV3 project folder
+4. PlatformIO will automatically detect the project and install dependencies
+
+### Building and Uploading
+
+#### First Upload (via USB/Serial)
+1. Connect your Wemos D1 Mini to your computer via USB
+2. Open PlatformIO Terminal (Terminal → New Terminal)
+3. Run the following command:
+```bash
+pio run -e d1_mini_serial -t upload
+```
+
+#### Subsequent Uploads (Over-The-Air)
+After the initial setup and when connected to WiFi:
+```bash
+pio run -e d1_mini -t upload
+```
+
+#### Alternative: Using PlatformIO GUI
+1. Click the PlatformIO icon in the left sidebar
+2. Expand "PROJECT TASKS"
+3. Select your environment (d1_mini_serial or d1_mini)
+4. Click "Upload" to build and upload
+5. Click "Upload and Monitor" to upload and view serial output
+
+### Monitoring Serial Output
+To view debug output and logs:
+```bash
+pio device monitor
+```
+
+Or use the PlatformIO GUI: PROJECT TASKS → [environment] → Monitor
+
+## Configuration
+- Modify `include/config.h` for pin assignments and settings
+- Update `platformio.ini` for different board configurations
+- Set your WiFi credentials in the code or use WiFiManager
+
+## Dependencies
+All required libraries are automatically downloaded via PlatformIO when you first open the project.
+
 ## original text readme:
 
 Key features:
@@ -53,35 +120,3 @@ The configuration interface is accessible using any browser at the URL http://wo
 The ESP8266 has been wired in dead bug style, I didn't bother to create a PCB for that. [Modules with integrated voltage regulator, buttons, USB and LDR](http://www.cnx-software.com/2015/12/14/3-compact-esp8266-board-includes-rgd-led-photo-resistor-buttons-and-a-usb-to-ttl-interface/) would have been a better option, but delivery from China is so slow and I didn't want to wait that long. The WS2812B LEDs are wired using thin copper wire. When fully powered, the voltage drop on the power wires is quite high and the last LEDs in the chain don't get enough voltage and stop responding. In the next version, I will use thicker wire for the power lines.
 
 The base for the LEDs is made of MDF milled on my CNC mill. It consists of a 12 mm back plate with holes and small rims for the LEDs to rest on and a 12 mm front plate having holes with equal diameter. I added a first diffusor of thin paper between the two plates (to make the LED less visible) and painted the inside of the holes white. On top I added a second diffusor (plastic foil) so the light tunnel gets invisible.
-
-# WordClock V3 - PlatformIO Project
-
-## Hardware
-- Wemos D1 Mini (ESP8266)
-- WS2812B LED Strip
-- Additional components as needed
-
-## Building and Uploading
-
-### First Upload (Serial)
-```bash
-pio run -e d1_mini_serial -t upload
-```
-
-### OTA Upload (After initial setup)
-```bash
-pio run -e d1_mini -t upload
-```
-
-### Monitor Serial Output
-```bash
-pio device monitor
-```
-
-## Configuration
-- Modify `include/config.h` for pin assignments and settings
-- Update `platformio.ini` for different board configurations
-- Set your WiFi credentials in the code or use WiFiManager
-
-## Dependencies
-All required libraries are automatically downloaded via PlatformIO.
