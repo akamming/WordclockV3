@@ -324,6 +324,8 @@ void MqttClass::PublishMQTTDimmer(const char* uniquename, bool SupportRGB)
   json["brightness"] = true;
   if (SupportRGB) {
     json["supported_color_modes"][0] = "rgb";
+  } else {
+    json["supported_color_modes"][0] = "brightness";
   }
 
   addDeviceToJson(&json); // Add Device details to discovery message

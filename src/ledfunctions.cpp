@@ -1002,63 +1002,34 @@ void LEDFunctionsClass::drawLine(uint8_t *target, int8_t x1, int8_t y1, int8_t x
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderRandom(uint8_t *target)
 {
-    /* palette_entry palette[] = {
-      {0, 0, 0},
-      {255, 0, 0},
-      {0, 255, 0},
-      {0, 0, 255},
-      {255, 255, 0},
-      {255, 0, 255},
-      {0, 255, 255},
-      {255, 255, 255}
-    }; */
-
-    palette_entry palette[] = {
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-      {random(256), random(256), random(256)},
-    };
-
-  if ((unsigned long)(millis() - this->lastUpdate) >= (unsigned)(100-Config.animspeed)*20) 
-  {
-    for (int i=0;i<NUM_PIXELS;i++)
-    {
-      target[i]=random(64);
+    // Use static palette to avoid stack overflow and update less frequently
+    static palette_entry palette[32];
+    static unsigned long lastPaletteUpdate = 0;
+    
+    // Update palette every 2 seconds instead of every frame
+    if (millis() - lastPaletteUpdate > 2000) {
+        for (int i = 0; i < 32; i++) {
+            palette[i] = {
+                (uint8_t)random(256), 
+                (uint8_t)random(256), 
+                (uint8_t)random(256)
+            };
+        }
+        lastPaletteUpdate = millis();
     }
-    this->lastUpdate=millis();
-    this->set(target, palette, false);
-  }
-  this->fade();
+
+    if ((unsigned long)(millis() - this->lastUpdate) >= (unsigned)(100-Config.animspeed)*20) 
+    {
+        for (int i=0;i<NUM_PIXELS;i++)
+        {
+            target[i]=(uint8_t)random(32);
+        }
+        this->lastUpdate=millis();
+        this->set(target, palette, false);
+    }
+    this->fade();
 }
+
 
 //---------------------------------------------------------------------------------------
 // renderStripes

@@ -53,3 +53,35 @@ The configuration interface is accessible using any browser at the URL http://wo
 The ESP8266 has been wired in dead bug style, I didn't bother to create a PCB for that. [Modules with integrated voltage regulator, buttons, USB and LDR](http://www.cnx-software.com/2015/12/14/3-compact-esp8266-board-includes-rgd-led-photo-resistor-buttons-and-a-usb-to-ttl-interface/) would have been a better option, but delivery from China is so slow and I didn't want to wait that long. The WS2812B LEDs are wired using thin copper wire. When fully powered, the voltage drop on the power wires is quite high and the last LEDs in the chain don't get enough voltage and stop responding. In the next version, I will use thicker wire for the power lines.
 
 The base for the LEDs is made of MDF milled on my CNC mill. It consists of a 12 mm back plate with holes and small rims for the LEDs to rest on and a 12 mm front plate having holes with equal diameter. I added a first diffusor of thin paper between the two plates (to make the LED less visible) and painted the inside of the holes white. On top I added a second diffusor (plastic foil) so the light tunnel gets invisible.
+
+# WordClock V3 - PlatformIO Project
+
+## Hardware
+- Wemos D1 Mini (ESP8266)
+- WS2812B LED Strip
+- Additional components as needed
+
+## Building and Uploading
+
+### First Upload (Serial)
+```bash
+pio run -e d1_mini_serial -t upload
+```
+
+### OTA Upload (After initial setup)
+```bash
+pio run -e d1_mini -t upload
+```
+
+### Monitor Serial Output
+```bash
+pio device monitor
+```
+
+## Configuration
+- Modify `include/config.h` for pin assignments and settings
+- Update `platformio.ini` for different board configurations
+- Set your WiFi credentials in the code or use WiFiManager
+
+## Dependencies
+All required libraries are automatically downloaded via PlatformIO.
