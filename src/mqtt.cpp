@@ -286,6 +286,7 @@ void MqttClass::PublishMQTTModeSelect(const char* uniquename)
   options.add("RandomDots");
   options.add("RandomStripes");
   options.add("RotatingLine");
+  options.add("christmas");
 
   addDeviceToJson(&json); // Add Device details to discovery message
 
@@ -513,6 +514,39 @@ void MqttClass::UpdateMQTTModeSelector(const char* uniquename, DisplayMode mode)
     break;
   case DisplayMode::RotatingLine:
     displaymode="RotatingLine"; 
+    break;
+  case DisplayMode::plasma:
+    displaymode="plasma"; 
+    break;
+  case DisplayMode::red:
+    displaymode="red"; 
+    break;
+  case DisplayMode::green:
+    displaymode="green"; 
+    break;
+  case DisplayMode::blue:
+    displaymode="blue"; 
+    break;
+  case DisplayMode::yellowHourglass:
+    displaymode="yellowHourglass"; 
+    break;
+  case DisplayMode::greenHourglass:
+    displaymode="greenHourglass"; 
+    break;
+  case DisplayMode::update:
+    displaymode="update"; 
+    break;
+  case DisplayMode::updateComplete:
+    displaymode="updateComplete"; 
+    break;
+  case DisplayMode::updateError:
+    displaymode="updateError"; 
+    break;
+  case DisplayMode::wifiManager:
+    displaymode="wifiManager"; 
+    break;
+  case DisplayMode::christmas:
+    displaymode="christmas"; 
     break;
   default:
     displaymode="unknown"; 
