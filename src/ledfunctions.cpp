@@ -1361,44 +1361,41 @@ void LEDFunctionsClass::renderChristmas()
   if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(300-Config.animspeed))
   {
     this->lastUpdate=millis();
+
+	// Christmas tree pattern (11x10 grid)
+	// 0=off, 1=tree(green), 2=trunk(brown)
+	uint8_t tree[NUM_PIXELS] = {
+	// Row 0 (indices 0-10) - Top Star / Tip
+	0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+	// Row 1 (indices 11-21) - First layer (Narrow)
+	0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
+	// Row 2 (indices 22-32) - Second layer (Wide)
+	0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+	// Row 3 (indices 33-43) - Third layer (Narrow)
+	0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+	// Row 4 (indices 44-54) - Fourth layer (Wide) - Small inkeping
+	0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+	// Row 5 (indices 55-65) - Fifth layer (Narrow)
+	0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+	// Row 6 (indices 66-76) - Sixth layer (Wide) - Diepere inkeping
+	0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+	// Row 7 (indices 77-87) - Seventh layer (Narrow)
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // Volle rij als basis van de boom
+	// Row 8 (indices 88-98) - Trunk space
+	0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0,
+	// Row 9 (indices 99-109) - Trunk
+	0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, // Stam van 3 pixels breed
+
+	// Corner LEDs (110-113) - off (Indien nodig voor uw hardware)
+	0, 0, 0, 0
+	};
     
-    // Christmas tree pattern
-    // 0=off, 1=tree(green), 2=trunk(brown)
-    uint8_t tree[NUM_PIXELS] = {
-      // Row 0 (indices 0-10)
-      0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-      // Row 1 (indices 11-21)
-      0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
-      // Row 2 (indices 22-32)
-      0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
-      // Row 3 (indices 33-43)
-      0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
-      // Row 4 (indices 44-54)
-      0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
-      // Row 5 (indices 55-65)
-      0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
-      // Row 6 (indices 66-76)
-      0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-      // Row 7 (indices 77-87)
-      0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
-      // Row 8 (indices 88-98)
-      0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-      // Row 9 (indices 99-109) - trunk
-      0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0,
-      // Corner LEDs (110-113) - off
-      0, 0, 0, 0
-    };
     
     // Render the static tree
     for(int i = 0; i < NUM_PIXELS; i++)
     {
       switch(tree[i])
       {
-		case 0: // Off
-		  this->targetValues[i*3] = 0; // R
-		  this->targetValues[i*3+1] = 0; // G
-		  this->targetValues[i*3+2] = 0; // B
-		  break;
         case 1: // Tree - green
           this->targetValues[i*3] = 0; // R
           this->targetValues[i*3+1] = 150; // G
@@ -1422,7 +1419,7 @@ void LEDFunctionsClass::renderChristmas()
     // Add random twinkling balls on green tree parts (value 1)
     for(int i = 0; i < NUM_PIXELS; i++)
     {
-      if(tree[i] == 1 && random(100) < 1) // 1% chance on tree parts
+      if(tree[i] == 1 && random(100) < 2) // 2% chance on tree parts
       {
         int color = random(3); // 0 red, 1 blue, 2 gold
         if(color == 0)
@@ -1440,7 +1437,7 @@ void LEDFunctionsClass::renderChristmas()
         else
         {
           this->currentValues[i*3] = 255; // R
-          this->currentValues[i*3+1] = 215; // G
+          this->currentValues[i*3+1] = 255; // G
           this->currentValues[i*3+2] = 0; // B (gold)
         }
       }
@@ -1449,7 +1446,7 @@ void LEDFunctionsClass::renderChristmas()
     // Add random twinkling stars on off parts (value 0)
     for(int i = 0; i < NUM_PIXELS; i++)
     {
-      if(tree[i] == 0 && random(200) < 1) // 0.5% chance on off parts
+      if(tree[i] == 0 && random(200) < 2)// 1% chance on off parts
       {
         this->currentValues[i*3] = 255; // R
         this->currentValues[i*3+1] = 255; // G
