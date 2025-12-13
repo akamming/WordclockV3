@@ -286,7 +286,7 @@ void MqttClass::PublishMQTTModeSelect(const char* uniquename)
   options.add("RandomDots");
   options.add("RandomStripes");
   options.add("RotatingLine");
-  options.add("christmas");
+  options.add("Christmas");
 
   addDeviceToJson(&json); // Add Device details to discovery message
 
@@ -869,6 +869,8 @@ DisplayMode GetDisplayModeFromPayload(String payload)
     return DisplayMode::RandomStripes;
   } else if (payload=="RotatingLine") {
     return DisplayMode::RotatingLine;
+  } else if (payload=="christmas") {
+    return DisplayMode::christmas;
   } else  {
     Serial.println("Unknown display mode received by mqtt");
     return DisplayMode::plain;
