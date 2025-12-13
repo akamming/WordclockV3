@@ -784,7 +784,7 @@ palette_entry ProcessColorCommand(palette_entry OldColor, char* payloadstr)
       } else {
         //update the brightness if we received a new one
         // apply the new brightness
-        NewColor={NewColor.r*brightness/maxcolor,NewColor.g*brightness/maxcolor,NewColor.b*brightness/maxcolor};
+        NewColor={(uint8_t)(NewColor.r*brightness/maxcolor),(uint8_t)(NewColor.g*brightness/maxcolor),(uint8_t)(NewColor.b*brightness/maxcolor)};
       }
     }
   }

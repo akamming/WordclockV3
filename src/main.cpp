@@ -75,9 +75,6 @@ int lastSecond = -1;
 bool startup = true;
 bool RecoverFromException = false;
 
-int hourglassState = 0;
-int hourglassPrescaler = 0;
-
 // int updateCountdown = 25;
 int updateCountdown = 0;
 
