@@ -434,6 +434,9 @@ void LEDFunctionsClass::process()
   case DisplayMode::RotatingLine: 
     this->renderRotatingLine();
     break;
+	case DisplayMode::christmas:
+		this->renderChristmas();
+		break;
 
 	case DisplayMode::fade:
 		this->renderTime(buf);
@@ -1342,6 +1345,120 @@ void LEDFunctionsClass::renderStars()
   
   	for(StarObject &s : this->stars) s.render(this->currentValues, this->stars);
   }
+}
+
+//---------------------------------------------------------------------------------------
+// renderChristmas
+//
+// Renders a Christmas tree with twinkling balls and stars
+// 0 = off, 1 = tree (green), 2 = trunk (brown)
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void LEDFunctionsClass::renderChristmas()
+{
+  if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(300-Config.animspeed))
+  {
+    this->lastUpdate=millis();
+    
+    // Christmas tree pattern
+    // 0=off, 1=tree(green), 2=trunk(brown)
+    uint8_t tree[NUM_PIXELS] = {
+      // Row 0 (indices 0-10)
+      0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+      // Row 1 (indices 11-21)
+      0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
+      // Row 2 (indices 22-32)
+      0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+      // Row 3 (indices 33-43)
+      0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+      // Row 4 (indices 44-54)
+      0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+      // Row 5 (indices 55-65)
+      0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+      // Row 6 (indices 66-76)
+      0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+      // Row 7 (indices 77-87)
+      0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+      // Row 8 (indices 88-98)
+      0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+      // Row 9 (indices 99-109) - trunk
+      0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0,
+      // Corner LEDs (110-113) - off
+      0, 0, 0, 0
+    };
+    
+    // Render the static tree
+    for(int i = 0; i < NUM_PIXELS; i++)
+    {
+      switch(tree[i])
+      {
+		case 0: // Off
+		  this->targetValues[i*3] = 0; // R
+		  this->targetValues[i*3+1] = 0; // G
+		  this->targetValues[i*3+2] = 0; // B
+		  break;
+        case 1: // Tree - green
+          this->targetValues[i*3] = 0; // R
+          this->targetValues[i*3+1] = 150; // G
+          this->targetValues[i*3+2] = 0; // B
+          break;
+          
+        case 2: // Trunk - brown
+          this->targetValues[i*3] = 101; // R
+          this->targetValues[i*3+1] = 67; // G
+          this->targetValues[i*3+2] = 33; // B
+          break;
+          
+        default: // 0 - off (black)
+          this->targetValues[i*3] = 0;
+          this->targetValues[i*3+1] = 0;
+          this->targetValues[i*3+2] = 0;
+          break;
+      }
+    }
+    
+    // Add random twinkling balls on green tree parts (value 1)
+    for(int i = 0; i < NUM_PIXELS; i++)
+    {
+      if(tree[i] == 1 && random(100) < 1) // 1% chance on tree parts
+      {
+        int color = random(3); // 0 red, 1 blue, 2 gold
+        if(color == 0)
+        {
+          this->currentValues[i*3] = 255; // R
+          this->currentValues[i*3+1] = 0; // G
+          this->currentValues[i*3+2] = 0; // B
+        }
+        else if(color == 1)
+        {
+          this->currentValues[i*3] = 0; // R
+          this->currentValues[i*3+1] = 0; // G
+          this->currentValues[i*3+2] = 255; // B
+        }
+        else
+        {
+          this->currentValues[i*3] = 255; // R
+          this->currentValues[i*3+1] = 215; // G
+          this->currentValues[i*3+2] = 0; // B (gold)
+        }
+      }
+    }
+    
+    // Add random twinkling stars on off parts (value 0)
+    for(int i = 0; i < NUM_PIXELS; i++)
+    {
+      if(tree[i] == 0 && random(200) < 1) // 0.5% chance on off parts
+      {
+        this->currentValues[i*3] = 255; // R
+        this->currentValues[i*3+1] = 255; // G
+        this->currentValues[i*3+2] = 255; // B (white)
+      }
+    }
+    
+  }
+  this->fade();
 }
 
 //---------------------------------------------------------------------------------------

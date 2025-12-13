@@ -139,6 +139,7 @@ private:
 	void renderFire();
 	void renderPlasma();
   void renderStars();
+  void renderChristmas();
   palette_entry blendedColor(palette_entry from_color, palette_entry to_color, float progress);
   void renderWakeup();
   void renderRandom(uint8_t *target);
