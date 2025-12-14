@@ -504,8 +504,19 @@ void LEDFunctionsClass::setMode(DisplayMode newMode)
 	// even if the current time did not yet change
 	if(newMode != previousMode && newMode == DisplayMode::explode)
 	{
+		// cleanup any existing particles to prevent memory leaks
+		for(Particle *p : this->particles) delete p;
+		this->particles.clear();
+		
 		this->renderTime(buf);
 		this->prepareExplosion(buf);
+	}
+
+	// if we changed away from exploding letters mode, cleanup particles
+	if(previousMode == DisplayMode::explode && newMode != DisplayMode::explode)
+	{
+		for(Particle *p : this->particles) delete p;
+		this->particles.clear();
 	}
 
 	// this->process();
@@ -1622,6 +1633,10 @@ void LEDFunctionsClass::prepareExplosion(uint8_t *source)
 {
 #define PARTICLE_COUNT 16
 #define PARTICLE_SPEED 0.15f
+
+	// defensive cleanup: remove any existing particles to prevent memory leaks
+	for(Particle *p : this->particles) delete p;
+	this->particles.clear();
 
 	float vx, vy, angle;
 	int ofs = 0;
