@@ -276,6 +276,7 @@ void MqttClass::PublishMQTTModeSelect(const char* uniquename)
   options.add("flyingLettersVerticalDown");
   options.add("explode");
   options.add("plasma");
+  options.add("wakeup");
   options.add("matrix");
   options.add("heart");
   options.add("fire");
