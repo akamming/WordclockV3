@@ -301,11 +301,17 @@ LEDFunctionsClass::LEDFunctionsClass()
 		this->matrix.push_back(MatrixObject());
 	}
 
-	// initialize star objects with default coordinates
 	for (int i = 0; i < NUM_STARS; i++) this->stars.push_back(StarObject());
 
-	// set random coordinates with minimum distance to other star objects
 	for (StarObject& s : this->stars) s.randomize(this->stars);
+
+	for (int i = 0; i < NUM_STARS; i++) {
+		this->stars.push_back(StarObject());
+	}
+
+	for (StarObject& s : this->stars) {
+		s.randomize(this->stars);
+	}
 }
 //---------------------------------------------------------------------------------------
 // begin
@@ -318,8 +324,8 @@ LEDFunctionsClass::LEDFunctionsClass()
 void LEDFunctionsClass::begin(int pin)
 {
 #ifdef FASTLED
-  // FastLED.addLeds<NEOPIXEL, pin>(this->leds, NUM_PIXELS);  // GRB ordering is assumed
-  FastLED.addLeds<NEOPIXEL, 3>(this->leds, NUM_PIXELS);  // GRB ordering is assumed
+	// FastLED.addLeds<NEOPIXEL, pin>(this->leds, NUM_PIXELS);  // GRB ordering is assumed
+	FastLED.addLeds<NEOPIXEL, 3>(this->leds, NUM_PIXELS);  // GRB ordering is assumed
 #elif defined(NEOPIXELBUS)
 #ifdef ESP32
   this->strip = new NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod>(NUM_PIXELS,pin);
@@ -355,12 +361,13 @@ void LEDFunctionsClass::begin(int pin)
 void LEDFunctionsClass::process()
 {
 	if(Config.debugMode) return;
+	if (Config.debugMode) return;
 
 	// check time values against boundaries
-	if(NTP.h > 23 || NTP.h < 0) NTP.h = 0;
-	if(NTP.m > 59 || NTP.m < 0) NTP.m = 0;
-	if(NTP.s > 59 || NTP.s < 0) NTP.s = 0;
-	if(NTP.ms > 999 || NTP.ms < 0) NTP.ms = 0;
+	if (NTP.h > 23 || NTP.h < 0) NTP.h = 0;
+	if (NTP.m > 59 || NTP.m < 0) NTP.m = 0;
+	if (NTP.s > 59 || NTP.s < 0) NTP.s = 0;
+	if (NTP.ms > 999 || NTP.ms < 0) NTP.ms = 0;
 
 	// load palette colors from configuration
 	palette_entry palette[] = {
@@ -1608,18 +1615,18 @@ palette_entry LEDFunctionsClass::blendedColor(palette_entry from_color, palette_
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderMerryChristmas()
 {
-  // Initialize colors only once
-	if (!this->merryChristmasColorsInitialized)
-	{
-		// Initialize 24 items (reindeer, sleigh, text, reindeer, sleigh)
-		this->merryChristmasColors[0] = 0;
-		for (int i = 1; i < 24; i++)
+		// Initialize colors only once
+		if (!this->merryChristmasColorsInitialized)
 		{
-			// Avoid same color as previous letter
-			this->merryChristmasColors[i] = (this->merryChristmasColors[i-1] + 1 + random(2)) % 3;
+			// Sequence: sprite + space + text(16) + space + sprite
+			this->merryChristmasColors[0] = 0;
+			for (int i = 1; i < 20; i++)
+			{
+				// Avoid same color as previous letter
+				this->merryChristmasColors[i] = (this->merryChristmasColors[i-1] + 1 + random(2)) % 3;
+			}
+			this->merryChristmasColorsInitialized = true;
 		}
-		this->merryChristmasColorsInitialized = true;
-	}
   
   if ((unsigned long) (millis()-this->lastUpdate) > (unsigned)(100 - Config.animspeed))
   {
@@ -1628,10 +1635,11 @@ void LEDFunctionsClass::renderMerryChristmas()
     // Clear all pixels
     memset(this->currentValues, 0, sizeof(this->currentValues));
     
-	// Per-item widths: 5+1 for letters, 8+1 for sleigh/reindeer (side-view)
-	int letterWidths[24] = {9, 6, 9, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 9, 6, 9, 6};
+	// Per-item widths: sprite(21)+1 gap =22, letters 5+1=6
+	int letterWidths[20] = {22, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 22, 6};
+	bool isSprite[20] = {true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false};
 	int totalTextWidth = 0;
-	for (int i = 0; i < 24; i++) totalTextWidth += letterWidths[i];
+	for (int i = 0; i < 20; i++) totalTextWidth += letterWidths[i];
 
 	// Update scroll offset
 	this->lastOffset++;
@@ -1669,117 +1677,27 @@ void LEDFunctionsClass::renderMerryChristmas()
 	// Lowercase 'm' (7px high, rows 3-9)
 	uint8_t m_low[10] = {0b00000, 0b00000, 0b00000, 0b10001, 0b11011, 0b10101, 0b10101, 0b10101, 0b10001, 0b00000};
     
-		// Santa on sleigh (side view) sprite (8 pixels wide, 10 pixels high)
-		// Split into masks for coloring: santa (red), beard (white), sleigh (brown)
-		// Left-facing side view sleigh + Santa
-		uint8_t sleigh_base[10] = {
-			0b00010000,  // Row 0: hat tip
-			0b00111000,  // Row 1: hat
-			0b10011100,  // Row 2: head + nose (protruding left)
-			0b01111000,  // Row 3: beard area (left-leaning)
-			0b00111100,  // Row 4: torso (front-left)
-			0b00111100,  // Row 5: torso
-			0b01111100,  // Row 6: sleigh top (extends right)
-			0b11111100,  // Row 7: sleigh body
-			0b10011110,  // Row 8: runners
-			0b10001110   // Row 9: bottom/runners
-		};
-		uint8_t sleigh_santa_mask[10] = {
-			0b00010000,  // hat tip
-			0b00111000,  // hat
-			0b10011100,  // head + nose
-			0b00000000,  // beard handled separately
-			0b00111100,  // torso
-			0b00111100,  // torso
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b00000000
-		};
-		uint8_t sleigh_beard_mask[10] = {
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b01111000,  // beard (wider, left-leaning)
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b00000000
-		};
-		uint8_t sleigh_sleigh_mask[10] = {
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b01111100,  // sleigh top
-			0b11111100,  // sleigh body
-			0b10011110,  // runners
-			0b10001110   // bottom/runners
+		// Combined Santa + sleigh + reindeer sprite (21x10), RGB per pixel
+		static const uint8_t santaSleighSprite[10][21][3] PROGMEM = {
+		  {{0,0,0},{0,0,0},{0,0,0},{80,40,0},{0,0,0},{80,40,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{255,255,255},{0,0,0},{0,0,0}},
+		  {{0,0,0},{0,0,0},{80,40,0},{0,0,0},{80,40,0},{0,0,0},{80,40,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{220,20,60},{255,255,255},{0,0,0}},
+		  {{0,0,0},{0,0,0},{180,100,50},{0,0,0},{180,100,50},{0,0,0},{180,100,50},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{200,180,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{220,20,60},{220,20,60},{255,255,255}},
+		  {{0,0,0},{180,100,50},{180,100,50},{180,100,50},{180,100,50},{180,100,50},{0,0,0},{180,100,50},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{200,180,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{255,200,150},{255,200,150},{255,255,255},{255,255,255}},
+		  {{180,100,50},{180,100,50},{0,0,0},{180,100,50},{180,100,50},{180,100,50},{180,100,50},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{200,180,0},{0,0,0},{100,50,0},{0,0,0},{0,0,0},{0,0,0},{220,20,60},{255,255,255},{255,255,255}},
+		  {{0,0,0},{180,100,50},{180,100,50},{180,100,50},{180,100,50},{180,100,50},{180,100,50},{180,100,50},{180,100,50},{200,180,0},{200,180,0},{200,180,0},{200,180,0},{200,180,0},{200,180,0},{100,50,0},{100,50,0},{100,50,0},{220,20,60},{220,20,60},{220,20,60}},
+		  {{0,0,0},{0,0,0},{180,100,50},{0,0,0},{0,0,0},{180,100,50},{180,100,50},{180,100,50},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{100,50,0},{100,50,0},{100,50,0},{220,20,60},{220,20,60},{100,50,0}},
+		  {{0,0,0},{0,0,0},{180,100,50},{0,0,0},{0,0,0},{180,100,50},{0,0,0},{0,0,0},{180,100,50},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{100,50,0},{100,50,0},{100,50,0},{100,50,0},{100,50,0},{100,50,0},{100,50,0}},
+		  {{0,0,0},{0,0,0},{80,40,0},{0,0,0},{0,0,0},{80,40,0},{0,0,0},{0,0,0},{80,40,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{150,150,150},{150,150,150},{150,150,150},{150,150,150},{150,150,150},{150,150,150}},
+		  {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{150,150,150},{150,150,150},{150,150,150},{150,150,150},{150,150,150},{150,150,150}}
 		};
 
-		// Reindeer (side view) base and masks (8x10)
-		// Left-facing side view reindeer
-		uint8_t reindeer_base[10] = {
-			0b00110000, // antlers top
-			0b01111000, // antlers/ears
-			0b11110000, // head + nose area
-			0b01111100, // neck/head
-			0b11111110, // body
-			0b11111110, // body
-			0b01011010, // legs
-			0b01011010, // legs
-			0b00011000, // tail
-			0b00000000  // ground
-		};
-		uint8_t reindeer_antlers_mask[10] = {
-			0b00110000,
-			0b01111000,
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b00000000
-		};
-		uint8_t reindeer_body_mask[10] = {
-			0b00000000,
-			0b00000000,
-			0b01110000, // head (without nose)
-			0b01111100,
-			0b11111110,
-			0b11111110,
-			0b01011010,
-			0b01011010,
-			0b00011000,
-			0b00000000
-		};
-		uint8_t reindeer_nose_mask[10] = {
-			0b00000000,
-			0b00000000,
-			0b10000000, // nose at leftmost of row 2
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b00000000,
-			0b00000000
-		};
-    
-		// Array: reindeer + space + sleigh + space + "Merry Christmas" + space + reindeer + space + sleigh + space
+		// Sequence: sprite + space + "MERRY CHRISTMAS" + space + sprite + trailing gap
 		uint8_t *letters[] = {
-			reindeer_base, space, sleigh_base, space,
-			M_cap, e_low, r_low, r_low, y_low, space,
+			nullptr, space, M_cap, e_low, r_low, r_low, y_low, space,
 			C_cap, h_low, r_low, i_low, s_low, t_low, m_low, a_low, s_low, space,
-			reindeer_base, space, sleigh_base, space
+			nullptr, space
 		};
-		int numLetters = 24;
+		int numLetters = 20;
     
     // For each Y row (0-9)
     for (int y = 0; y < 10; y++)
@@ -1809,81 +1727,27 @@ void LEDFunctionsClass::renderMerryChristmas()
 					accum += w;
 				}
 				if (letterIndex < 0) continue;
-        
-        // Get the bit pattern for this position
-        uint8_t pattern = letters[letterIndex][y];
-        
-        // Check if this pixel should be on
-        bool pixelOn = false;
-		// Sleigh/Reindeer are 8 pixels wide; letters are 5 pixels wide
-		bool isSleigh = (letterIndex == 2 || letterIndex == 22);
-		bool isReindeer = (letterIndex == 0 || letterIndex == 20);
-		int pixelWidth = (isSleigh || isReindeer) ? 8 : 5;
-        if (posInLetter < pixelWidth)
-        {
-          int bitPos = (pixelWidth == 8) ? (7 - posInLetter) : (4 - posInLetter);
-          pixelOn = (pattern & (1 << bitPos)) != 0;
-        }
-        
-				if (pixelOn)
+
+				bool pixelOn = false;
+				uint8_t r = 0, g = 0, b = 0;
+
+				int glyphWidth = isSprite[letterIndex] ? 21 : 5;
+				if (posInLetter >= glyphWidth) continue; // skip spacer column
+
+				if (isSprite[letterIndex])
 				{
-					// Get color for this letter or sleigh
-					uint8_t r = 0, g = 0, b = 0;
-					if (isSleigh)
+					r = pgm_read_byte(&(santaSleighSprite[y][posInLetter][0]));
+					g = pgm_read_byte(&(santaSleighSprite[y][posInLetter][1]));
+					b = pgm_read_byte(&(santaSleighSprite[y][posInLetter][2]));
+					pixelOn = (r != 0 || g != 0 || b != 0);
+				}
+				else
+				{
+					uint8_t pattern = letters[letterIndex][y];
+					int bitPos = 4 - posInLetter;
+					pixelOn = (pattern & (1 << bitPos)) != 0;
+					if (pixelOn)
 					{
-						// Sleigh item: choose per-mask color
-						int bitPos = (7 - posInLetter);
-						bool isBeard = (sleigh_beard_mask[y] & (1 << bitPos)) != 0;
-						bool isSanta = (sleigh_santa_mask[y] & (1 << bitPos)) != 0;
-						bool isSleigh = (sleigh_sleigh_mask[y] & (1 << bitPos)) != 0;
-						if (isBeard)
-						{
-							// White beard
-							r = 255; g = 255; b = 255;
-						}
-						else if (isSanta)
-						{
-							// Santa in red
-							r = 255; g = 0; b = 0;
-						}
-						else if (isSleigh)
-						{
-							// Sleigh in brown
-							r = 150; g = 75; b = 0;
-						}
-						else
-						{
-							// Fallback: treat as sleigh
-							r = 150; g = 75; b = 0;
-						}
-					}
-					else if (isReindeer)
-					{
-						// Reindeer coloring: antlers dark brown, body brown, nose red
-						int bitPos = (7 - posInLetter);
-						bool isAntlers = (reindeer_antlers_mask[y] & (1 << bitPos)) != 0;
-						bool isBody = (reindeer_body_mask[y] & (1 << bitPos)) != 0;
-						bool isNose = (reindeer_nose_mask[y] & (1 << bitPos)) != 0;
-						if (isNose)
-						{
-							r = 255; g = 0; b = 0; // red nose
-						}
-						else if (isAntlers)
-						{
-							r = 100; g = 50; b = 0; // dark brown antlers
-						}
-						else if (isBody)
-						{
-							r = 150; g = 75; b = 0; // brown body
-						}
-						else
-						{
-							r = 150; g = 75; b = 0; // fallback brown
-						}
-					}
-					else
-					{
-						// Regular letters: use festive cycling colors per letter
 						int colorPhase = this->merryChristmasColors[letterIndex];
 						if (colorPhase == 0)
 						{
@@ -1898,10 +1762,11 @@ void LEDFunctionsClass::renderMerryChristmas()
 							r = 255; g = 220; b = 0;    // Yellow
 						}
 					}
-          
-					// Use mapping array to get correct physical LED position
+				}
+
+				if (pixelOn)
+				{
 					int mappedIndex = LEDFunctionsClass::mapping[y * 11 + x] * 3;
-          
 					this->currentValues[mappedIndex] = r;
 					this->currentValues[mappedIndex + 1] = g;
 					this->currentValues[mappedIndex + 2] = b;
