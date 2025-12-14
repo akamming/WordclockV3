@@ -1615,20 +1615,7 @@ palette_entry LEDFunctionsClass::blendedColor(palette_entry from_color, palette_
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderMerryChristmas()
 {
-		// Initialize colors only once
-		if (!this->merryChristmasColorsInitialized)
-		{
-			// Sequence: sprite + space + text(16) + space + sprite
-			this->merryChristmasColors[0] = 0;
-			for (int i = 1; i < 20; i++)
-			{
-				// Avoid same color as previous letter
-				this->merryChristmasColors[i] = (this->merryChristmasColors[i-1] + 1 + random(2)) % 3;
-			}
-			this->merryChristmasColorsInitialized = true;
-		}
-  
-  if ((unsigned long) (millis()-this->lastUpdate) > (unsigned)(100 - Config.animspeed))
+  if ((unsigned long) (millis()-this->lastUpdate) > (unsigned)(1000 - 10 *Config.animspeed))
   {
     this->lastUpdate = millis();
 
@@ -1651,6 +1638,13 @@ void LEDFunctionsClass::renderMerryChristmas()
     if (this->lastOffset > totalScrollLength) 
     {
       this->lastOffset = 0;
+      // Randomize colors at start of each sequence
+      this->merryChristmasColors[0] = 0;
+      for (int i = 1; i < 20; i++)
+      {
+        // Avoid same color as previous letter
+        this->merryChristmasColors[i] = (this->merryChristmasColors[i-1] + 1 + random(2)) % 3;
+      }
     }
     
 	// Check if we're in the pause period (after text scrolled off)
