@@ -288,6 +288,15 @@ void MqttClass::PublishMQTTModeSelect(const char* uniquename)
   options.add("RandomStripes");
   options.add("RotatingLine");
   options.add("Christmas");
+  options.add("red");
+  options.add("green");
+  options.add("blue");
+  options.add("yellowHourglass");
+  options.add("greenHourglass");
+  options.add("update");
+  options.add("updateComplete");
+  options.add("updateError");
+  options.add("wifiManager");
 
   addDeviceToJson(&json); // Add Device details to discovery message
 
@@ -872,6 +881,24 @@ DisplayMode GetDisplayModeFromPayload(String payload)
     return DisplayMode::RotatingLine;
   } else if (payload=="Christmas") {
     return DisplayMode::christmas;
+  } else if (payload=="red") {
+    return DisplayMode::red;
+  } else if (payload=="green") {
+    return DisplayMode::green;
+  } else if (payload=="blue") {
+    return DisplayMode::blue;
+  } else if (payload=="yellowHourglass") {
+    return DisplayMode::yellowHourglass;
+  } else if (payload=="greenHourglass") {
+    return DisplayMode::greenHourglass;
+  } else if (payload=="update") {
+    return DisplayMode::update;
+  } else if (payload=="updateComplete") {
+    return DisplayMode::updateComplete;
+  } else if (payload=="updateError") {
+    return DisplayMode::updateError;
+  } else if (payload=="wifiManager") {
+    return DisplayMode::wifiManager;
   } else  {
     Serial.println("Unknown display mode received by mqtt");
     return DisplayMode::plain;
