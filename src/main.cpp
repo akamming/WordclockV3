@@ -327,6 +327,12 @@ void setup()
 void loop()
 {
   bool AlarmInProgress = false;
+  
+  // Feed watchdog to prevent resets during long operations
+#ifndef ESP32
+  wdt_reset();
+#endif
+  
   // handle NTP
   NTP.process();
   
@@ -341,6 +347,11 @@ void loop()
 
   // do MQTT stuff
   MQTT.process();
+  
+  // Feed watchdog again after network operations
+#ifndef ESP32
+  wdt_reset();
+#endif
 
 	// do not continue if OTA update is in progress
 	// OTA callbacks drive the LED display mode and OTA progress
@@ -383,7 +394,12 @@ void loop()
             {
               Config.nightmode=false;
               LED.setMode(Config.alarm[i].mode);
-              LED.AlarmProgress=(float) (CurrentTime-StartTime) / (float) (EndTime-StartTime); // Let the alarmhandling know how far we are in the progress
+              // Prevent division by zero if duration is 0
+              if(EndTime > StartTime) {
+                LED.AlarmProgress=(float) (CurrentTime-StartTime) / (float) (EndTime-StartTime);
+              } else {
+                LED.AlarmProgress=0.0f;
+              }
               AlarmInProgress=true;
               alarmstate=i;
               alarmtype=Config.alarm[i].type;
@@ -402,10 +418,15 @@ void loop()
               LED.setMode(Config.alarm[i].mode);
               alarmstate=i;
               alarmtype=Config.alarm[i].type;
-              if (CurrentTime>StartTime) {
-                LED.AlarmProgress=(CurrentTime-StartTime)/(EndTime-StartTime); // Let the alarmhandling know how far we are in the progress
+              // Prevent division by zero if duration is 0
+              if(EndTime > StartTime) {
+                if (CurrentTime>StartTime) {
+                  LED.AlarmProgress=(float)(CurrentTime-StartTime)/(float)(EndTime-StartTime);
+                } else {
+                  LED.AlarmProgress=(float)(CurrentTime+24*3600*1000-StartTime)/(float)(EndTime-StartTime);
+                }
               } else {
-                LED.AlarmProgress=(CurrentTime+24*3600*1000-StartTime)/(EndTime-StartTime); // Let the alarmhandling know how far we are in the progress
+                LED.AlarmProgress=0.0f;
               }
               AlarmInProgress=true;
             }
@@ -474,7 +495,7 @@ void loop()
 #else
       char buffer[256];
 
-      sprintf(buffer,"%02i:%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, Free Cont Stack = %i, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
+      snprintf(buffer, sizeof(buffer), "%02i:%02i:%02i:%02i, filtered ADC=%i.%02i, heap=%i, heap fragmentation=%i, Max Free Block Size = %i, Free Cont Stack = %i, brightness=%i, uptime=%i:%02i:%02i:%02i.%03i\r\n",
           NTP.weekday, NTP.h, NTP.m, NTP.s, (int)Brightness.avg, (int)(Brightness.avg*100)%100,
           ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getMaxFreeBlockSize(), ESP.getFreeContStack(), Brightness.value(),
           days,hrs,mins,secs,msecs);

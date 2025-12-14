@@ -302,6 +302,11 @@ void MqttClass::PublishMQTTModeSelect(const char* uniquename)
   addDeviceToJson(&json); // Add Device details to discovery message
 
   char conf[1024];
+  size_t jsonSize = measureJson(json);
+  if(jsonSize >= sizeof(conf)) {
+    Serial.printf("JSON too large: %u bytes, buffer is %u\n", jsonSize, sizeof(conf));
+    return; // Skip publishing to prevent crash
+  }
   serializeJson(json, conf);  // conf now contains the json
 
   // Publish config message
@@ -925,10 +930,15 @@ void MqttClass::MQTTcallback(char* topic, byte* payload, unsigned int length)
   // get vars from callback
   String topicstr=String(topic);
   char payloadstr[256];
-  unsigned int n = length;
-  if (n > sizeof(payloadstr) - 1) n = sizeof(payloadstr) - 1;
-  strncpy(payloadstr,(char *)payload,n);
-  payloadstr[n]='\0';
+  
+  // Prevent buffer overflow: limit length to buffer size - 1
+  if(length >= sizeof(payloadstr)) {
+    Serial.printf("MQTT payload too large: %u bytes, truncating to %u\n", length, sizeof(payloadstr)-1);
+    length = sizeof(payloadstr) - 1;
+  }
+  
+  strncpy(payloadstr,(char *)payload,length);
+  payloadstr[length]='\0';
 
   // main switch: The name of the light = config.hostname 
   if (topicstr.equals(DimmerCommandTopic(Config.hostname) ) ) {

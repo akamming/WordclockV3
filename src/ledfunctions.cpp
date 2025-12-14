@@ -327,9 +327,17 @@ void LEDFunctionsClass::begin(int pin)
 #else
   this->strip = new NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod>(NUM_PIXELS);
 #endif
+  if(this->strip == nullptr) {
+    Serial.println("ERROR: Failed to allocate NeoPixelBus!");
+    return;
+  }
   this->strip->Begin();
 #else
 	this->pixels = new Adafruit_NeoPixel(NUM_PIXELS, pin, NEO_GRB + NEO_KHZ800);
+  if(this->pixels == nullptr) {
+    Serial.println("ERROR: Failed to allocate Adafruit_NeoPixel!");
+    return;
+  }
   this->pixels->begin();
 #endif
 }
