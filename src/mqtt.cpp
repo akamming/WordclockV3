@@ -869,7 +869,7 @@ DisplayMode GetDisplayModeFromPayload(String payload)
     return DisplayMode::RandomStripes;
   } else if (payload=="RotatingLine") {
     return DisplayMode::RotatingLine;
-  } else if (payload=="christmas") {
+  } else if (payload=="Christmas") {
     return DisplayMode::christmas;
   } else  {
     Serial.println("Unknown display mode received by mqtt");
