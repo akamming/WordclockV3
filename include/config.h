@@ -35,7 +35,7 @@ enum class DisplayMode
   random, matrix, heart, fire, plasma, stars, wakeup, HorizontalStripes, VerticalStripes,
   RandomDots, RandomStripes, RotatingLine, red, green, blue,
   yellowHourglass, greenHourglass, update, updateComplete, updateError,
-  wifiManager, christmastree, christmasstar, invalid
+  wifiManager, christmastree, christmasstar, merryChristmas, invalid
 };
 
 enum class AlarmType

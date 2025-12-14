@@ -448,6 +448,9 @@ void LEDFunctionsClass::process()
 	case DisplayMode::christmasstar:
 		this->renderChristmasStar();
 		break;
+	case DisplayMode::merryChristmas:
+		this->renderMerryChristmas();
+		break;
 
 	case DisplayMode::fade:
 		this->renderTime(buf);
@@ -1595,7 +1598,111 @@ palette_entry LEDFunctionsClass::blendedColor(palette_entry from_color, palette_
   return resulting_color;
 }
 
+//---------------------------------------------------------------------------------------
+// renderMerryChristmas
+//
+// Renders "MERRY CHRISTMAS" scrolling horizontally with wrong sweater colors
+// (bright red, green, yellow) creating a festive ugly Christmas sweater effect
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void LEDFunctionsClass::renderMerryChristmas()
+{
+  if ((unsigned long) (millis()-this->lastUpdate) > (unsigned)(100 - Config.animspeed))
+  {
+    this->lastUpdate = millis();
 
+    // Clear all pixels
+    memset(this->currentValues, 0, sizeof(this->currentValues));
+    
+    // Update scroll offset
+    this->lastOffset++;
+    if (this->lastOffset > 200) this->lastOffset = 0;
+    
+    // Define simple 5-pixel wide letter patterns (height = 10 pixels for full grid height)
+    // Each row in the pattern represents one horizontal line
+    // 1 = pixel on, 0 = pixel off
+    
+    // Letter patterns: each letter is 5 pixels wide
+    uint8_t M[10] = {0b10101, 0b11111, 0b10101, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001};
+    uint8_t E[10] = {0b11111, 0b10000, 0b11110, 0b10000, 0b11110, 0b10000, 0b11111, 0b00000, 0b00000, 0b00000};
+    uint8_t R[10] = {0b11110, 0b10001, 0b11110, 0b10100, 0b10010, 0b10001, 0b10001, 0b00000, 0b00000, 0b00000};
+    uint8_t Y[10] = {0b10001, 0b10001, 0b01010, 0b00100, 0b00100, 0b00100, 0b00100, 0b00000, 0b00000, 0b00000};
+    uint8_t C[10] = {0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110, 0b00000, 0b00000, 0b00000};
+    uint8_t H[10] = {0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b00000, 0b00000, 0b00000};
+    uint8_t I[10] = {0b11111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b11111, 0b00000, 0b00000, 0b00000};
+    uint8_t S[10] = {0b01110, 0b10001, 0b10000, 0b01110, 0b00001, 0b10001, 0b01110, 0b00000, 0b00000, 0b00000};
+    uint8_t T[10] = {0b11111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00000, 0b00000, 0b00000};
+    uint8_t A[10] = {0b01010, 0b10101, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b00000, 0b00000, 0b00000};
+    uint8_t space[10] = {0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000};
+    
+    // Array of letter pointers: "MERRY CHRISTMAS "
+    uint8_t *letters[] = {M, E, R, R, Y, space, C, H, R, I, S, T, M, A, S, space};
+    int numLetters = 16;
+    int letterWidth = 6; // 5 pixels + 1 space between letters
+    
+    // For each Y row (0-9)
+    for (int y = 0; y < 10; y++)
+    {
+      // For each X position on screen (0-10)
+      for (int x = 0; x < 11; x++)
+      {
+        // Calculate position in scrolling text
+        int scrollPos = (x + this->lastOffset - 11);
+        int letterIndex = scrollPos / letterWidth;
+        int posInLetter = scrollPos % letterWidth;
+        
+        // Wrap around the message
+        if (letterIndex < 0) letterIndex = numLetters + (letterIndex % numLetters);
+        letterIndex = letterIndex % numLetters;
+        
+        // Get the bit pattern for this position
+        uint8_t pattern = letters[letterIndex][y];
+        
+        // Check if this pixel should be on
+        bool pixelOn = false;
+        if (posInLetter < 5)
+        {
+          pixelOn = (pattern & (1 << (4 - posInLetter))) != 0;
+        }
+        
+        if (pixelOn)
+        {
+          // Determine color based on scroll position
+          uint8_t r, g, b;
+          int colorPhase = (scrollPos / 3) % 3;
+          
+          if (colorPhase == 0)
+          {
+            // Red
+            r = 255; g = 0; b = 0;
+          }
+          else if (colorPhase == 1)
+          {
+            // Green
+            r = 0; g = 255; b = 0;
+          }
+          else
+          {
+            // Yellow
+            r = 255; g = 220; b = 0;
+          }
+          
+          // Use mapping array to get correct physical LED position
+          // Just like drawDot does: mapping[y*11+x]*3
+          int mappedIndex = LEDFunctionsClass::mapping[y * 11 + x] * 3;
+          
+          this->currentValues[mappedIndex] = r;
+          this->currentValues[mappedIndex + 1] = g;
+          this->currentValues[mappedIndex + 2] = b;
+        }
+      }
+    }
+  }
+  
+  // this->fade();
+}
 
 //---------------------------------------------------------------------------------------
 // renderWakeup

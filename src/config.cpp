@@ -174,6 +174,12 @@ JsonDocument ConfigClass::json()
     displaymode = 14; break;
   case DisplayMode::RotatingLine:
     displaymode = 15; break;
+  case DisplayMode::christmastree:
+    displaymode = 16; break;
+  case DisplayMode::christmasstar:
+    displaymode = 17; break;
+  case DisplayMode::merryChristmas:
+    displaymode = 18; break;
   default:
     displaymode = 1; break;
   }
