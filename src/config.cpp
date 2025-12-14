@@ -106,7 +106,7 @@ void ConfigClass::process()
     if(this->delayedWriteTimer <= 0) 
     {
       this->delayedWriteTimer=0; // make sure we don't save to often.
-      Serial.println("Config timer expired, writing configuration.");
+      Serial.println(F("Config timer expired, writing configuration."));
       this->save();
     }
   }
@@ -317,12 +317,12 @@ void ConfigClass::save()
   // save the new file
   File configFile = LittleFS.open(CONFIGFILE, "w");
   if (!configFile) {
-    Serial.println("unable to open "+String(CONFIGFILE));
+    Serial.println(F("unable to open ")+String(CONFIGFILE));
   } else {
     // Save the file
     serializeJson(this->json(), configFile);
     configFile.close();
-    Serial.println("Configfile saved");
+    Serial.println(F("Configfile saved"));
   }  
 }
 
@@ -410,12 +410,12 @@ void ConfigClass::reset()
 //---------------------------------------------------------------------------------------
 void ConfigClass::load()
 {
-	Serial.println("Reading EEPROM config");
+	Serial.println(F("Reading EEPROM config"));
 	for (int i = 0; i < EEPROM_SIZE; i++)
 		this->eeprom_data[i] = EEPROM.read(i);
 	if (this->config->magic != 0xDEADBEEF)
 	{
-		Serial.println("EEPROM config invalid, writing default values");
+		Serial.println(F("EEPROM config invalid, writing default values"));
 		this->reset();
 		this->save();
 	}

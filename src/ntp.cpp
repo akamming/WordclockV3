@@ -108,7 +108,7 @@ void NtpClass::begin(IPAddress ip, TNtpCallback callback, int timezone, bool DST
 	this->udp.begin(LOCAL_PORT);
 
 	// don't wait 2 seconds before starting first request
-	Serial.println("NtpClass::begin()"); // Waiting 2 seconds");
+	Serial.println(F("NtpClass::begin()")); // Waiting 2 seconds");
 	this->state = NtpState::waitingForReload;
 	this->timer = NTP_RELOAD_INTERVAL; // - 2000;
   this->previousMillis = 0;
@@ -166,12 +166,12 @@ void NtpClass::process()
   case NtpState::waitingForReply:
     if (this->timer >= NTP_TIMEOUT)
     {
-      Serial.println("NtpClass: NTP request timeout ("+String(timer)+")");
+      Serial.println(F("NtpClass: NTP request timeout (")+String(timer)+F(")"));
       this->state = NtpState::startRequest;
     }
     else if (udp.parsePacket() > 0)
     {
-      Serial.println("NtpClass: Received NTP packet");
+      Serial.println(F("NtpClass: Received NTP packet"));
       this->parse();
       if (this->_callback)
         this->_callback(this->weekday, this->h, this->m, this->s, this->ms);
@@ -184,7 +184,7 @@ void NtpClass::process()
   case NtpState::waitingForReload:
     if (this->timer >= NTP_RELOAD_INTERVAL)
     {
-      Serial.println("NtpClass: NTP reload timer expired.");
+      Serial.println(F("NtpClass: NTP reload timer expired."));
       this->state = NtpState::startRequest;
     }
     break;
@@ -282,7 +282,7 @@ void NtpClass::parse()
 	byte buf[NTP_PACKET_SIZE];
 	bool DST = false;
 
-	Serial.print("NtpClass::parse() (");
+	Serial.print(F("NtpClass::parse() ("));
 	Serial.print(this->timer);
 
 	this->udp.read(buf, NTP_PACKET_SIZE);

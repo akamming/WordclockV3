@@ -146,7 +146,7 @@ void WebServerClass::begin()
 //---------------------------------------------------------------------------------------
 void WebServerClass::sendOK()
 {
-  Serial.println("sendOK");
+  Serial.println(F("sendOK"));
 
   this->server->send(200);       //Response to the HTTP request
 }
@@ -159,7 +159,7 @@ void WebServerClass::sendOK()
 //---------------------------------------------------------------------------------------
 void WebServerClass::sendUploadForm()
 {
-  Serial.println("sendUploadForm");
+  Serial.println(F("sendUploadForm"));
 
   this->server->send(200, "text/html", (String("Use this form to upload index.html, favicon.ico and index.css<BR /><BR />")+String(HTTP_UPLOAD_FORM)).c_str());       //Response to the HTTP request
 }
@@ -173,25 +173,25 @@ void WebServerClass::sendUploadForm()
 void WebServerClass::handleFileUpload(){ // upload a new file to the LittleFS
   HTTPUpload& upload = this->server->upload();
   if(upload.status == UPLOAD_FILE_START){
-    Serial.println("Upload file start");
+    Serial.println(F("Upload file start"));
     String filename = upload.filename;
     if(!filename.startsWith("/")) filename = "/"+filename;
-    Serial.print("handleFileUpload Name: "); Serial.println(filename);
-    Serial.println("HandleFileUpload Name "+filename);
+    Serial.print(F("handleFileUpload Name: ")); Serial.println(filename);
+    Serial.println(F("HandleFileUpload Name ")+filename);
     fsUploadFile = LittleFS.open(filename, "w");            // Open the file for writing in LittleFS (create if it doesn't exist)
     if (!fsUploadFile) {
-      this->server->send(500, "text/plain", "500: couldn't create file");
+      this->server->send(500, FPSTR(CT_TEXT_PLAIN), F("500: couldn't create file"));
     }
     filename = String();
   } else if(upload.status == UPLOAD_FILE_WRITE){
-    Serial.println("Upload file write");
+    Serial.println(F("Upload file write"));
     if(fsUploadFile)
       fsUploadFile.write(upload.buf, upload.currentSize); // Write the received bytes to the file
   } else if(upload.status == UPLOAD_FILE_END){
-    Serial.println("Upload file end");
+    Serial.println(F("Upload file end"));
     if(fsUploadFile) {                                    // If the file was successfully created
       fsUploadFile.close();                               // Close the file again
-      Serial.print("handleFileUpload Size: "); 
+      Serial.print(F("handleFileUpload Size: ")); 
       Serial.println(upload.totalSize);
       // server.send(200, "text/plain", "File succesfully uploaded");
       this->server->send(200, "text/html", (String(upload.filename)+
@@ -199,7 +199,7 @@ void WebServerClass::handleFileUpload(){ // upload a new file to the LittleFS
                                       String(upload.totalSize)+String(" bytes), do you want to upload another file?<BR /><BR />")+
                                       String(HTTP_UPLOAD_FORM)).c_str()); // send form to upload another file
     } else {
-      this->server->send(500, "text/plain", "500: couldn't create file");
+      this->server->send(500, FPSTR(CT_TEXT_PLAIN), F("500: couldn't create file"));
     }
   }
 }
@@ -260,19 +260,19 @@ bool WebServerClass::serveFile(const char url[])
 	if (LittleFS.exists(path))
 	{
 		File file = LittleFS.open(path, "r");
-    if (this->server->hasArg("download")) this->server->streamFile(file, "application/octet-stream");
-		else if (this->endsWith(path,".htm") or this->endsWith(path,".html")) this->server->streamFile(file, "text/html");
-    else if (this->endsWith(path,".css") ) this->server->streamFile(file, "text/css");
-    else if (this->endsWith(path,".png") ) this->server->streamFile(file, "image/png");
-    else if (this->endsWith(path,".gif") ) this->server->streamFile(file, "image/gif");
-    else if (this->endsWith(path,".jpg") ) this->server->streamFile(file, "image/jpeg");
-    else if (this->endsWith(path,".ico") ) this->server->streamFile(file, "image/x-icon");
-    else if (this->endsWith(path,".xml") ) this->server->streamFile(file, "text/xml");
-    else if (this->endsWith(path,".pdf") ) this->server->streamFile(file, "application./x-pdf");
-    else if (this->endsWith(path,".zip") ) this->server->streamFile(file, "application./x-zip");
-    else if (this->endsWith(path,".gz") ) this->server->streamFile(file, "application./x-gzip");
-    else if (this->endsWith(path,".json") ) this->server->streamFile(file, "application/json");
-     else this->server->streamFile(file, "text/plain");
+    if (this->server->hasArg("download")) this->server->streamFile(file, FPSTR(CT_APP_OCTET));
+		else if (this->endsWith(path,".htm") or this->endsWith(path,".html")) this->server->streamFile(file, FPSTR(CT_TEXT_HTML));
+    else if (this->endsWith(path,".css") ) this->server->streamFile(file, FPSTR(CT_TEXT_CSS));
+    else if (this->endsWith(path,".png") ) this->server->streamFile(file, FPSTR(CT_IMAGE_PNG));
+    else if (this->endsWith(path,".gif") ) this->server->streamFile(file, FPSTR(CT_IMAGE_GIF));
+    else if (this->endsWith(path,".jpg") ) this->server->streamFile(file, FPSTR(CT_IMAGE_JPEG));
+    else if (this->endsWith(path,".ico") ) this->server->streamFile(file, FPSTR(CT_IMAGE_ICON));
+    else if (this->endsWith(path,".xml") ) this->server->streamFile(file, FPSTR(CT_TEXT_XML));
+    else if (this->endsWith(path,".pdf") ) this->server->streamFile(file, FPSTR(CT_APP_PDF));
+    else if (this->endsWith(path,".zip") ) this->server->streamFile(file, FPSTR(CT_APP_ZIP));
+    else if (this->endsWith(path,".gz") ) this->server->streamFile(file, FPSTR(CT_APP_GZIP));
+    else if (this->endsWith(path,".json") ) this->server->streamFile(file, FPSTR(CT_APP_JSON));
+     else this->server->streamFile(file, FPSTR(CT_TEXT_PLAIN));
 		file.close();
 		return true;
 	}
@@ -289,7 +289,7 @@ bool WebServerClass::serveFile(const char url[])
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleFactoryReset() 
 {
-  Serial.println("Reset Config");
+  Serial.println(F("Reset Config"));
   Config.reset();
   Config.save();
 
@@ -297,7 +297,7 @@ void WebServerClass::handleFactoryReset()
   WiFiManager wifiManager;
   wifiManager.resetSettings(); */
 
-  this->server->send(200, "text/plain", "OK"); 
+  this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK)); 
   MQTT.PublishStatus("offline");
 
   delay(500); // wait half a second, then reset
@@ -318,10 +318,10 @@ void WebServerClass::handleFactoryReset()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleReset() 
 {
-  Serial.println("Manual reboot");
+  Serial.println(F("Manual reboot"));
   MQTT.PublishStatus("offline");
 
-  this->server->send(200, "text/plain", "OK"); 
+  this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK)); 
   
   delay(500); // wait half a second, then reset
 #ifdef ESP32
@@ -342,11 +342,11 @@ void WebServerClass::handleReset()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleResetWifiCredentials() 
 {
-  Serial.println("Resetting Wifi Credentials");
+  Serial.println(F("Resetting Wifi Credentials"));
   WiFiManager wifiManager;
   wifiManager.resetSettings();
   MQTT.PublishStatus("offline");
-  this->server->send(200, "text/plain", "OK");
+  this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
 
 #ifdef ESP32
   ESP.restart();
@@ -393,7 +393,7 @@ void WebServerClass::handleDebug()
   {
     Config.debugMode = 0;
   }
-  this->server->send(200, "text/plain", "OK");
+  this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
 }
 
 //---------------------------------------------------------------------------------------
@@ -407,7 +407,7 @@ void WebServerClass::handleDebug()
 void WebServerClass::handleM()
 {
 	if(++NTP.m>59) NTP.m = 0;
-	this->server->send(200, "text/plain", "OK");
+	this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
 }
 
 //---------------------------------------------------------------------------------------
@@ -421,7 +421,7 @@ void WebServerClass::handleM()
 void WebServerClass::handleH()
 {
 	if(++NTP.h>23) NTP.h = 0;
-	this->server->send(200, "text/plain", "OK");
+	this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
 }
 
 //---------------------------------------------------------------------------------------
@@ -435,7 +435,7 @@ void WebServerClass::handleH()
 void WebServerClass::handleR()
 {
 	LED.setMode(DisplayMode::red);
-	this->server->send(200, "text/plain", "OK");
+	this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
 }
 
 //---------------------------------------------------------------------------------------
@@ -449,7 +449,7 @@ void WebServerClass::handleR()
 void WebServerClass::handleG()
 {
 	LED.setMode(DisplayMode::green);
-	this->server->send(200, "text/plain", "OK");
+	this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
 }
 
 //---------------------------------------------------------------------------------------
@@ -463,7 +463,7 @@ void WebServerClass::handleG()
 void WebServerClass::handleB()
 {
 	LED.setMode(DisplayMode::blue);
-	this->server->send(200, "text/plain", "OK");
+	this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
 }
 
 //---------------------------------------------------------------------------------------
@@ -492,7 +492,7 @@ void WebServerClass::handleShowCrashLog()
 void WebServerClass::handleClearCrashLog()
 {
   SaveCrash.clear();
-  this->server->send(200, "text/plain", "OK");
+  this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
 }
 
 #endif
@@ -509,10 +509,10 @@ void WebServerClass::handleSetBrightness()
 {
 	if(this->server->hasArg("value"))
 	{
-    Serial.println("SetBrightness");
+    Serial.println(F("SetBrightness"));
 		Brightness.brightnessOverride = this->server->arg("value").toInt();
     Config.save();
-		this->server->send(200, "text/plain", "OK");
+		this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
 	}
 }
 
@@ -526,12 +526,12 @@ void WebServerClass::handleSetBrightness()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSetNightMode()
 {
-  Serial.println("SetNightMode");
+  Serial.println(F("SetNightMode"));
   if(this->server->hasArg("value"))
   {
     Config.nightmode = (this->server->hasArg("value") && this->server->arg("value") == "1");
     Config.saveDelayed();
-    this->server->send(200, "text/plain", "OK");
+    this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
   }
 }
 
@@ -562,14 +562,14 @@ void WebServerClass::handleSetTimeZone()
 		newTimeZone = this->server->arg("value").toInt();
 		if(newTimeZone < - 12 || newTimeZone > 14)
 		{
-			this->server->send(400, "text/plain", "ERR");
+			this->server->send(400, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_ERR));
 		}
 		else
 		{
 			Config.timeZone = newTimeZone;
 			Config.save();
 			NTP.setTimeZone(Config.timeZone);
-			this->server->send(200, "text/plain", "OK");
+			this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
 		}
 	}
 }
@@ -595,12 +595,12 @@ void WebServerClass::handleSetAnimSpeed()
     {
       Config.animspeed=animspeed;
       Config.saveDelayed();
-      this->server->send(200, "text/plain", "OK");
+      this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
     } else {
-      this->server->send(200, "text/plain", "Value should be min 1 or max 100");
+      this->server->send(200, FPSTR(CT_TEXT_PLAIN), F("Value should be min 1 or max 100"));
     }
   } else {
-    this->server->send(200, "text/plain", "Missing value");
+    this->server->send(200, FPSTR(CT_TEXT_PLAIN), F("Missing value"));
   }
 }
 
@@ -649,7 +649,7 @@ void WebServerClass::handleSetMode()
 
 	if(mode == DisplayMode::invalid)
 	{
-		this->server->send(400, "text/plain", "ERR");
+		this->server->send(400, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_ERR));
 	}
 	else
 	{
@@ -657,7 +657,7 @@ void WebServerClass::handleSetMode()
     LED.lastOffset=0; // in case of moving effects, reset from start
 		Config.defaultMode = mode;
 		Config.save();
-		this->server->send(200, "text/plain", "OK");
+		this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
 	}
 }
 
@@ -838,7 +838,7 @@ void WebServerClass::handleSetColor()
   this->extractColor((char *)"fg", Config.fg);
 	this->extractColor((char *)"bg", Config.bg);
 	this->extractColor((char *)"s", Config.s);
-	this->server->send(200, "text/plain", "OK");
+	this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
 	Config.saveDelayed();
 }
 
@@ -852,13 +852,13 @@ void WebServerClass::handleSetColor()
 //---------------------------------------------------------------------------------------
 void WebServerClass::handleSaveConfig()
 {
-  Serial.println("handleSaveConfig");
+  Serial.println(F("handleSaveConfig"));
   String Message;
   
   // for Debugging purposes
-  Serial.println("Handling Command: Number of args received: "+this->server->args());
+  Serial.println(String(F("Handling Command: Number of args received: "))+this->server->args());
   for (int i = 0; i < this->server->args(); i++) {
-    Serial.println ("Argument "+String(i)+" -> "+this->server->argName(i)+": "+this->server->arg(i));
+    Serial.println (String(F("Argument "))+String(i)+F(" -> ")+this->server->argName(i)+F(": ")+this->server->arg(i));
   } 
 
   // try to deserialize
@@ -870,7 +870,7 @@ void WebServerClass::handleSaveConfig()
     return;
   } else {
     //save the custom parameters to FS
-    Serial.println("saving config");
+    Serial.println(F("saving config"));
 
     // hostname
     strncpy(Config.hostname,json["hostname"],CONFIGSTRINGSIZE);
@@ -924,7 +924,7 @@ void WebServerClass::handleSaveConfig()
 void WebServerClass::handleLoadConfig()
 {
 	Config.load();
-	this->server->send(200, "text/plain", "OK");
+	this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
 }
 
 //---------------------------------------------------------------------------------------
@@ -939,7 +939,7 @@ void WebServerClass::handleSetHeartbeat()
 {
 	Config.heartbeat = (this->server->hasArg("value") && this->server->arg("value") == "1");
 	Config.save();
-	this->server->send(200, "text/plain", "OK");
+	this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
 }
 
 //---------------------------------------------------------------------------------------
@@ -1005,9 +1005,9 @@ void WebServerClass::handleSetAlarm()
         Config.alarm[i].type = AlarmType::oneoff;  // default
     }
     
-    this->server->send(200, "text/plain", "OK");
+    this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
   } else {
-    this->server->send(200, "text/plain", "invalid arg");
+    this->server->send(200, FPSTR(CT_TEXT_PLAIN), F("invalid arg"));
   }
 
   Config.saveDelayed();
@@ -1034,9 +1034,9 @@ void WebServerClass::handleSetHostname()
 #else
     ESP.reset();
 #endif
-    this->server->send(200, "text/plain", Config.hostname);
+    this->server->send(200, FPSTR(CT_TEXT_PLAIN), Config.hostname);
   } else {
-    this->server->send(200, "text/plain", "invalid arg"); 
+    this->server->send(200, FPSTR(CT_TEXT_PLAIN), F("invalid arg")); 
   }
 }
 

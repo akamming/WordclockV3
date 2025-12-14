@@ -17,6 +17,17 @@
 #define CONNECTTIMEOUT 60000 // only try to connect once a minute
 #define PUBLISHTIMEOUT 3600000 // publish the sensors at least every hour 
 
+// MQTT topic strings in PROGMEM
+const char MQTT_LIGHT[] PROGMEM = "/light/";
+const char MQTT_NUMBER[] PROGMEM = "/number/";
+const char MQTT_SWITCH[] PROGMEM = "/switch/";
+const char MQTT_TEXT[] PROGMEM = "/text/";
+const char MQTT_SELECT[] PROGMEM = "/select/";
+const char MQTT_SET[] PROGMEM = "/set";
+const char MQTT_STATE[] PROGMEM = "/state";
+const char MQTT_STATUS[] PROGMEM = "/status";
+const char MQTT_CONFIG[] PROGMEM = "/config";
+
 class MqttClass
 {
 public:

@@ -156,7 +156,7 @@ void MqttClass::Debug(const char* status)
 //---------------------------------------------------------------------------------------
 void MqttClass::PublishStatus(const char* status)
 {
-  if (MQ.connected()) MQ.publish((String(Config.hostname)+"/status").c_str(),status,Config.mqttpersistence);
+  if (MQ.connected()) MQ.publish((String(Config.hostname)+FPSTR(MQTT_STATUS)).c_str(),status,Config.mqttpersistence);
 }
 
 
@@ -170,7 +170,7 @@ void MqttClass::PublishStatus(const char* status)
 //---------------------------------------------------------------------------------------
 String DimmerCommandTopic(const char* DeviceName)
 {
-  return String(Config.hostname)+String("/light/")+String(DeviceName)+String("/set");
+  return String(Config.hostname)+FPSTR(MQTT_LIGHT)+String(DeviceName)+FPSTR(MQTT_SET);
 }
 
 //---------------------------------------------------------------------------------------
@@ -183,7 +183,7 @@ String DimmerCommandTopic(const char* DeviceName)
 //---------------------------------------------------------------------------------------
 String NumberCommandTopic(const char* DeviceName)
 {
-  return String(Config.hostname)+String("/number/")+String(DeviceName)+String("/set");
+  return String(Config.hostname)+FPSTR(MQTT_NUMBER)+String(DeviceName)+FPSTR(MQTT_SET);
 }
 
 //---------------------------------------------------------------------------------------
@@ -196,7 +196,7 @@ String NumberCommandTopic(const char* DeviceName)
 //---------------------------------------------------------------------------------------
 String SwitchCommandTopic(const char* DeviceName)
 {
-  return String(Config.hostname)+String("/switch/")+String(DeviceName)+String("/set");
+  return String(Config.hostname)+FPSTR(MQTT_SWITCH)+String(DeviceName)+FPSTR(MQTT_SET);
 }
 
 //---------------------------------------------------------------------------------------
@@ -209,7 +209,7 @@ String SwitchCommandTopic(const char* DeviceName)
 //---------------------------------------------------------------------------------------
 String TextCommandTopic(const char* DeviceName)
 {
-  return String(Config.hostname)+String("/text/")+String(DeviceName)+String("/set");
+  return String(Config.hostname)+FPSTR(MQTT_TEXT)+String(DeviceName)+FPSTR(MQTT_SET);
 }
 
 //---------------------------------------------------------------------------------------
@@ -222,7 +222,7 @@ String TextCommandTopic(const char* DeviceName)
 //---------------------------------------------------------------------------------------
 String SelectorCommandTopic(const char* DeviceName)
 {
-  return String(Config.hostname)+String("/select/")+String(DeviceName)+String("/set");
+  return String(Config.hostname)+FPSTR(MQTT_SELECT)+String(DeviceName)+FPSTR(MQTT_SET);
 }
 
 //---------------------------------------------------------------------------------------
@@ -258,14 +258,14 @@ void addDeviceToJson(JsonDocument *json) {
 
 void MqttClass::PublishMQTTModeSelect(const char* uniquename)
 {
-  Serial.println("PublishMQTTModeSelect");
+  Serial.println(F("PublishMQTTModeSelect"));
   JsonDocument json;
 
   // Construct JSON config message
   json["name"] = uniquename;
   json["unique_id"] = String(Config.hostname)+"_"+uniquename;
   json["cmd_t"] = SelectorCommandTopic(uniquename); 
-  json["stat_t"] = String(Config.hostname)+"/select/"+String(uniquename)+"/state";
+  json["stat_t"] = String(Config.hostname)+FPSTR(MQTT_SELECT)+String(uniquename)+FPSTR(MQTT_STATE);
   json["platform"] = "select";
   // json["val_tpl"] = "{{ value_json.mode }}";
 
@@ -311,7 +311,7 @@ void MqttClass::PublishMQTTModeSelect(const char* uniquename)
   serializeJson(json, conf);  // conf now contains the json
 
   // Publish config message
-  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+"/select/"+String(Config.hostname)+"/"+String(uniquename)+"/config").c_str(),conf,Config.mqttpersistence);
+  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+FPSTR(MQTT_SELECT)+String(Config.hostname)+"/"+String(uniquename)+FPSTR(MQTT_CONFIG)).c_str(),conf,Config.mqttpersistence);
 
   // Make sure we receive commands
   MQ.subscribe(SelectorCommandTopic(uniquename).c_str());
@@ -329,14 +329,14 @@ void MqttClass::PublishMQTTModeSelect(const char* uniquename)
 
 void MqttClass::PublishMQTTDimmer(const char* uniquename, bool SupportRGB)
 {
-  Serial.println("PublishMQTTDimmer");
+  Serial.println(F("PublishMQTTDimmer"));
   JsonDocument json;
 
   // Construct JSON config message
   json["name"] = uniquename;
   json["unique_id"] = String(Config.hostname)+"_"+uniquename;
   json["cmd_t"] = DimmerCommandTopic(uniquename);
-  json["stat_t"] = String(Config.hostname)+"/light/"+String(uniquename)+"/state";
+  json["stat_t"] = String(Config.hostname)+FPSTR(MQTT_LIGHT)+String(uniquename)+FPSTR(MQTT_STATE);
   // json["avty_t"] =  String(Config.hostname)+"/status",
   json["schema"] = "json";
   json["brightness"] = true;
@@ -352,7 +352,7 @@ void MqttClass::PublishMQTTDimmer(const char* uniquename, bool SupportRGB)
   serializeJson(json, conf);  // conf now contains the json
 
   // Publish config message
-  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+"/light/"+String(Config.hostname)+"/"+String(uniquename)+"/config").c_str(),conf,Config.mqttpersistence);
+  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+FPSTR(MQTT_LIGHT)+String(Config.hostname)+"/"+String(uniquename)+FPSTR(MQTT_CONFIG)).c_str(),conf,Config.mqttpersistence);
 
   // Make sure we receive commands
   MQ.subscribe(DimmerCommandTopic(uniquename).c_str());
@@ -369,14 +369,14 @@ void MqttClass::PublishMQTTDimmer(const char* uniquename, bool SupportRGB)
 
 void MqttClass::PublishMQTTNumber(const char* uniquename, int min, int max, float step, bool isSlider)
 {
-  Serial.println("PublishMQTTNumber");
+  Serial.println(F("PublishMQTTNumber"));
   JsonDocument json;
 
   // Construct JSON config message
   json["name"] = uniquename;
   json["unique_id"] = String(Config.hostname)+"_"+uniquename;
   json["cmd_t"] = NumberCommandTopic(uniquename);
-  json["stat_t"] = String(Config.hostname)+"/number/"+String(uniquename)+"/state";
+  json["stat_t"] = String(Config.hostname)+FPSTR(MQTT_NUMBER)+String(uniquename)+FPSTR(MQTT_STATE);
   json["min"] = min;
   json["max"] = max;
   json["step"] = step;
@@ -393,7 +393,7 @@ void MqttClass::PublishMQTTNumber(const char* uniquename, int min, int max, floa
   serializeJson(json, conf);  // conf now contains the json
 
   // Publish config message
-  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+"/number/"+String(Config.hostname)+"/"+String(uniquename)+"/config").c_str(),conf,Config.mqttpersistence);
+  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+FPSTR(MQTT_NUMBER)+String(Config.hostname)+"/"+String(uniquename)+FPSTR(MQTT_CONFIG)).c_str(),conf,Config.mqttpersistence);
 
   // Make sure we receive commands
   MQ.subscribe(NumberCommandTopic(uniquename).c_str());
@@ -410,14 +410,14 @@ void MqttClass::PublishMQTTNumber(const char* uniquename, int min, int max, floa
 
 void MqttClass::PublishMQTTText(const char* uniquename)
 {
-  Serial.println("PublishMQTTNumber");
+  Serial.println(F("PublishMQTTNumber"));
   JsonDocument json;
 
   // Construct JSON config message
   json["name"] = uniquename;
   json["unique_id"] = String(Config.hostname)+"_"+uniquename;
   json["cmd_t"] = TextCommandTopic(uniquename);
-  json["stat_t"] = String(Config.hostname)+"/text/"+String(uniquename)+"/state";
+  json["stat_t"] = String(Config.hostname)+FPSTR(MQTT_TEXT)+String(uniquename)+FPSTR(MQTT_STATE);
 
 
   addDeviceToJson(&json); // Add Device details to discovery message
@@ -426,7 +426,7 @@ void MqttClass::PublishMQTTText(const char* uniquename)
   serializeJson(json, conf);  // conf now contains the json
 
   // Publish config message
-  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+"/text/"+String(Config.hostname)+"/"+String(uniquename)+"/config").c_str(),conf,Config.mqttpersistence);
+  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+FPSTR(MQTT_TEXT)+String(Config.hostname)+"/"+String(uniquename)+FPSTR(MQTT_CONFIG)).c_str(),conf,Config.mqttpersistence);
 
   // Make sure we receive commands
   MQ.subscribe(TextCommandTopic(uniquename).c_str());
@@ -446,14 +446,14 @@ void MqttClass::PublishMQTTText(const char* uniquename)
 
 void MqttClass::PublishMQTTSwitch(const char* uniquename)
 {
-  Serial.println("PublishMQTTSwitch");
+  Serial.println(F("PublishMQTTSwitch"));
   JsonDocument json;
 
   // Construct JSON config message
   json["name"] = uniquename;
   json["unique_id"] = String(Config.hostname)+"_"+uniquename;
   json["cmd_t"] = SwitchCommandTopic(uniquename);
-  json["stat_t"] = String(Config.hostname)+"/switch/"+String(uniquename)+"/state";
+  json["stat_t"] = String(Config.hostname)+FPSTR(MQTT_SWITCH)+String(uniquename)+FPSTR(MQTT_STATE);
 
   addDeviceToJson(&json);
 
@@ -461,7 +461,7 @@ void MqttClass::PublishMQTTSwitch(const char* uniquename)
   serializeJson(json, conf);  // conf now contains the json
 
   // Publish config message
-  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+"/switch/"+String(Config.hostname)+"/"+String(uniquename)+"/config").c_str(),conf,Config.mqttpersistence);
+  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+FPSTR(MQTT_SWITCH)+String(Config.hostname)+"/"+String(uniquename)+FPSTR(MQTT_CONFIG)).c_str(),conf,Config.mqttpersistence);
 
   // subscribe if need to listen to commands
   MQ.subscribe(SwitchCommandTopic(uniquename).c_str());
@@ -478,7 +478,7 @@ void MqttClass::PublishMQTTSwitch(const char* uniquename)
 //---------------------------------------------------------------------------------------
 void MqttClass::UpdateMQTTModeSelector(const char* uniquename, DisplayMode mode)
 {
-  Serial.println("UpdateMQTTModeSelector");
+  Serial.println(F("UpdateMQTTModeSelector"));
 
   String displaymode;
   
@@ -577,7 +577,7 @@ void MqttClass::UpdateMQTTModeSelector(const char* uniquename, DisplayMode mode)
   }
 
   // publish state message
-  MQ.publish((String(Config.hostname)+"/select/"+String(uniquename)+"/state").c_str(),displaymode.c_str(),Config.mqttpersistence);
+  MQ.publish((String(Config.hostname)+FPSTR(MQTT_SELECT)+String(uniquename)+FPSTR(MQTT_STATE)).c_str(),displaymode.c_str(),Config.mqttpersistence);
 }
 
 
@@ -592,7 +592,7 @@ void MqttClass::UpdateMQTTModeSelector(const char* uniquename, DisplayMode mode)
 //---------------------------------------------------------------------------------------
 void MqttClass::UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t  Mod)
 {
-  Serial.println("UpdateMQTTDimmer");
+  Serial.println(F("UpdateMQTTDimmer"));
   JsonDocument json;
 
   // Construct JSON config message
@@ -619,10 +619,10 @@ void MqttClass::UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t  Mo
 //---------------------------------------------------------------------------------------
 void MqttClass::UpdateMQTTNumber(const char* uniquename, uint8_t Mod)
 {
-  Serial.println("UpdateMQTTNumber");
+  Serial.println(F("UpdateMQTTNumber"));
 
   // publish state message
-  MQ.publish((String(Config.hostname)+"/number/"+String(uniquename)+"/state").c_str(),String(Mod).c_str(),Config.mqttpersistence);
+  MQ.publish((String(Config.hostname)+FPSTR(MQTT_NUMBER)+String(uniquename)+FPSTR(MQTT_STATE)).c_str(),String(Mod).c_str(),Config.mqttpersistence);
 }
 
 //---------------------------------------------------------------------------------------
@@ -635,10 +635,10 @@ void MqttClass::UpdateMQTTNumber(const char* uniquename, uint8_t Mod)
 //---------------------------------------------------------------------------------------
 void MqttClass::UpdateMQTTSwitch(const char* uniquename, bool Value)
 {
-  Serial.println("UpdateMQTTSwitch");
+  Serial.println(F("UpdateMQTTSwitch"));
 
   // publish state message
-  MQ.publish((String(Config.hostname)+"/switch/"+String(uniquename)+"/state").c_str(),Value?"ON":"OFF",Config.mqttpersistence);
+  MQ.publish((String(Config.hostname)+FPSTR(MQTT_SWITCH)+String(uniquename)+FPSTR(MQTT_STATE)).c_str(),Value?"ON":"OFF",Config.mqttpersistence);
 }
 
 
@@ -652,10 +652,10 @@ void MqttClass::UpdateMQTTSwitch(const char* uniquename, bool Value)
 //---------------------------------------------------------------------------------------
 void MqttClass::UpdateMQTTText(const char* uniquename, const char* text)
 {
-  Serial.println("UpdateMQTTText");
+  Serial.println(F("UpdateMQTTText"));
  
   // publish state message
-  MQ.publish((String(Config.hostname)+"/text/"+String(uniquename)+"/state").c_str(),text,Config.mqttpersistence);
+  MQ.publish((String(Config.hostname)+FPSTR(MQTT_TEXT)+String(uniquename)+FPSTR(MQTT_STATE)).c_str(),text,Config.mqttpersistence);
 }
 
 
@@ -669,7 +669,7 @@ void MqttClass::UpdateMQTTText(const char* uniquename, const char* text)
 //---------------------------------------------------------------------------------------
 void MqttClass::UpdateMQTTColorDimmer(const char* uniquename, palette_entry Color)
 {
-  Serial.println("UpdateMQTTColorDimmer");
+  Serial.println(F("UpdateMQTTColorDimmer"));
   JsonDocument json;
   uint8_t brightness = MaxColor(Color);
 
@@ -776,7 +776,7 @@ void MqttClass::reconnect()
   {
     this->lastconnectcheck=millis();
     if (!MQ.connected()) {
-      Serial.print("Attempting MQTT connection...");
+      Serial.print(F("Attempting MQTT connection..."));
       bool mqttconnected;
       if (Config.usemqttauthentication) {
         mqttconnected = MQ.connect(Config.hostname, Config.mqttuser, Config.mqttpass);
@@ -788,7 +788,7 @@ void MqttClass::reconnect()
         this->PublishAllMQTTSensors();
 
       } else {
-        Serial.print("failed, rc=");
+        Serial.print(F("failed, rc="));
         Serial.print(MQ.state());
       }
     }
@@ -917,7 +917,7 @@ DisplayMode GetDisplayModeFromPayload(String payload)
   } else if (payload=="wifiManager") {
     return DisplayMode::wifiManager;
   } else  {
-    Serial.println("Unknown display mode received by mqtt");
+    Serial.println(F("Unknown display mode received by mqtt"));
     return DisplayMode::plain;
   } 
 }
