@@ -1609,6 +1609,18 @@ palette_entry LEDFunctionsClass::blendedColor(palette_entry from_color, palette_
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderMerryChristmas()
 {
+  // Initialize colors only once
+  if (!this->merryChristmasColorsInitialized)
+  {
+    this->merryChristmasColors[0] = 0; // Start with red for M
+    for (int i = 1; i < 16; i++)
+    {
+      // Avoid same color as previous letter
+      this->merryChristmasColors[i] = (this->merryChristmasColors[i-1] + 1 + random(2)) % 3;
+    }
+    this->merryChristmasColorsInitialized = true;
+  }
+  
   if ((unsigned long) (millis()-this->lastUpdate) > (unsigned)(100 - Config.animspeed))
   {
     this->lastUpdate = millis();
@@ -1618,29 +1630,46 @@ void LEDFunctionsClass::renderMerryChristmas()
     
     // Update scroll offset
     this->lastOffset++;
-    if (this->lastOffset > 200) this->lastOffset = 0;
     
-    // Define simple 5-pixel wide letter patterns (height = 10 pixels for full grid height)
-    // Each row in the pattern represents one horizontal line
-    // 1 = pixel on, 0 = pixel off
+    // Total scroll length: 16 letters * 6 pixels per letter = 96 pixels
+    // Add 11 pixels to scroll off screen + 5 pixels pause
+    int totalScrollLength = (16 * 6) + 11 + 5;
     
-    // Letter patterns: each letter is 5 pixels wide
-    uint8_t M[10] = {0b10101, 0b11111, 0b10101, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001};
-    uint8_t E[10] = {0b11111, 0b10000, 0b11110, 0b10000, 0b11110, 0b10000, 0b11111, 0b00000, 0b00000, 0b00000};
-    uint8_t R[10] = {0b11110, 0b10001, 0b11110, 0b10100, 0b10010, 0b10001, 0b10001, 0b00000, 0b00000, 0b00000};
-    uint8_t Y[10] = {0b10001, 0b10001, 0b01010, 0b00100, 0b00100, 0b00100, 0b00100, 0b00000, 0b00000, 0b00000};
-    uint8_t C[10] = {0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110, 0b00000, 0b00000, 0b00000};
-    uint8_t H[10] = {0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b00000, 0b00000, 0b00000};
-    uint8_t I[10] = {0b11111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b11111, 0b00000, 0b00000, 0b00000};
-    uint8_t S[10] = {0b01110, 0b10001, 0b10000, 0b01110, 0b00001, 0b10001, 0b01110, 0b00000, 0b00000, 0b00000};
-    uint8_t T[10] = {0b11111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00000, 0b00000, 0b00000};
-    uint8_t A[10] = {0b01010, 0b10101, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b00000, 0b00000, 0b00000};
+    if (this->lastOffset > totalScrollLength) 
+    {
+      this->lastOffset = 0;
+    }
+    
+    // Check if we're in the pause period (after text scrolled off)
+    if (this->lastOffset > (16 * 6) + 11)
+    {
+      // Pause period - keep screen dark
+      return;
+    }
+    
+    // Define CAPITAL letter patterns (10 pixels high, full height)
+    uint8_t M_cap[10] = {0b10001, 0b11011, 0b10101, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001};
+    uint8_t C_cap[10] = {0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110};
+    
+    // Define lowercase letter patterns (7 pixels high, rows 3-9)
+    uint8_t e_low[10] = {0b00000, 0b00000, 0b00000, 0b01110, 0b10001, 0b11111, 0b10000, 0b10001, 0b01110, 0b00000};
+    uint8_t r_low[10] = {0b00000, 0b00000, 0b00000, 0b10110, 0b11001, 0b10000, 0b10000, 0b10000, 0b10000, 0b00000};
+    uint8_t y_low[10] = {0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10011, 0b01101, 0b00001, 0b00010, 0b01100};
+    uint8_t h_low[10] = {0b10000, 0b10000, 0b10000, 0b10110, 0b11001, 0b10001, 0b10001, 0b10001, 0b10001, 0b00000};
+    uint8_t i_low[10] = {0b00000, 0b00100, 0b00000, 0b01100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000};
+    uint8_t s_low[10] = {0b00000, 0b00000, 0b00000, 0b01110, 0b10000, 0b01110, 0b00001, 0b10001, 0b01110, 0b00000};
+    uint8_t t_low[10] = {0b00000, 0b00100, 0b00100, 0b11111, 0b00100, 0b00100, 0b00100, 0b00101, 0b00010, 0b00000};
+    uint8_t a_low[10] = {0b00000, 0b00000, 0b00000, 0b01110, 0b00001, 0b01111, 0b10001, 0b10011, 0b01101, 0b00000};
     uint8_t space[10] = {0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000};
     
-    // Array of letter pointers: "MERRY CHRISTMAS "
-    uint8_t *letters[] = {M, E, R, R, Y, space, C, H, R, I, S, T, M, A, S, space};
+    // Array: "Merry Christmas " - M and C are capitals
+    uint8_t *letters[] = {M_cap, e_low, r_low, r_low, y_low, space, C_cap, h_low, r_low, i_low, s_low, t_low, M_cap, a_low, s_low, space};
     int numLetters = 16;
     int letterWidth = 6; // 5 pixels + 1 space between letters
+    
+    // Track the current letter visible on the right side for corner LEDs
+    int rightmostLetterIndex = -1;
+    uint8_t cornerR = 0, cornerG = 0, cornerB = 0;
     
     // For each Y row (0-9)
     for (int y = 0; y < 10; y++)
@@ -1653,9 +1682,14 @@ void LEDFunctionsClass::renderMerryChristmas()
         int letterIndex = scrollPos / letterWidth;
         int posInLetter = scrollPos % letterWidth;
         
-        // Wrap around the message
-        if (letterIndex < 0) letterIndex = numLetters + (letterIndex % numLetters);
-        letterIndex = letterIndex % numLetters;
+        // Skip if out of bounds
+        if (letterIndex < 0 || letterIndex >= numLetters) continue;
+        
+        // Track rightmost letter (x=10)
+        if (x == 10 && posInLetter < 5)
+        {
+          rightmostLetterIndex = letterIndex;
+        }
         
         // Get the bit pattern for this position
         uint8_t pattern = letters[letterIndex][y];
@@ -1669,9 +1703,9 @@ void LEDFunctionsClass::renderMerryChristmas()
         
         if (pixelOn)
         {
-          // Determine color based on scroll position
+          // Get color for this letter
           uint8_t r, g, b;
-          int colorPhase = (scrollPos / 3) % 3;
+          int colorPhase = this->merryChristmasColors[letterIndex];
           
           if (colorPhase == 0)
           {
@@ -1689,14 +1723,33 @@ void LEDFunctionsClass::renderMerryChristmas()
             r = 255; g = 220; b = 0;
           }
           
+          // Save corner color if this is the rightmost letter
+          if (x == 10)
+          {
+            cornerR = r;
+            cornerG = g;
+            cornerB = b;
+          }
+          
           // Use mapping array to get correct physical LED position
-          // Just like drawDot does: mapping[y*11+x]*3
           int mappedIndex = LEDFunctionsClass::mapping[y * 11 + x] * 3;
           
           this->currentValues[mappedIndex] = r;
           this->currentValues[mappedIndex + 1] = g;
           this->currentValues[mappedIndex + 2] = b;
         }
+      }
+    }
+    
+    // Set the 4 corner LEDs (indices 110-113) to match the rightmost letter
+    if (rightmostLetterIndex >= 0)
+    {
+      for (int i = 110; i <= 113; i++)
+      {
+        int mappedIndex = LEDFunctionsClass::mapping[i] * 3;
+        this->currentValues[mappedIndex] = cornerR;
+        this->currentValues[mappedIndex + 1] = cornerG;
+        this->currentValues[mappedIndex + 2] = cornerB;
       }
     }
   }
