@@ -434,8 +434,11 @@ void LEDFunctionsClass::process()
   case DisplayMode::RotatingLine: 
     this->renderRotatingLine();
     break;
-	case DisplayMode::christmas:
-		this->renderChristmas();
+	case DisplayMode::christmastree:
+		this->renderChristmasTree();
+		break;
+	case DisplayMode::christmasstar:
+		this->renderChristmasStar();
 		break;
 
 	case DisplayMode::fade:
@@ -1359,7 +1362,7 @@ void LEDFunctionsClass::renderStars()
 }
 
 //---------------------------------------------------------------------------------------
-// renderChristmas
+// renderChristmasTree
 //
 // Renders a Christmas tree with twinkling balls and stars
 // 0 = off, 1 = tree (green), 2 = trunk (brown)
@@ -1367,7 +1370,7 @@ void LEDFunctionsClass::renderStars()
 // -> --
 // <- --
 //---------------------------------------------------------------------------------------
-void LEDFunctionsClass::renderChristmas()
+void LEDFunctionsClass::renderChristmasTree()
 {
   if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(300-Config.animspeed))
   {
@@ -1462,6 +1465,105 @@ void LEDFunctionsClass::renderChristmas()
         this->currentValues[i*3] = 255; // R
         this->currentValues[i*3+1] = 255; // G
         this->currentValues[i*3+2] = 255; // B (white)
+      }
+    }
+    
+  }
+  this->fade();
+}
+
+//---------------------------------------------------------------------------------------
+// renderChristmasStar
+//
+// Renders a Christmas star with twinkling lights
+// Pixel art pattern:
+// Row  1: .....*.....
+// Row  2: .....*.....
+// Row  3: ..*..*..*..
+// Row  4: ...*.*.*...
+// Row  5: ....***....
+// Row  6: ***********
+// Row  7: .*.** **.*.
+// Row  8: **..* *..**
+// Row  9: .*...*...*.
+// Row 10: ..*.....*..
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void LEDFunctionsClass::renderChristmasStar()
+{
+  if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(300-Config.animspeed))
+  {
+    this->lastUpdate=millis();
+
+	// Christmas star pattern (11x10 grid)
+	// 0=off, 1=star(gold/yellow)
+	uint8_t star[NUM_PIXELS] = {
+	// Row 0 (indices 0-10): .....*.....
+	0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+	// Row 1 (indices 11-21): .....*.....
+	0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+	// Row 2 (indices 22-32): ..*..*..*..
+	0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
+	// Row 3 (indices 33-43): ...*.*.*...
+	0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0,
+	// Row 4 (indices 44-54): ....***....
+	0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
+	// Row 5 (indices 55-65): ***********
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	// Row 6 (indices 66-76): .*.** **.*.
+	0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0,
+	// Row 7 (indices 77-87): **..* *..**
+	1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1,
+	// Row 8 (indices 88-98): .*...*...*.
+	0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+	// Row 9 (indices 99-109): ..*.....*..
+	0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0,
+
+	// Corner LEDs (110-113) - off
+	0, 0, 0, 0
+	};
+    
+    
+    // Render the static star
+    for(int i = 0; i < NUM_PIXELS; i++)
+    {
+      switch(star[i])
+      {
+        case 1: // Star - gold/yellow
+          this->targetValues[i*3] = 255; // R
+          this->targetValues[i*3+1] = 215; // G
+          this->targetValues[i*3+2] = 0; // B
+          break;
+          
+        default: // 0 - off (black)
+          this->targetValues[i*3] = 0;
+          this->targetValues[i*3+1] = 0;
+          this->targetValues[i*3+2] = 0;
+          break;
+      }
+    }
+    
+    // Add random twinkling on star parts (value 1)
+    for(int i = 0; i < NUM_PIXELS; i++)
+    {
+      if(star[i] == 1 && random(100) < 5) // 5% chance on star parts to twinkle brighter
+      {
+        this->currentValues[i*3] = 255; // R
+        this->currentValues[i*3+1] = 255; // G
+        this->currentValues[i*3+2] = 255; // B (bright white)
+      }
+    }
+    
+    // Add random twinkling stars in background (off parts, value 0)
+    for(int i = 0; i < NUM_PIXELS; i++)
+    {
+      if(star[i] == 0 && random(200) < 2) // 1% chance on off parts
+      {
+        this->currentValues[i*3] = 200; // R
+        this->currentValues[i*3+1] = 200; // G
+        this->currentValues[i*3+2] = 255; // B (slight blue tint for background stars)
       }
     }
     

@@ -287,7 +287,8 @@ void MqttClass::PublishMQTTModeSelect(const char* uniquename)
   options.add("RandomDots");
   options.add("RandomStripes");
   options.add("RotatingLine");
-  options.add("Christmas");
+  options.add("ChristmasTree");
+  options.add("ChristmasStar");
   options.add("red");
   options.add("green");
   options.add("blue");
@@ -555,8 +556,11 @@ void MqttClass::UpdateMQTTModeSelector(const char* uniquename, DisplayMode mode)
   case DisplayMode::wifiManager:
     displaymode="wifiManager"; 
     break;
-  case DisplayMode::christmas:
-    displaymode="christmas"; 
+  case DisplayMode::christmastree:
+    displaymode="christmastree"; 
+    break;
+  case DisplayMode::christmasstar:
+    displaymode="christmasstar"; 
     break;
   default:
     displaymode="unknown"; 
@@ -879,8 +883,10 @@ DisplayMode GetDisplayModeFromPayload(String payload)
     return DisplayMode::RandomStripes;
   } else if (payload=="RotatingLine") {
     return DisplayMode::RotatingLine;
-  } else if (payload=="Christmas") {
-    return DisplayMode::christmas;
+  } else if (payload=="ChristmasTree") {
+    return DisplayMode::christmastree;
+  } else if (payload=="ChristmasStar") {
+    return DisplayMode::christmasstar;
   } else if (payload=="red") {
     return DisplayMode::red;
   } else if (payload=="green") {
