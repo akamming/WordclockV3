@@ -925,8 +925,10 @@ void MqttClass::MQTTcallback(char* topic, byte* payload, unsigned int length)
   // get vars from callback
   String topicstr=String(topic);
   char payloadstr[256];
-  strncpy(payloadstr,(char *)payload,length);
-  payloadstr[length]='\0';
+  unsigned int n = length;
+  if (n > sizeof(payloadstr) - 1) n = sizeof(payloadstr) - 1;
+  strncpy(payloadstr,(char *)payload,n);
+  payloadstr[n]='\0';
 
   // main switch: The name of the light = config.hostname 
   if (topicstr.equals(DimmerCommandTopic(Config.hostname) ) ) {
