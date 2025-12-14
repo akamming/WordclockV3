@@ -307,7 +307,6 @@ LEDFunctionsClass::LEDFunctionsClass()
 	// set random coordinates with minimum distance to other star objects
 	for (StarObject& s : this->stars) s.randomize(this->stars);
 }
-
 //---------------------------------------------------------------------------------------
 // begin
 //
@@ -1610,16 +1609,17 @@ palette_entry LEDFunctionsClass::blendedColor(palette_entry from_color, palette_
 void LEDFunctionsClass::renderMerryChristmas()
 {
   // Initialize colors only once
-  if (!this->merryChristmasColorsInitialized)
-  {
-    this->merryChristmasColors[0] = 0; // Start with red for M
-    for (int i = 1; i < 16; i++)
-    {
-      // Avoid same color as previous letter
-      this->merryChristmasColors[i] = (this->merryChristmasColors[i-1] + 1 + random(2)) % 3;
-    }
-    this->merryChristmasColorsInitialized = true;
-  }
+	if (!this->merryChristmasColorsInitialized)
+	{
+		// Initialize 24 items (reindeer, sleigh, text, reindeer, sleigh)
+		this->merryChristmasColors[0] = 0;
+		for (int i = 1; i < 24; i++)
+		{
+			// Avoid same color as previous letter
+			this->merryChristmasColors[i] = (this->merryChristmasColors[i-1] + 1 + random(2)) % 3;
+		}
+		this->merryChristmasColorsInitialized = true;
+	}
   
   if ((unsigned long) (millis()-this->lastUpdate) > (unsigned)(100 - Config.animspeed))
   {
@@ -1628,20 +1628,25 @@ void LEDFunctionsClass::renderMerryChristmas()
     // Clear all pixels
     memset(this->currentValues, 0, sizeof(this->currentValues));
     
-    // Update scroll offset
-    this->lastOffset++;
+	// Per-item widths: 5+1 for letters, 8+1 for sleigh/reindeer (side-view)
+	int letterWidths[24] = {9, 6, 9, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 9, 6, 9, 6};
+	int totalTextWidth = 0;
+	for (int i = 0; i < 24; i++) totalTextWidth += letterWidths[i];
+
+	// Update scroll offset
+	this->lastOffset++;
     
-    // Total scroll length: 16 letters * 6 pixels per letter = 96 pixels
-    // Add 11 pixels to scroll off screen + 5 pixels pause
-    int totalScrollLength = (16 * 6) + 11 + 5;
+	// Total scroll length based on actual widths
+	// Add 11 pixels to scroll off screen + 5 pixels pause
+	int totalScrollLength = totalTextWidth + 11 + 5;
     
     if (this->lastOffset > totalScrollLength) 
     {
       this->lastOffset = 0;
     }
     
-    // Check if we're in the pause period (after text scrolled off)
-    if (this->lastOffset > (16 * 6) + 11)
+	// Check if we're in the pause period (after text scrolled off)
+	if (this->lastOffset > totalTextWidth + 11)
     {
       // Pause period - keep screen dark
       return;
@@ -1661,15 +1666,120 @@ void LEDFunctionsClass::renderMerryChristmas()
     uint8_t t_low[10] = {0b00000, 0b00100, 0b00100, 0b11111, 0b00100, 0b00100, 0b00100, 0b00101, 0b00010, 0b00000};
     uint8_t a_low[10] = {0b00000, 0b00000, 0b00000, 0b01110, 0b00001, 0b01111, 0b10001, 0b10011, 0b01101, 0b00000};
     uint8_t space[10] = {0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000};
+	// Lowercase 'm' (7px high, rows 3-9)
+	uint8_t m_low[10] = {0b00000, 0b00000, 0b00000, 0b10001, 0b11011, 0b10101, 0b10101, 0b10101, 0b10001, 0b00000};
     
-    // Array: "Merry Christmas " - M and C are capitals
-    uint8_t *letters[] = {M_cap, e_low, r_low, r_low, y_low, space, C_cap, h_low, r_low, i_low, s_low, t_low, M_cap, a_low, s_low, space};
-    int numLetters = 16;
-    int letterWidth = 6; // 5 pixels + 1 space between letters
+		// Santa on sleigh (side view) sprite (8 pixels wide, 10 pixels high)
+		// Split into masks for coloring: santa (red), beard (white), sleigh (brown)
+		// Left-facing side view sleigh + Santa
+		uint8_t sleigh_base[10] = {
+			0b00010000,  // Row 0: hat tip
+			0b00111000,  // Row 1: hat
+			0b10011100,  // Row 2: head + nose (protruding left)
+			0b01111000,  // Row 3: beard area (left-leaning)
+			0b00111100,  // Row 4: torso (front-left)
+			0b00111100,  // Row 5: torso
+			0b01111100,  // Row 6: sleigh top (extends right)
+			0b11111100,  // Row 7: sleigh body
+			0b10011110,  // Row 8: runners
+			0b10001110   // Row 9: bottom/runners
+		};
+		uint8_t sleigh_santa_mask[10] = {
+			0b00010000,  // hat tip
+			0b00111000,  // hat
+			0b10011100,  // head + nose
+			0b00000000,  // beard handled separately
+			0b00111100,  // torso
+			0b00111100,  // torso
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b00000000
+		};
+		uint8_t sleigh_beard_mask[10] = {
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b01111000,  // beard (wider, left-leaning)
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b00000000
+		};
+		uint8_t sleigh_sleigh_mask[10] = {
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b01111100,  // sleigh top
+			0b11111100,  // sleigh body
+			0b10011110,  // runners
+			0b10001110   // bottom/runners
+		};
+
+		// Reindeer (side view) base and masks (8x10)
+		// Left-facing side view reindeer
+		uint8_t reindeer_base[10] = {
+			0b00110000, // antlers top
+			0b01111000, // antlers/ears
+			0b11110000, // head + nose area
+			0b01111100, // neck/head
+			0b11111110, // body
+			0b11111110, // body
+			0b01011010, // legs
+			0b01011010, // legs
+			0b00011000, // tail
+			0b00000000  // ground
+		};
+		uint8_t reindeer_antlers_mask[10] = {
+			0b00110000,
+			0b01111000,
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b00000000
+		};
+		uint8_t reindeer_body_mask[10] = {
+			0b00000000,
+			0b00000000,
+			0b01110000, // head (without nose)
+			0b01111100,
+			0b11111110,
+			0b11111110,
+			0b01011010,
+			0b01011010,
+			0b00011000,
+			0b00000000
+		};
+		uint8_t reindeer_nose_mask[10] = {
+			0b00000000,
+			0b00000000,
+			0b10000000, // nose at leftmost of row 2
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b00000000,
+			0b00000000
+		};
     
-    // Track the current letter visible on the right side for corner LEDs
-    int rightmostLetterIndex = -1;
-    uint8_t cornerR = 0, cornerG = 0, cornerB = 0;
+		// Array: reindeer + space + sleigh + space + "Merry Christmas" + space + reindeer + space + sleigh + space
+		uint8_t *letters[] = {
+			reindeer_base, space, sleigh_base, space,
+			M_cap, e_low, r_low, r_low, y_low, space,
+			C_cap, h_low, r_low, i_low, s_low, t_low, m_low, a_low, s_low, space,
+			reindeer_base, space, sleigh_base, space
+		};
+		int numLetters = 24;
     
     // For each Y row (0-9)
     for (int y = 0; y < 10; y++)
@@ -1677,81 +1787,129 @@ void LEDFunctionsClass::renderMerryChristmas()
       // For each X position on screen (0-10)
       for (int x = 0; x < 11; x++)
       {
-        // Calculate position in scrolling text
-        int scrollPos = (x + this->lastOffset - 11);
-        int letterIndex = scrollPos / letterWidth;
-        int posInLetter = scrollPos % letterWidth;
+				// Calculate position in scrolling text
+				int scrollPos = (x + this->lastOffset - 11);
         
-        // Skip if out of bounds
-        if (letterIndex < 0 || letterIndex >= numLetters) continue;
+				// Skip if out of bounds
+				if (scrollPos < 0 || scrollPos >= totalTextWidth) continue;
         
-        // Track rightmost letter (x=10)
-        if (x == 10 && posInLetter < 5)
-        {
-          rightmostLetterIndex = letterIndex;
-        }
+				// Determine letter index and position using variable widths
+				int accum = 0;
+				int letterIndex = -1;
+				int posInLetter = -1;
+				for (int i = 0; i < numLetters; i++)
+				{
+					int w = letterWidths[i];
+					if (scrollPos >= accum && scrollPos < accum + w)
+					{
+						letterIndex = i;
+						posInLetter = scrollPos - accum;
+						break;
+					}
+					accum += w;
+				}
+				if (letterIndex < 0) continue;
         
         // Get the bit pattern for this position
         uint8_t pattern = letters[letterIndex][y];
         
         // Check if this pixel should be on
         bool pixelOn = false;
-        if (posInLetter < 5)
+		// Sleigh/Reindeer are 8 pixels wide; letters are 5 pixels wide
+		bool isSleigh = (letterIndex == 2 || letterIndex == 22);
+		bool isReindeer = (letterIndex == 0 || letterIndex == 20);
+		int pixelWidth = (isSleigh || isReindeer) ? 8 : 5;
+        if (posInLetter < pixelWidth)
         {
-          pixelOn = (pattern & (1 << (4 - posInLetter))) != 0;
+          int bitPos = (pixelWidth == 8) ? (7 - posInLetter) : (4 - posInLetter);
+          pixelOn = (pattern & (1 << bitPos)) != 0;
         }
         
-        if (pixelOn)
-        {
-          // Get color for this letter
-          uint8_t r, g, b;
-          int colorPhase = this->merryChristmasColors[letterIndex];
+				if (pixelOn)
+				{
+					// Get color for this letter or sleigh
+					uint8_t r = 0, g = 0, b = 0;
+					if (isSleigh)
+					{
+						// Sleigh item: choose per-mask color
+						int bitPos = (7 - posInLetter);
+						bool isBeard = (sleigh_beard_mask[y] & (1 << bitPos)) != 0;
+						bool isSanta = (sleigh_santa_mask[y] & (1 << bitPos)) != 0;
+						bool isSleigh = (sleigh_sleigh_mask[y] & (1 << bitPos)) != 0;
+						if (isBeard)
+						{
+							// White beard
+							r = 255; g = 255; b = 255;
+						}
+						else if (isSanta)
+						{
+							// Santa in red
+							r = 255; g = 0; b = 0;
+						}
+						else if (isSleigh)
+						{
+							// Sleigh in brown
+							r = 150; g = 75; b = 0;
+						}
+						else
+						{
+							// Fallback: treat as sleigh
+							r = 150; g = 75; b = 0;
+						}
+					}
+					else if (isReindeer)
+					{
+						// Reindeer coloring: antlers dark brown, body brown, nose red
+						int bitPos = (7 - posInLetter);
+						bool isAntlers = (reindeer_antlers_mask[y] & (1 << bitPos)) != 0;
+						bool isBody = (reindeer_body_mask[y] & (1 << bitPos)) != 0;
+						bool isNose = (reindeer_nose_mask[y] & (1 << bitPos)) != 0;
+						if (isNose)
+						{
+							r = 255; g = 0; b = 0; // red nose
+						}
+						else if (isAntlers)
+						{
+							r = 100; g = 50; b = 0; // dark brown antlers
+						}
+						else if (isBody)
+						{
+							r = 150; g = 75; b = 0; // brown body
+						}
+						else
+						{
+							r = 150; g = 75; b = 0; // fallback brown
+						}
+					}
+					else
+					{
+						// Regular letters: use festive cycling colors per letter
+						int colorPhase = this->merryChristmasColors[letterIndex];
+						if (colorPhase == 0)
+						{
+							r = 255; g = 0; b = 0;      // Red
+						}
+						else if (colorPhase == 1)
+						{
+							r = 0; g = 255; b = 0;      // Green
+						}
+						else
+						{
+							r = 255; g = 220; b = 0;    // Yellow
+						}
+					}
           
-          if (colorPhase == 0)
-          {
-            // Red
-            r = 255; g = 0; b = 0;
-          }
-          else if (colorPhase == 1)
-          {
-            // Green
-            r = 0; g = 255; b = 0;
-          }
-          else
-          {
-            // Yellow
-            r = 255; g = 220; b = 0;
-          }
+					// Use mapping array to get correct physical LED position
+					int mappedIndex = LEDFunctionsClass::mapping[y * 11 + x] * 3;
           
-          // Save corner color if this is the rightmost letter
-          if (x == 10)
-          {
-            cornerR = r;
-            cornerG = g;
-            cornerB = b;
-          }
-          
-          // Use mapping array to get correct physical LED position
-          int mappedIndex = LEDFunctionsClass::mapping[y * 11 + x] * 3;
-          
-          this->currentValues[mappedIndex] = r;
-          this->currentValues[mappedIndex + 1] = g;
-          this->currentValues[mappedIndex + 2] = b;
-        }
+					this->currentValues[mappedIndex] = r;
+					this->currentValues[mappedIndex + 1] = g;
+					this->currentValues[mappedIndex + 2] = b;
+				}
       }
     }
     
-    // Set the 4 corner LEDs (indices 110-113) to match the rightmost letter
-    if (rightmostLetterIndex >= 0)
-    {
-      for (int i = 110; i <= 113; i++)
-      {
-        int mappedIndex = LEDFunctionsClass::mapping[i] * 3;
-        this->currentValues[mappedIndex] = cornerR;
-        this->currentValues[mappedIndex + 1] = cornerG;
-        this->currentValues[mappedIndex + 2] = cornerB;
-      }
-    }
+    // Keep corner LEDs (110-113) off - they are already cleared by memset
   }
   
   // this->fade();

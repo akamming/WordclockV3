@@ -87,7 +87,7 @@ public:
   int Y2 = 9;
   
   // Merry Christmas effect vars
-  uint8_t merryChristmasColors[16] = {0};
+	uint8_t merryChristmasColors[24] = {0};
   bool merryChristmasColorsInitialized = false;
 
 #ifdef FASTLED
