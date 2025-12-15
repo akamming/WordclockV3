@@ -176,7 +176,7 @@ JsonDocument ConfigClass::json()
     displaymode = 15; break;
   case DisplayMode::christmastree:
     displaymode = 16; break;
-  case DisplayMode::christmasstar:
+  case DisplayMode::jinglebells:
     displaymode = 17; break;
   case DisplayMode::merryChristmas:
     displaymode = 18; break;

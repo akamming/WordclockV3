@@ -643,7 +643,7 @@ void WebServerClass::handleSetMode()
       LED.Y1=0;
     }
     if(this->server->arg("value") == "16") mode = DisplayMode::christmastree;
-    if(this->server->arg("value") == "17") mode = DisplayMode::christmasstar;
+    if(this->server->arg("value") == "17") mode = DisplayMode::jinglebells;
     if(this->server->arg("value") == "18") mode = DisplayMode::merryChristmas;
 	}
 

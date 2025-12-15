@@ -144,7 +144,7 @@ private:
 	void renderPlasma();
   void renderStars();
   void renderChristmasTree();
-  void renderChristmasStar();
+	void renderJingleBells();
   void renderMerryChristmas();
   palette_entry blendedColor(palette_entry from_color, palette_entry to_color, float progress);
   void renderWakeup();

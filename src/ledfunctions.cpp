@@ -323,10 +323,6 @@ LEDFunctionsClass::LEDFunctionsClass()
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::begin(int pin)
 {
-#ifdef FASTLED
-	// FastLED.addLeds<NEOPIXEL, pin>(this->leds, NUM_PIXELS);  // GRB ordering is assumed
-	FastLED.addLeds<NEOPIXEL, 3>(this->leds, NUM_PIXELS);  // GRB ordering is assumed
-#elif defined(NEOPIXELBUS)
 #ifdef ESP32
   this->strip = new NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod>(NUM_PIXELS,pin);
 #else
@@ -337,14 +333,6 @@ void LEDFunctionsClass::begin(int pin)
     return;
   }
   this->strip->Begin();
-#else
-	this->pixels = new Adafruit_NeoPixel(NUM_PIXELS, pin, NEO_GRB + NEO_KHZ800);
-  if(this->pixels == nullptr) {
-    Serial.println(F("ERROR: Failed to allocate Adafruit_NeoPixel!"));
-    return;
-  }
-  this->pixels->begin();
-#endif
 }
 
 
@@ -451,8 +439,8 @@ void LEDFunctionsClass::process()
 	case DisplayMode::christmastree:
 		this->renderChristmasTree();
 		break;
-	case DisplayMode::christmasstar:
-		this->renderChristmasStar();
+	case DisplayMode::jinglebells:
+		this->renderJingleBells();
 		break;
 	case DisplayMode::merryChristmas:
 		this->renderMerryChristmas();
@@ -841,29 +829,12 @@ void LEDFunctionsClass::show()
 	// copy current color values to LED object and display it
 	for (int i = 0; i < NUM_PIXELS; i++)
 	{
-#ifdef FASTLED
-    this->leds[i]=CRGB( ((int) data[ofs + 0] * this->brightness) >> 8,
-                        ((int) data[ofs + 1] * this->brightness) >> 8,  
-                        ((int) data[ofs + 2] * this->brightness) >> 8);  
-#elif defined(NEOPIXELBUS)
   this->strip->SetPixelColor(i,RgbColor(((int) data[ofs + 0] * this->brightness) >> 8,
                                         ((int) data[ofs + 1] * this->brightness) >> 8,  
                                         ((int) data[ofs + 2] * this->brightness) >> 8));
-#else
-    this->pixels->setPixelColor(i,
-        pixels->Color(((int) data[ofs + 0] * this->brightness) >> 8,
-                  ((int) data[ofs + 1] * this->brightness) >> 8,
-                  ((int) data[ofs + 2] * this->brightness) >> 8)); 
-#endif
     ofs += 3;
 	}
-#ifdef FASTLED
-  FastLED.show();
-#elif defined(NEOPIXELBUS)
   this->strip->Show();
-#else
-  this->pixels->show();
-#endif
 }
 
 //---------------------------------------------------------------------------------------
@@ -1490,102 +1461,98 @@ void LEDFunctionsClass::renderChristmasTree()
 }
 
 //---------------------------------------------------------------------------------------
-// renderChristmasStar
+// renderJingleBells
 //
-// Renders a Christmas star with twinkling lights
-// Pixel art pattern:
-// Row  1: .....*.....
-// Row  2: .....*.....
-// Row  3: ..*..*..*..
-// Row  4: ...*.*.*...
-// Row  5: ....***....
-// Row  6: ***********
-// Row  7: .*.** **.*.
-// Row  8: **..* *..**
-// Row  9: .*...*...*.
-// Row 10: ..*.....*..
+// Renders a jingling bell that gently swings left-right
+// Bell colors: gold body, red ribbon, grey clapper
+// Slight swing: horizontally shifts outline by -1..+1 over time
 //
 // -> --
 // <- --
 //---------------------------------------------------------------------------------------
-void LEDFunctionsClass::renderChristmasStar()
+void LEDFunctionsClass::renderJingleBells()
 {
-  if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(300-Config.animspeed))
-  {
-    this->lastUpdate=millis();
+	if ((unsigned long) (millis()-this->lastUpdate)>(unsigned)(200-Config.animspeed))
+	{
+		this->lastUpdate=millis();
 
-	// Christmas star pattern (11x10 grid)
-	// 0=off, 1=star(gold/yellow)
-	uint8_t star[NUM_PIXELS] = {
-	// Row 0 (indices 0-10): .....*.....
-	0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-	// Row 1 (indices 11-21): .....*.....
-	0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-	// Row 2 (indices 22-32): ..*..*..*..
-	0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
-	// Row 3 (indices 33-43): ...*.*.*...
-	0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0,
-	// Row 4 (indices 44-54): ....***....
-	0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
-	// Row 5 (indices 55-65): ***********
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	// Row 6 (indices 66-76): .*.** **.*.
-	0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0,
-	// Row 7 (indices 77-87): **..* *..**
-	1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1,
-	// Row 8 (indices 88-98): .*...*...*.
-	0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0,
-	// Row 9 (indices 99-109): ..*.....*..
-	0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0,
+		// Base pattern indices: 11x10 grid, values:
+		// 0=off, 1=bell gold, 2=ribbon red, 3=clapper grey
+		uint8_t bell[NUM_PIXELS] = {
+			// Row 0
+			0,0,0,0,2,2,2,0,0,0,0,
+			// Row 1
+			0,0,0,1,1,1,1,1,0,0,0,
+			// Row 2
+			0,0,1,1,1,1,1,1,1,0,0,
+			// Row 3
+			0,1,1,1,1,1,1,1,1,1,0,
+			// Row 4
+			0,1,1,1,1,1,1,1,1,1,0,
+			// Row 5
+			0,1,1,1,1,1,1,1,1,1,0,
+			// Row 6
+			0,0,1,1,1,1,1,1,1,0,0,
+			// Row 7
+			0,0,0,1,1,1,1,1,0,0,0,
+			// Row 8 (clapper)
+			0,0,0,0,0,3,0,0,0,0,0,
+			// Row 9 (shadow/off)
+			0,0,0,0,0,0,0,0,0,0,0,
+			// corners
+			0,0,0,0
+		};
 
-	// Corner LEDs (110-113) - off
-	0, 0, 0, 0
-	};
-    
-    
-    // Render the static star
-    for(int i = 0; i < NUM_PIXELS; i++)
-    {
-      switch(star[i])
-      {
-        case 1: // Star - gold/yellow
-          this->targetValues[i*3] = 255; // R
-          this->targetValues[i*3+1] = 215; // G
-          this->targetValues[i*3+2] = 0; // B
-          break;
-          
-        default: // 0 - off (black)
-          this->targetValues[i*3] = 0;
-          this->targetValues[i*3+1] = 0;
-          this->targetValues[i*3+2] = 0;
-          break;
-      }
-    }
-    
-    // Add random twinkling on star parts (value 1)
-    for(int i = 0; i < NUM_PIXELS; i++)
-    {
-      if(star[i] == 1 && random(100) < 5) // 5% chance on star parts to twinkle brighter
-      {
-        this->currentValues[i*3] = 255; // R
-        this->currentValues[i*3+1] = 255; // G
-        this->currentValues[i*3+2] = 255; // B (bright white)
-      }
-    }
-    
-    // Add random twinkling stars in background (off parts, value 0)
-    for(int i = 0; i < NUM_PIXELS; i++)
-    {
-      if(star[i] == 0 && random(200) < 2) // 1% chance on off parts
-      {
-        this->currentValues[i*3] = 200; // R
-        this->currentValues[i*3+1] = 200; // G
-        this->currentValues[i*3+2] = 255; // B (slight blue tint for background stars)
-      }
-    }
-    
-  }
-  this->fade();
+		// Compute swing offset based on lastOffset: -1,0,+1 cycling
+		int swingPhase = (this->lastOffset % 6);
+		int xShift = (swingPhase < 2) ? -1 : (swingPhase < 4 ? 0 : 1);
+		this->lastOffset++;
+
+		// Clear target
+		for(int i=0;i<NUM_PIXELS*3;i++) this->targetValues[i]=0;
+
+		// Render with horizontal shift
+		for(int y=0;y<10;y++)
+		{
+			for(int x=0;x<11;x++)
+			{
+				int srcIdx = y*11 + x;
+				uint8_t v = bell[srcIdx];
+				int tx = x + xShift;
+				if(tx<0 || tx>=11) continue;
+				int ofs = LEDFunctionsClass::mapping[y*11 + tx]*3;
+				if(v==1) { // gold
+					this->targetValues[ofs+0]=255;
+					this->targetValues[ofs+1]=200;
+					this->targetValues[ofs+2]=0;
+				} else if(v==2) { // red ribbon
+					this->targetValues[ofs+0]=220;
+					this->targetValues[ofs+1]=0;
+					this->targetValues[ofs+2]=0;
+				} else if(v==3) { // grey clapper
+					this->targetValues[ofs+0]=150;
+					this->targetValues[ofs+1]=150;
+					this->targetValues[ofs+2]=150;
+				}
+			}
+		}
+
+		// Occasional sparkle on bell body
+		for(int i=0;i<NUM_PIXELS;i++)
+		{
+			int y=i/11, x=i%11;
+			int tx=x+xShift; if(tx<0||tx>=11) continue;
+			int srcIdx=y*11+x;
+			if(bell[srcIdx]==1 && random(120)<2)
+			{
+				int ofs = LEDFunctionsClass::mapping[y*11 + tx]*3;
+				this->currentValues[ofs+0]=255;
+				this->currentValues[ofs+1]=255;
+				this->currentValues[ofs+2]=180;
+			}
+		}
+	}
+	this->fade();
 }
 
 //---------------------------------------------------------------------------------------
