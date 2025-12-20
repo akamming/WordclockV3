@@ -1582,7 +1582,9 @@ palette_entry LEDFunctionsClass::blendedColor(palette_entry from_color, palette_
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderMerryChristmas()
 {
-  if ((unsigned long) (millis()-this->lastUpdate) > (unsigned)(1000 - 10 *Config.animspeed))
+  // Linear mapping: animspeed 0->500ms, 100->40ms
+  unsigned int delay = 500 - (Config.animspeed * 460 / 100);
+  if ((unsigned long) (millis()-this->lastUpdate) > delay)
   {
     this->lastUpdate = millis();
 
