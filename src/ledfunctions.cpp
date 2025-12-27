@@ -389,10 +389,8 @@ void LEDFunctionsClass::process()
 	if (NTP.ms > 999 || NTP.ms < 0) NTP.ms = 0;
 
 	// load palette colors from configuration
-	palette_entry palette[] = {
-		{Config.bg.r, Config.bg.g, Config.bg.b},
-		{Config.fg.r, Config.fg.g, Config.fg.b},
-		{Config.s.r,  Config.s.g,  Config.s.b}};
+	palette_entry palette[3];
+  this->buildDefaultPalette(palette);
 	uint8_t buf[NUM_PIXELS];
 
 	switch(this->mode)
@@ -676,6 +674,13 @@ void LEDFunctionsClass::setBuffer(uint8_t *target, const uint8_t *source,
 	}
 }
 
+void LEDFunctionsClass::buildDefaultPalette(palette_entry palette[3])
+{
+  palette[0] = {Config.bg.r, Config.bg.g, Config.bg.b};
+  palette[1] = {Config.fg.r, Config.fg.g, Config.fg.b};
+  palette[2] = {Config.s.r,  Config.s.g,  Config.s.b};
+}
+
 //---------------------------------------------------------------------------------------
 // renderRandomDots
 //
@@ -876,9 +881,29 @@ void LEDFunctionsClass::show()
 	// copy current color values to LED object and display it
 	for (int i = 0; i < NUM_PIXELS; i++)
 	{
-  this->strip->SetPixelColor(i,RgbColor(((int) data[ofs + 0] * this->brightness) >> 8,
-                                        ((int) data[ofs + 1] * this->brightness) >> 8,  
-                                        ((int) data[ofs + 2] * this->brightness) >> 8));
+    int r = ((int) data[ofs + 0] * this->brightness) >> 8;
+    int g = ((int) data[ofs + 1] * this->brightness) >> 8;
+    int b = ((int) data[ofs + 2] * this->brightness) >> 8;
+    
+    // Apply blue correction for "HET IS" pixels (logical positions 0,1,2,4,5)
+    // Check if current physical LED i corresponds to one of these logical positions
+    if (Config.blueCorrection > 0) {
+      uint32_t physicalLED0 = pgm_read_dword(&mapping[0]);
+      uint32_t physicalLED1 = pgm_read_dword(&mapping[1]);
+      uint32_t physicalLED2 = pgm_read_dword(&mapping[2]);
+      uint32_t physicalLED4 = pgm_read_dword(&mapping[4]);
+      uint32_t physicalLED5 = pgm_read_dword(&mapping[5]);
+      
+      if (i == physicalLED0 || i == physicalLED1 || i == physicalLED2 || 
+          i == physicalLED4 || i == physicalLED5) {
+        float factor = 1.0f + 4.0f * (static_cast<float>(Config.blueCorrection) / 100.0f);
+        int boosted = static_cast<int>(static_cast<float>(b) * factor);
+        if (boosted > 255) boosted = 255;
+        b = boosted;
+      }
+    }
+    
+    this->strip->SetPixelColor(i, RgbColor(r, g, b));
     ofs += 3;
 	}
   this->strip->Show();
@@ -2291,10 +2316,8 @@ void LEDFunctionsClass::renderExplosion()
   	uint8_t buf[NUM_PIXELS];
   
   	// load palette colors from configuration
-  	palette_entry palette[] = {
-  		{Config.bg.r, Config.bg.g, Config.bg.b},
-  		{Config.fg.r, Config.fg.g, Config.fg.b},
-  		{Config.s.r,  Config.s.g,  Config.s.b}};
+  	palette_entry palette[3];
+    this->buildDefaultPalette(palette);
   
   	// check if the displayed time has changed
   	if((NTP.m/5 != this->lastM/5) || (NTP.h != this->lastH))
@@ -2437,10 +2460,8 @@ void LEDFunctionsClass::renderFlyingLetters()
   	uint8_t buf[NUM_PIXELS];
   
   	// load palette colors from configuration
-  	palette_entry palette[] = {
-  		{Config.bg.r, Config.bg.g, Config.bg.b},
-  		{Config.fg.r, Config.fg.g, Config.fg.b},
-  		{Config.s.r,  Config.s.g,  Config.s.b}};
+  	palette_entry palette[3];
+    this->buildDefaultPalette(palette);
   
   	// check if the displayed time has changed
   	if((NTP.m/5 != this->lastM/5) || (NTP.h != this->lastH))

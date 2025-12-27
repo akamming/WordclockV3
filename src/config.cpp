@@ -212,6 +212,7 @@ JsonDocument ConfigClass::json()
 
   json["NTPServer"] = NTPServer;
   json["Brightness"] = Brightness.brightnessOverride;
+  json["bluecorrection"] = Config.blueCorrection;
   json["hostname"] = Config.hostname;
 
   JsonArray Alarm = json["Alarm"].to<JsonArray>();
@@ -297,6 +298,7 @@ void ConfigClass::save()
 	for (int i = 0; i < 4; i++)
 		this->config->ntpserver[i] = this->ntpserver[i];
   this->config->brightnessOverride=Brightness.brightnessOverride;
+  this->config->blueCorrection = this->blueCorrection;
   for (int i=0; i<5;i++)
     this->config->alarm[i]=this->alarm[i];
 
@@ -356,6 +358,8 @@ void ConfigClass::reset()
   
   this->config->nightmode= false;
   this->nightmode= this->config->nightmode;
+  this->config->blueCorrection = 0;
+  this->blueCorrection = this->config->blueCorrection;
 
 	this->defaultMode = DisplayMode::fade;
 	this->config->mode = (uint32_t) this->defaultMode;
@@ -431,6 +435,8 @@ void ConfigClass::load()
 	for (int i = 0; i < 4; i++)
 		this->ntpserver[i] = this->config->ntpserver[i];
   Brightness.brightnessOverride=this->config->brightnessOverride;
+  this->blueCorrection = this->config->blueCorrection;
+  if (this->blueCorrection > 100) this->blueCorrection = 100;
   
   for (int i=0; i<5;i++)
     this->alarm[i]=this->config->alarm[i];

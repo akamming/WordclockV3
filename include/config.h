@@ -69,6 +69,7 @@ typedef struct _config_struct
 	uint32_t mode;
 	uint32_t timeZone;
   uint32_t brightnessOverride;
+  uint8_t blueCorrection;
   bool nightmode;
   t_alarm alarm[5];
   char hostname[CONFIGSTRINGSIZE];
@@ -105,6 +106,7 @@ public:
 	bool heartbeat = true;
 	bool debugMode = false;
   bool nightmode = false;
+  uint8_t blueCorrection = 0;
 
 	// DisplayMode defaultMode = DisplayMode::explode;
   DisplayMode defaultMode = DisplayMode::fade;

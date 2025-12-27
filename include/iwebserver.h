@@ -83,6 +83,7 @@ private:
 	void handleSetHeartbeat();
 	void handleInfo();
   void handleSetBrightness();
+  void handleSetBlueCorrection();
 	void handleGetADC();
 	void handleSetNtpServer();
   void handleResetWifiCredentials();

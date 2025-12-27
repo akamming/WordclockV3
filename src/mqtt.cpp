@@ -52,6 +52,7 @@ uint8_t MaxColor(palette_entry A)
 //---------------------------------------------------------------------------------------
 MqttClass::MqttClass()
 {
+  this->mqtt_bluecorrection = 0;
 }
 
 //---------------------------------------------------------------------------------------
@@ -108,6 +109,10 @@ void MqttClass::process()
     if (this->mqtt_animspeed!=Config.animspeed) {
       this->mqtt_animspeed=Config.animspeed;
       this->UpdateMQTTNumber(ANIMATIONSPEEDNAME, this->mqtt_animspeed);
+    }
+    if (this->mqtt_bluecorrection!=Config.blueCorrection) {
+      this->mqtt_bluecorrection=Config.blueCorrection;
+      this->UpdateMQTTNumber(BLUECORRECTIONNAME, this->mqtt_bluecorrection);
     }
     if (!isSameColor(Config.fg,this->fg)) {
       this->fg=Config.fg;
@@ -724,6 +729,7 @@ void MqttClass::PublishAllMQTTSensors()
     this->PublishMQTTDimmer(BACKGROUNDNAME,true);
     this->PublishMQTTDimmer(SECONDSNAME,true);
     this->PublishMQTTNumber(ANIMATIONSPEEDNAME,1,100,1,true);
+    this->PublishMQTTNumber(BLUECORRECTIONNAME,0,100,1,true);
     this->PublishMQTTModeSelect(MODENAME);
     this->PublishMQTTText(DEBUGNAME);
     this->PublishMQTTSwitch(DEBUGNAME);
@@ -731,6 +737,7 @@ void MqttClass::PublishAllMQTTSensors()
     // Trick the program to communicate in the next run by making sure the mqtt cached values are set to the "wrong" values
     this->mqtt_brightness = Brightness.brightnessOverride==50 ? 51 : 50;
     this->mqtt_animspeed = Config.animspeed==50 ? 51 : 50;  
+    this->mqtt_bluecorrection = (Config.blueCorrection==50 ? 51 : 50);
     this->mqtt_nightmode = Config.nightmode ? false : true ;
     if (isSameColor(Config.fg,{0,0,0})) {
       this->fg={1,1,1};
@@ -973,6 +980,11 @@ void MqttClass::MQTTcallback(char* topic, byte* payload, unsigned int length)
     } 
   } else if (topicstr.equals(NumberCommandTopic(ANIMATIONSPEEDNAME))) {
     Config.animspeed = String(payloadstr).toInt();
+  } else if (topicstr.equals(NumberCommandTopic(BLUECORRECTIONNAME))) {
+    int value = String(payloadstr).toInt();
+    if (value < 0) value = 0;
+    if (value > 100) value = 100;
+    Config.blueCorrection = value;
   } else if (topicstr.equals(DimmerCommandTopic(FOREGROUNDNAME) ) ) {
     Config.fg=ProcessColorCommand(Config.fg, payloadstr); 
   } else if (topicstr.equals(DimmerCommandTopic(BACKGROUNDNAME) ) ) {

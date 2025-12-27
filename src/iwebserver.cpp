@@ -91,6 +91,7 @@ void WebServerClass::begin()
 	this->server->on("/setheartbeat", std::bind(&WebServerClass::handleSetHeartbeat, this));
 	this->server->on("/setntpserver", std::bind(&WebServerClass::handleSetNtpServer, this));
   this->server->on("/setbrightness", std::bind(&WebServerClass::handleSetBrightness, this));
+  this->server->on("/setbluecorrection", std::bind(&WebServerClass::handleSetBlueCorrection, this));
 	this->server->on("/getadc", std::bind(&WebServerClass::handleGetADC, this));
 	this->server->on("/setmode", std::bind(&WebServerClass::handleSetMode, this));
   this->server->on("/setanimspeed", std::bind(&WebServerClass::handleSetAnimSpeed, this));
@@ -514,6 +515,27 @@ void WebServerClass::handleSetBrightness()
     Config.save();
 		this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
 	}
+}
+
+//---------------------------------------------------------------------------------------
+// handleSetBlueCorrection
+//
+// Handles the /setbluecorrection request, boosts blue for "het is" letters
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void WebServerClass::handleSetBlueCorrection()
+{
+  if(this->server->hasArg("value"))
+  {
+    int value = this->server->arg("value").toInt();
+    if(value < 0) value = 0;
+    if(value > 100) value = 100;
+    Config.blueCorrection = value;
+    Config.saveDelayed();
+    this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
+  }
 }
 
 //---------------------------------------------------------------------------------------

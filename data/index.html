@@ -36,6 +36,9 @@
         <div class="slidediv">
             Helderheid  <input type="range" min="0" max="255" value="125" name="brightness" id="brightness" onchange="brightnessChanged(this.value)" />
         </div>
+        <div class="slidediv">
+            Blauwe correctie <input type="range" min="0" max="100" value="0" name="bluecorrection" id="bluecorrection" onchange="blueCorrectionChanged(this.value)" />
+        </div>
         Effect
         <select name="displaymode" id="displaymode" class="transitions" onchange="displayModeChanged()">
             <option>Simpel</option>
@@ -388,6 +391,7 @@
                     document.getElementById('nightmode').checked = json.nightmode;
                     document.getElementById('timezone').selectedIndex = json.timezone + 12;
                     document.getElementById('brightness').value = json.Brightness;
+                    document.getElementById('bluecorrection').value = json.bluecorrection;
                     document.getElementById('animspeed').value = json.animspeed;
 
                     // get mqtt config
@@ -519,6 +523,12 @@
         function brightnessChanged(slidevalue) {
             var xhttp = new XMLHttpRequest();
             xhttp.open("GET", "http://" + location.hostname + "/setbrightness?value=" + slidevalue, true);
+            xhttp.send();
+        }
+
+        function blueCorrectionChanged(slidevalue) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "http://" + location.hostname + "/setbluecorrection?value=" + slidevalue, true);
             xhttp.send();
         }
 

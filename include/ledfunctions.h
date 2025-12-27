@@ -173,7 +173,7 @@ private:
 	void set(const uint8_t *buf, palette_entry palette[]);
 	void set(const uint8_t *buf, palette_entry palette[], bool immediately);
 	void setBuffer(uint8_t *target, const uint8_t *source, palette_entry palette[]);
-
+  void buildDefaultPalette(palette_entry palette[3]);
 	// this mapping table maps the linear memory buffer structure used throughout the
 	// project to the physical layout of the LEDs
 	static const uint32_t PROGMEM mapping[NUM_PIXELS];

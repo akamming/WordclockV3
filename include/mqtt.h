@@ -13,6 +13,7 @@
 #define SECONDSNAME "Seconds"
 #define MODENAME "Mode"
 #define ANIMATIONSPEEDNAME "AnimationSpeed"
+#define BLUECORRECTIONNAME "BlueCorrection"
 #define DEBUGNAME "Debug"
 #define CONNECTTIMEOUT 60000 // only try to connect once a minute
 #define PUBLISHTIMEOUT 3600000 // publish the sensors at least every hour 
@@ -66,6 +67,7 @@ private:
 	palette_entry s;
   DisplayMode mqttDisplayMode;
   uint8_t mqtt_animspeed;
+  uint8_t mqtt_bluecorrection;
 
   unsigned long lastconnectcheck;
   unsigned long lastmqttpublication;
