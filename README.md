@@ -25,6 +25,7 @@ plus several added features
 - nightmode
 - plugin available for [domoticz integration](https://github.com/akamming/Domoticz-WordClock) 
 - MQTT Autodiscovery for integration in Domoticz and home assistant (no need for above plugin anymore)
+- Blue correction slider to compensate for worn blue LEDs in the "het is" letters (adjustable 0-100%, scales from 1x to 5x boost)
 
 # WordClock V3 - PlatformIO Project
 
