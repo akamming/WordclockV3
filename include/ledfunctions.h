@@ -89,6 +89,11 @@ public:
   // Merry Christmas effect vars
 	uint8_t merryChristmasColors[20] = {0};
   bool merryChristmasColorsInitialized = false;
+  
+  // Happy New Year effect vars
+	uint8_t happyNewYearColors[14] = {0};
+	bool happyNewYearColorsInitialized = false;
+  int happyNewYearState = 0;  // 0 = fireworks, 1 = text
 
 #ifdef FASTLED
   CRGB leds[NUM_PIXELS]; // FastLed
@@ -146,6 +151,7 @@ private:
   void renderChristmasTree();
 	void renderJingleBells();
   void renderMerryChristmas();
+  void renderHappyNewYear();
   palette_entry blendedColor(palette_entry from_color, palette_entry to_color, float progress);
   void renderWakeup();
   void renderRandom(uint8_t *target);

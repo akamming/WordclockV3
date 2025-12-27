@@ -290,6 +290,7 @@ void MqttClass::PublishMQTTModeSelect(const char* uniquename)
   options.add("ChristmasTree");
   options.add("JingleBells");
   options.add("MerryChristmas");
+  options.add("HappyNewYear");
   options.add("red");
   options.add("green");
   options.add("blue");
@@ -570,6 +571,9 @@ void MqttClass::UpdateMQTTModeSelector(const char* uniquename, DisplayMode mode)
     break;
   case DisplayMode::merryChristmas:
     displaymode="merryChristmas"; 
+    break;
+  case DisplayMode::happyNewYear:
+    displaymode="happyNewYear"; 
     break;
   default:
     displaymode="unknown"; 
@@ -898,6 +902,8 @@ DisplayMode GetDisplayModeFromPayload(String payload)
     return DisplayMode::jinglebells;
   } else if (payload=="MerryChristmas") {
     return DisplayMode::merryChristmas;
+  } else if (payload=="HappyNewYear") {
+    return DisplayMode::happyNewYear;
   } else if (payload=="red") {
     return DisplayMode::red;
   } else if (payload=="green") {

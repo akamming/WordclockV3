@@ -33,6 +33,37 @@ uint8_t __attribute__((aligned(4))) fireBuf[NUM_PIXELS];
 uint8_t plasmaBuf[NUM_PIXELS];
 
 //---------------------------------------------------------------------------------------
+// Shared letter patterns for text animations
+// Capital letters are 10 pixels high (rows 0-9)
+// Lowercase letters are 7 pixels high (rows 3-9)
+//---------------------------------------------------------------------------------------
+// Capital letters (10 pixels high)
+static const uint8_t LETTER_M_CAP[10] = {0b10001, 0b11011, 0b10101, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001};
+static const uint8_t LETTER_C_CAP[10] = {0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110};
+static const uint8_t LETTER_H_CAP[10] = {0b10001, 0b10001, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001};
+static const uint8_t LETTER_A_CAP[10] = {0b01110, 0b10001, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001};
+static const uint8_t LETTER_P_CAP[10] = {0b11110, 0b10001, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000};
+static const uint8_t LETTER_Y_CAP[10] = {0b10001, 0b10001, 0b10001, 0b01010, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100};
+static const uint8_t LETTER_N_CAP[10] = {0b10001, 0b11001, 0b11001, 0b10101, 0b10101, 0b10011, 0b10011, 0b10001, 0b10001, 0b10001};
+static const uint8_t LETTER_E_CAP[10] = {0b11111, 0b10000, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000, 0b10000, 0b11111};
+static const uint8_t LETTER_W_CAP[10] = {0b10001, 0b10001, 0b10001, 0b10001, 0b10101, 0b10101, 0b10101, 0b11011, 0b10001, 0b10001};
+static const uint8_t LETTER_R_CAP[10] = {0b11110, 0b10001, 0b10001, 0b10001, 0b11110, 0b10100, 0b10010, 0b10001, 0b10001, 0b10001};
+
+// Lowercase letters (7 pixels high, rows 3-9)
+static const uint8_t LETTER_e_LOW[10] = {0b00000, 0b00000, 0b00000, 0b01110, 0b10001, 0b11111, 0b10000, 0b10001, 0b01110, 0b00000};
+static const uint8_t LETTER_r_LOW[10] = {0b00000, 0b00000, 0b00000, 0b10110, 0b11001, 0b10000, 0b10000, 0b10000, 0b10000, 0b00000};
+static const uint8_t LETTER_y_LOW[10] = {0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10011, 0b01101, 0b00001, 0b00010, 0b01100};
+static const uint8_t LETTER_h_LOW[10] = {0b10000, 0b10000, 0b10000, 0b10110, 0b11001, 0b10001, 0b10001, 0b10001, 0b10001, 0b00000};
+static const uint8_t LETTER_i_LOW[10] = {0b00000, 0b00100, 0b00000, 0b01100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000};
+static const uint8_t LETTER_s_LOW[10] = {0b00000, 0b00000, 0b00000, 0b01110, 0b10000, 0b01110, 0b00001, 0b10001, 0b01110, 0b00000};
+static const uint8_t LETTER_t_LOW[10] = {0b00000, 0b00100, 0b00100, 0b11111, 0b00100, 0b00100, 0b00100, 0b00101, 0b00010, 0b00000};
+static const uint8_t LETTER_a_LOW[10] = {0b00000, 0b00000, 0b00000, 0b01110, 0b00001, 0b01111, 0b10001, 0b10011, 0b01101, 0b00000};
+static const uint8_t LETTER_m_LOW[10] = {0b00000, 0b00000, 0b00000, 0b10001, 0b11011, 0b10101, 0b10101, 0b10101, 0b10001, 0b00000};
+static const uint8_t LETTER_p_LOW[10] = {0b00000, 0b00000, 0b00000, 0b11110, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000};
+static const uint8_t LETTER_w_LOW[10] = {0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10101, 0b10101, 0b11011, 0b10001, 0b00000};
+static const uint8_t LETTER_SPACE[10] = {0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000};
+
+//---------------------------------------------------------------------------------------
 // variables in PROGMEM (mapping table, images)
 //---------------------------------------------------------------------------------------
 #include "hourglass_animation.h"
@@ -415,27 +446,27 @@ void LEDFunctionsClass::process()
 	case DisplayMode::plasma:
 		this->renderPlasma();
 		break;
-  case DisplayMode::wakeup:
-    this->renderWakeup();
-    break;
-  case DisplayMode::random: 
-    this->renderRandom(buf);
-    break;
-  case DisplayMode::HorizontalStripes: 
-    this->renderStripes(buf,true);
-    break;
-  case DisplayMode::VerticalStripes: 
-    this->renderStripes(buf,false);
-    break;
-  case DisplayMode::RandomDots: 
-    this->renderRandomDots();
-    break;
-  case DisplayMode::RandomStripes: 
-    this->renderRandomStripes();
-    break;
-  case DisplayMode::RotatingLine: 
-    this->renderRotatingLine();
-    break;
+	case DisplayMode::wakeup:
+		this->renderWakeup();
+		break;
+	case DisplayMode::random:
+		this->renderRandom(buf);
+		break;
+	case DisplayMode::HorizontalStripes:
+		this->renderStripes(buf, true);
+		break;
+	case DisplayMode::VerticalStripes:
+		this->renderStripes(buf, false);
+		break;
+	case DisplayMode::RandomDots:
+		this->renderRandomDots();
+		break;
+	case DisplayMode::RandomStripes:
+		this->renderRandomStripes();
+		break;
+	case DisplayMode::RotatingLine:
+		this->renderRotatingLine();
+		break;
 	case DisplayMode::christmastree:
 		this->renderChristmasTree();
 		break;
@@ -443,15 +474,31 @@ void LEDFunctionsClass::process()
 		this->renderJingleBells();
 		break;
 	case DisplayMode::merryChristmas:
-		this->renderMerryChristmas();
-		break;
-
+		// in nightmode, show rendertime instead of christmas greeting
+		if (Config.nightmode) {
+			this->renderTime(buf);
+			this->set(buf, palette, true);
+			break;
+		} else {
+			this->renderMerryChristmas();
+			break;
+		}
+	case DisplayMode::happyNewYear:
+		// in nightmode, show rendertime instead of new year greeting
+		if (Config.nightmode) {
+			this->renderTime(buf);
+			this->set(buf, palette, true);
+			break;
+		} else {
+			this->renderHappyNewYear();
+			break;
+		}
 	case DisplayMode::fade:
 		this->renderTime(buf);
 		this->set(buf, palette, false);
 		this->fade();
 		break;
-    
+
 	case DisplayMode::plain:
 	default:
 		this->renderTime(buf);
@@ -1090,7 +1137,7 @@ void LEDFunctionsClass::renderStripes(uint8_t *target, bool Horizontal)
         Offset++;
       }
     }
-    this->lastOffset++;
+	this->lastOffset++;
     this->lastUpdate=millis();
     this->set(target, palette, false);
   }
@@ -1582,8 +1629,9 @@ palette_entry LEDFunctionsClass::blendedColor(palette_entry from_color, palette_
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderMerryChristmas()
 {
-  // Linear mapping: animspeed 0->500ms, 100->40ms
-  unsigned int delay = 500 - (Config.animspeed * 460 / 100);
+	// Linear mapping: animspeed 0->500ms, 100->40ms, then 5x faster for rockets
+	unsigned int delay = (500 - (Config.animspeed * 460 / 100)) / 5;
+	if (delay < 10) delay = 10;
   if ((unsigned long) (millis()-this->lastUpdate) > delay)
   {
     this->lastUpdate = millis();
@@ -1597,24 +1645,29 @@ void LEDFunctionsClass::renderMerryChristmas()
 	int totalTextWidth = 0;
 	for (int i = 0; i < 20; i++) totalTextWidth += letterWidths[i];
 
-	// Update scroll offset
-	this->lastOffset++;
-    
-	// Total scroll length based on actual widths
-	// Add 11 pixels to scroll off screen + 5 pixels pause
-	int totalScrollLength = totalTextWidth + 11 + 5;
-    
-    if (this->lastOffset > totalScrollLength) 
-    {
-      this->lastOffset = 0;
-      // Randomize colors at start of each sequence
-      this->merryChristmasColors[0] = 0;
-      for (int i = 1; i < 20; i++)
-      {
-        // Avoid same color as previous letter
-        this->merryChristmasColors[i] = (this->merryChristmasColors[i-1] + 1 + random(2)) % 3;
-      }
-    }
+		// Total scroll length based on actual widths
+		// Add 11 pixels to scroll off screen + 5 pixels pause
+		int totalScrollLength = totalTextWidth + 11 + 5;
+
+		// Randomize colors at start (first entry) only once per cycle
+		if (!this->merryChristmasColorsInitialized || this->lastOffset == 0)
+		{
+			this->merryChristmasColors[0] = random(3);
+			for (int i = 1; i < 20; i++)
+			{
+				// Avoid same color as previous letter
+				this->merryChristmasColors[i] = (this->merryChristmasColors[i-1] + 1 + random(2)) % 3;
+			}
+			this->merryChristmasColorsInitialized = true;
+		}
+
+		// Update scroll offset
+		this->lastOffset++;
+
+		if (this->lastOffset > totalScrollLength)
+		{
+			this->lastOffset = 0;
+		}
     
 	// Check if we're in the pause period (after text scrolled off)
 	if (this->lastOffset > totalTextWidth + 11)
@@ -1622,23 +1675,6 @@ void LEDFunctionsClass::renderMerryChristmas()
       // Pause period - keep screen dark
       return;
     }
-    
-    // Define CAPITAL letter patterns (10 pixels high, full height)
-    uint8_t M_cap[10] = {0b10001, 0b11011, 0b10101, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001};
-    uint8_t C_cap[10] = {0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110};
-    
-    // Define lowercase letter patterns (7 pixels high, rows 3-9)
-    uint8_t e_low[10] = {0b00000, 0b00000, 0b00000, 0b01110, 0b10001, 0b11111, 0b10000, 0b10001, 0b01110, 0b00000};
-    uint8_t r_low[10] = {0b00000, 0b00000, 0b00000, 0b10110, 0b11001, 0b10000, 0b10000, 0b10000, 0b10000, 0b00000};
-    uint8_t y_low[10] = {0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10011, 0b01101, 0b00001, 0b00010, 0b01100};
-    uint8_t h_low[10] = {0b10000, 0b10000, 0b10000, 0b10110, 0b11001, 0b10001, 0b10001, 0b10001, 0b10001, 0b00000};
-    uint8_t i_low[10] = {0b00000, 0b00100, 0b00000, 0b01100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000};
-    uint8_t s_low[10] = {0b00000, 0b00000, 0b00000, 0b01110, 0b10000, 0b01110, 0b00001, 0b10001, 0b01110, 0b00000};
-    uint8_t t_low[10] = {0b00000, 0b00100, 0b00100, 0b11111, 0b00100, 0b00100, 0b00100, 0b00101, 0b00010, 0b00000};
-    uint8_t a_low[10] = {0b00000, 0b00000, 0b00000, 0b01110, 0b00001, 0b01111, 0b10001, 0b10011, 0b01101, 0b00000};
-    uint8_t space[10] = {0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000};
-	// Lowercase 'm' (7px high, rows 3-9)
-	uint8_t m_low[10] = {0b00000, 0b00000, 0b00000, 0b10001, 0b11011, 0b10101, 0b10101, 0b10101, 0b10001, 0b00000};
     
 		// Combined Santa + sleigh + reindeer sprite (21x10), RGB per pixel
 		static const uint8_t santaSleighSprite[10][21][3] PROGMEM = {
@@ -1655,10 +1691,10 @@ void LEDFunctionsClass::renderMerryChristmas()
 		};
 
 		// Sequence: sprite + space + "MERRY CHRISTMAS" + space + sprite + trailing gap
-		uint8_t *letters[] = {
-			nullptr, space, M_cap, e_low, r_low, r_low, y_low, space,
-			C_cap, h_low, r_low, i_low, s_low, t_low, m_low, a_low, s_low, space,
-			nullptr, space
+		const uint8_t *letters[] = {
+			nullptr, LETTER_SPACE, LETTER_M_CAP, LETTER_e_LOW, LETTER_r_LOW, LETTER_r_LOW, LETTER_y_LOW, LETTER_SPACE,
+			LETTER_C_CAP, LETTER_h_LOW, LETTER_r_LOW, LETTER_i_LOW, LETTER_s_LOW, LETTER_t_LOW, LETTER_m_LOW, LETTER_a_LOW, LETTER_s_LOW, LETTER_SPACE,
+			nullptr, LETTER_SPACE
 		};
 		int numLetters = 20;
     
@@ -1742,6 +1778,309 @@ void LEDFunctionsClass::renderMerryChristmas()
   
   // this->fade();
 }
+
+//---------------------------------------------------------------------------------------
+// renderHappyNewYear
+//
+// Renders fireworks animation followed by "Happy New Year" scrolling text
+// Reuses particle system from renderExplosion for fireworks
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void LEDFunctionsClass::renderHappyNewYear()
+{
+  // Linear mapping: animspeed 0->500ms, 100->40ms
+  unsigned int delay = 500 - (Config.animspeed * 460 / 100);
+  if ((unsigned long) (millis()-this->lastUpdate) > delay)
+  {
+    this->lastUpdate = millis();
+
+    // Clear all pixels
+    memset(this->currentValues, 0, sizeof(this->currentValues));
+    
+	// State machine: 
+	// Offset 0-120: Show fireworks (3 rockets)
+	// Offset 120+: Show text
+    
+	// Calculate cycle lengths
+	int fireworksDuration = 120;
+    
+    // Letter widths for "Happy New Year": H=6, a=6, p=6, p=6, y=6, space=6, N=6, e=6, w=6, space=6, Y=6, e=6, a=6, r=6
+    int letterWidths[14] = {6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6};
+    int totalTextWidth = 0;
+    for (int i = 0; i < 14; i++) totalTextWidth += letterWidths[i];
+    int totalScrollLength = totalTextWidth + 11 + 5; // Text + scroll off + pause
+    
+		int totalCycleLength = fireworksDuration + totalScrollLength;
+
+		// Randomize colors at start of cycle (first run) only once per cycle
+		if (!this->happyNewYearColorsInitialized || this->lastOffset == 0)
+		{
+			this->happyNewYearColors[0] = random(3);
+			for (int i = 1; i < 14; i++)
+			{
+				this->happyNewYearColors[i] = (this->happyNewYearColors[i-1] + 1 + random(2)) % 3;
+			}
+			this->happyNewYearColorsInitialized = true;
+		}
+
+		// Advance offset
+		this->lastOffset++;
+
+		if (this->lastOffset > totalCycleLength)
+		{
+			this->lastOffset = 0;
+		}
+    
+    // Fireworks phase
+    if (this->lastOffset < fireworksDuration)
+    {
+      // Use particle system like renderExplosion
+      palette_entry palette[] = {
+        {Config.bg.r, Config.bg.g, Config.bg.b},
+        {255, 200, 0},  // Yellow/orange for fireworks
+        {Config.s.r, Config.s.g, Config.s.b}
+      };
+      
+      // Define rocket timing and positions
+      // Rocket 1: x=3, launches at frame 10, explodes at y=4
+      // Rocket 2: x=5, launches at frame 45, explodes at y=5
+      // Rocket 3: x=7, launches at frame 80, explodes at y=4
+      
+      int rocket1Start = 10;
+      int rocket1Explode = 25;
+      int rocket2Start = 45;
+      int rocket2Explode = 60;
+      int rocket3Start = 80;
+      int rocket3Explode = 95;
+      
+      // Rocket 1
+      if (this->lastOffset >= rocket1Start && this->lastOffset < rocket1Explode)
+      {
+        // Rising phase
+        int phase = this->lastOffset - rocket1Start;
+        int y = 9 - (phase * 5 / (rocket1Explode - rocket1Start));
+        if (y >= 4 && y <= 9)
+        {
+          int mappedIndex = LEDFunctionsClass::mapping[y * 11 + 3] * 3;
+          this->currentValues[mappedIndex] = 255;
+          this->currentValues[mappedIndex + 1] = 200;
+          this->currentValues[mappedIndex + 2] = 0;
+        }
+      }
+			else if (this->lastOffset == rocket1Explode)
+			{
+				// Create explosion at (3, 4) with immediate particles
+				for(Particle *p : this->particles) delete p;
+				this->particles.clear();
+
+				const int particleCount = 16;
+				const float particleSpeed = 0.90f;
+				float angle_increment = 2.0f * 3.141592654f / (float)(particleCount);
+				float angle = 0;
+				for(int i=0; i<particleCount; i++)
+				{
+					float vx = particleSpeed * sin(angle);
+					float vy = particleSpeed * cos(angle);
+					Particle *p = new Particle(3, 4, vx, vy, 0);
+					this->particles.push_back(p);
+					angle += angle_increment;
+				}
+			}
+      else if (this->lastOffset > rocket1Explode && this->lastOffset < rocket2Start)
+      {
+        // Render explosion particles
+        std::vector<Particle*> particlesToKeep;
+        for (Particle *p : this->particles)
+        {
+          p->render(this->currentValues, palette);
+          if (p->alive) particlesToKeep.push_back(p); else delete p;
+        }
+        this->particles.swap(particlesToKeep);
+      }
+      
+      // Rocket 2
+      if (this->lastOffset >= rocket2Start && this->lastOffset < rocket2Explode)
+      {
+        // Rising phase
+        int phase = this->lastOffset - rocket2Start;
+        int y = 9 - (phase * 4 / (rocket2Explode - rocket2Start));
+        if (y >= 5 && y <= 9)
+        {
+          int mappedIndex = LEDFunctionsClass::mapping[y * 11 + 5] * 3;
+          this->currentValues[mappedIndex] = 0;
+          this->currentValues[mappedIndex + 1] = 200;
+          this->currentValues[mappedIndex + 2] = 255;
+        }
+      }
+			else if (this->lastOffset == rocket2Explode)
+			{
+				// Create explosion at (5, 5) with immediate particles
+				for(Particle *p : this->particles) delete p;
+				this->particles.clear();
+
+				const int particleCount = 16;
+				const float particleSpeed = 0.90f;
+				float angle_increment = 2.0f * 3.141592654f / (float)(particleCount);
+				float angle = 0;
+				for(int i=0; i<particleCount; i++)
+				{
+					float vx = particleSpeed * sin(angle);
+					float vy = particleSpeed * cos(angle);
+					Particle *p = new Particle(5, 5, vx, vy, 0);
+					this->particles.push_back(p);
+					angle += angle_increment;
+				}
+			}
+      else if (this->lastOffset > rocket2Explode && this->lastOffset < rocket3Start)
+      {
+        // Render explosion particles
+        std::vector<Particle*> particlesToKeep;
+        for (Particle *p : this->particles)
+        {
+          p->render(this->currentValues, palette);
+          if (p->alive) particlesToKeep.push_back(p); else delete p;
+        }
+        this->particles.swap(particlesToKeep);
+      }
+      
+      // Rocket 3
+      if (this->lastOffset >= rocket3Start && this->lastOffset < rocket3Explode)
+      {
+        // Rising phase
+        int phase = this->lastOffset - rocket3Start;
+        int y = 9 - (phase * 5 / (rocket3Explode - rocket3Start));
+        if (y >= 4 && y <= 9)
+        {
+          int mappedIndex = LEDFunctionsClass::mapping[y * 11 + 7] * 3;
+          this->currentValues[mappedIndex] = 255;
+          this->currentValues[mappedIndex + 1] = 0;
+          this->currentValues[mappedIndex + 2] = 200;
+        }
+      }
+			else if (this->lastOffset == rocket3Explode)
+			{
+				// Create explosion at (7, 4) with immediate particles
+				for(Particle *p : this->particles) delete p;
+				this->particles.clear();
+
+				const int particleCount = 16;
+				const float particleSpeed = 0.90f;
+				float angle_increment = 2.0f * 3.141592654f / (float)(particleCount);
+				float angle = 0;
+				for(int i=0; i<particleCount; i++)
+				{
+					float vx = particleSpeed * sin(angle);
+					float vy = particleSpeed * cos(angle);
+					Particle *p = new Particle(7, 4, vx, vy, 0);
+					this->particles.push_back(p);
+					angle += angle_increment;
+				}
+			}
+      else if (this->lastOffset > rocket3Explode && this->lastOffset < fireworksDuration)
+      {
+        // Render explosion particles
+        std::vector<Particle*> particlesToKeep;
+        for (Particle *p : this->particles)
+        {
+          p->render(this->currentValues, palette);
+          if (p->alive) particlesToKeep.push_back(p); else delete p;
+        }
+        this->particles.swap(particlesToKeep);
+      }
+      
+      // Cleanup particles at end of fireworks
+      if (this->lastOffset == fireworksDuration - 1)
+      {
+        for(Particle *p : this->particles) delete p;
+        this->particles.clear();
+      }
+    }
+    // Text phase: "Happy New Year" with mixed case
+    else
+    {
+      int textOffset = this->lastOffset - fireworksDuration;
+      
+      // Check if we're in the pause period
+      if (textOffset > totalTextWidth + 11)
+      {
+        // Pause period - keep screen dark
+        return;
+      }
+      
+      // Happy New Year: H(cap) a(low) p(low) p(low) y(low) space N(cap) e(low) w(low) space Y(cap) e(low) a(low) r(low)
+      const uint8_t *letters[] = {
+        LETTER_H_CAP, LETTER_a_LOW, LETTER_p_LOW, LETTER_p_LOW, LETTER_y_LOW, LETTER_SPACE,
+        LETTER_N_CAP, LETTER_e_LOW, LETTER_w_LOW, LETTER_SPACE,
+        LETTER_Y_CAP, LETTER_e_LOW, LETTER_a_LOW, LETTER_r_LOW
+      };
+      int numLetters = 14;
+      
+      // For each Y row (0-9)
+      for (int y = 0; y < 10; y++)
+      {
+        // For each X position on screen (0-10)
+        for (int x = 0; x < 11; x++)
+        {
+          // Calculate position in scrolling text
+          int scrollPos = (x + textOffset - 11);
+          
+          // Skip if out of bounds
+          if (scrollPos < 0 || scrollPos >= totalTextWidth) continue;
+          
+          // Determine letter index and position
+          int accum = 0;
+          int letterIndex = -1;
+          int posInLetter = -1;
+          for (int i = 0; i < numLetters; i++)
+          {
+            int w = letterWidths[i];
+            if (scrollPos >= accum && scrollPos < accum + w)
+            {
+              letterIndex = i;
+              posInLetter = scrollPos - accum;
+              break;
+            }
+            accum += w;
+          }
+          if (letterIndex < 0) continue;
+          
+          int glyphWidth = 5;
+          if (posInLetter >= glyphWidth) continue; // skip spacer column
+          
+          uint8_t pattern = letters[letterIndex][y];
+          int bitPos = 4 - posInLetter;
+          bool pixelOn = (pattern & (1 << bitPos)) != 0;
+          
+          if (pixelOn)
+          {
+            uint8_t r, g, b;
+            int colorPhase = this->happyNewYearColors[letterIndex];
+            if (colorPhase == 0)
+            {
+              r = 255; g = 0; b = 0;      // Red
+            }
+            else if (colorPhase == 1)
+            {
+              r = 0; g = 255; b = 0;      // Green
+            }
+            else
+            {
+              r = 255; g = 220; b = 0;    // Yellow
+            }
+            
+            int mappedIndex = LEDFunctionsClass::mapping[y * 11 + x] * 3;
+            this->currentValues[mappedIndex] = r;
+            this->currentValues[mappedIndex + 1] = g;
+            this->currentValues[mappedIndex + 2] = b;
+          }
+        }
+      }
+    }
+  }
+}
+
 
 //---------------------------------------------------------------------------------------
 // renderWakeup

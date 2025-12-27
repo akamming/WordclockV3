@@ -180,6 +180,8 @@ JsonDocument ConfigClass::json()
     displaymode = 17; break;
   case DisplayMode::merryChristmas:
     displaymode = 18; break;
+  case DisplayMode::happyNewYear:
+    displaymode = 19; break;
   default:
     displaymode = 1; break;
   }

@@ -645,6 +645,7 @@ void WebServerClass::handleSetMode()
     if(this->server->arg("value") == "16") mode = DisplayMode::christmastree;
     if(this->server->arg("value") == "17") mode = DisplayMode::jinglebells;
     if(this->server->arg("value") == "18") mode = DisplayMode::merryChristmas;
+    if(this->server->arg("value") == "19") mode = DisplayMode::happyNewYear;
 	}
 
 	if(mode == DisplayMode::invalid)
@@ -673,22 +674,23 @@ void WebServerClass::handleSetMode()
 void WebServerClass::handleNotFound()
 {
 
-	// first, try to serve the requested file from flash
-	if (!serveFile(this->server->uri().c_str()))
-	{
+  // first, try to serve the requested file from flash
+  if (!serveFile(this->server->uri().c_str()))
+  {
     // create 404 message if no file was found for this URI
     char message[1000];
-    sprintf(message,"File Not Found\n\nURI: %s\nMethod: %s\nArguments %d\n",
-        this->server->uri().c_str(), this->server->method() == HTTP_GET ? "GET" : "POST",
-        this->server->args());
-		for (uint8_t i = 0; i < this->server->args(); i++)
-		{
+    sprintf(message,"<html><body>File Not Found<br><br>URI: %s<br>Method: %s<br>Arguments %d<br>Upload page: <a href=\"/upload\">/upload</a><br>",
+      this->server->uri().c_str(), this->server->method() == HTTP_GET ? "GET" : "POST",
+      this->server->args());
+    for (uint8_t i = 0; i < this->server->args(); i++)
+    {
       char buf[100];
-      sprintf(buf," %s,%s\n\r",this->server->argName(i).c_str(),this->server->arg(i).c_str());
+      sprintf(buf," %s,%s<br>",this->server->argName(i).c_str(),this->server->arg(i).c_str());
       strcat (message,buf);
-		}
-		this->server->send(404, "text/plain", message);
-	}
+    }
+    strcat(message,"</body></html>");
+    this->server->send(404, "text/html", message);
+  }
 }
 
 //---------------------------------------------------------------------------------------
