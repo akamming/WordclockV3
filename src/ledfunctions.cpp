@@ -37,51 +37,458 @@ uint8_t plasmaBuf[NUM_PIXELS];
 // Lowercase letters are 7 pixels high (rows 3-9)
 //---------------------------------------------------------------------------------------
 // Capital letters (10 pixels high)
-static const uint8_t LETTER_M_CAP[10] = {0b10001, 0b11011, 0b10101, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001};
-static const uint8_t LETTER_C_CAP[10] = {0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110};
-static const uint8_t LETTER_H_CAP[10] = {0b10001, 0b10001, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001};
-static const uint8_t LETTER_A_CAP[10] = {0b01110, 0b10001, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001};
-static const uint8_t LETTER_P_CAP[10] = {0b11110, 0b10001, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000};
-static const uint8_t LETTER_Y_CAP[10] = {0b10001, 0b10001, 0b10001, 0b01010, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100};
-static const uint8_t LETTER_N_CAP[10] = {0b10001, 0b11001, 0b11001, 0b10101, 0b10101, 0b10011, 0b10011, 0b10001, 0b10001, 0b10001};
-static const uint8_t LETTER_E_CAP[10] = {0b11111, 0b10000, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000, 0b10000, 0b11111};
-static const uint8_t LETTER_W_CAP[10] = {0b10001, 0b10001, 0b10001, 0b10001, 0b10101, 0b10101, 0b10101, 0b11011, 0b10001, 0b10001};
-static const uint8_t LETTER_R_CAP[10] = {0b11110, 0b10001, 0b10001, 0b10001, 0b11110, 0b10100, 0b10010, 0b10001, 0b10001, 0b10001};
+static const uint8_t LETTER_M_CAP[10] = {
+  0b10001,
+  0b11011,
+  0b10101,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001
+};
+static const uint8_t LETTER_C_CAP[10] = {
+  0b01110,
+  0b10001,
+  0b10000,
+  0b10000,
+  0b10000,
+  0b10000,
+  0b10000,
+  0b10000,
+  0b10001,
+  0b01110
+};
+static const uint8_t LETTER_H_CAP[10] = {
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b11111,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001
+};
+static const uint8_t LETTER_A_CAP[10] = {
+  0b01110,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b11111,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001
+};
+static const uint8_t LETTER_P_CAP[10] = {
+  0b11110,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b11110,
+  0b10000,
+  0b10000,
+  0b10000,
+  0b10000,
+  0b10000
+};
+static const uint8_t LETTER_Y_CAP[10] = {
+  0b10001,
+  0b10001,
+  0b10001,
+  0b01010,
+  0b00100,
+  0b00100,
+  0b00100,
+  0b00100,
+  0b00100,
+  0b00100
+};
+static const uint8_t LETTER_N_CAP[10] = {
+  0b10001,
+  0b11001,
+  0b11001,
+  0b10101,
+  0b10101,
+  0b10011,
+  0b10011,
+  0b10001,
+  0b10001,
+  0b10001
+};
+static const uint8_t LETTER_E_CAP[10] = {
+  0b11111,
+  0b10000,
+  0b10000,
+  0b10000,
+  0b11110,
+  0b10000,
+  0b10000,
+  0b10000,
+  0b10000,
+  0b11111
+};
+static const uint8_t LETTER_W_CAP[10] = {
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10101,
+  0b10101,
+  0b10101,
+  0b11011,
+  0b10001,
+  0b10001
+};
+static const uint8_t LETTER_R_CAP[10] = {
+  0b11110,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b11110,
+  0b10100,
+  0b10010,
+  0b10001,
+  0b10001,
+  0b10001
+};
 
 // Lowercase letters (7 pixels high, rows 3-9)
-static const uint8_t LETTER_e_LOW[10] = {0b00000, 0b00000, 0b00000, 0b01110, 0b10001, 0b11111, 0b10000, 0b10001, 0b01110, 0b00000};
-static const uint8_t LETTER_r_LOW[10] = {0b00000, 0b00000, 0b00000, 0b10110, 0b11001, 0b10000, 0b10000, 0b10000, 0b10000, 0b00000};
-static const uint8_t LETTER_y_LOW[10] = {0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10011, 0b01101, 0b00001, 0b00010, 0b01100};
-static const uint8_t LETTER_h_LOW[10] = {0b10000, 0b10000, 0b10000, 0b10110, 0b11001, 0b10001, 0b10001, 0b10001, 0b10001, 0b00000};
-static const uint8_t LETTER_i_LOW[10] = {0b00000, 0b00100, 0b00000, 0b01100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000};
-static const uint8_t LETTER_s_LOW[10] = {0b00000, 0b00000, 0b00000, 0b01110, 0b10000, 0b01110, 0b00001, 0b10001, 0b01110, 0b00000};
-static const uint8_t LETTER_t_LOW[10] = {0b00000, 0b00100, 0b00100, 0b11111, 0b00100, 0b00100, 0b00100, 0b00101, 0b00010, 0b00000};
-static const uint8_t LETTER_a_LOW[10] = {0b00000, 0b00000, 0b00000, 0b01110, 0b00001, 0b01111, 0b10001, 0b10011, 0b01101, 0b00000};
-static const uint8_t LETTER_m_LOW[10] = {0b00000, 0b00000, 0b00000, 0b10001, 0b11011, 0b10101, 0b10101, 0b10101, 0b10001, 0b00000};
-static const uint8_t LETTER_p_LOW[10] = {0b00000, 0b00000, 0b00000, 0b11110, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000};
-static const uint8_t LETTER_w_LOW[10] = {0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10101, 0b10101, 0b11011, 0b10001, 0b00000};
-static const uint8_t LETTER_SPACE[10] = {0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000};
+static const uint8_t LETTER_e_LOW[10] = {
+  0b00000,
+  0b00000,
+  0b00000,
+  0b01110,
+  0b10001,
+  0b11111,
+  0b10000,
+  0b10001,
+  0b01110,
+  0b00000
+};
+static const uint8_t LETTER_r_LOW[10] = {
+  0b00000,
+  0b00000,
+  0b00000,
+  0b10110,
+  0b11001,
+  0b10000,
+  0b10000,
+  0b10000,
+  0b10000,
+  0b00000
+};
+static const uint8_t LETTER_y_LOW[10] = {
+  0b00000,
+  0b00000,
+  0b00000,
+  0b10001,
+  0b10001,
+  0b10011,
+  0b01101,
+  0b00001,
+  0b00010,
+  0b01100
+};
+static const uint8_t LETTER_h_LOW[10] = {
+  0b10000,
+  0b10000,
+  0b10000,
+  0b10110,
+  0b11001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b00000
+};
+static const uint8_t LETTER_i_LOW[10] = {
+  0b00000,
+  0b00100,
+  0b00000,
+  0b01100,
+  0b00100,
+  0b00100,
+  0b00100,
+  0b00100,
+  0b01110,
+  0b00000
+};
+static const uint8_t LETTER_s_LOW[10] = {
+  0b00000,
+  0b00000,
+  0b00000,
+  0b01110,
+  0b10000,
+  0b01110,
+  0b00001,
+  0b10001,
+  0b01110,
+  0b00000
+};
+static const uint8_t LETTER_t_LOW[10] = {
+  0b00000,
+  0b00100,
+  0b00100,
+  0b11111,
+  0b00100,
+  0b00100,
+  0b00100,
+  0b00101,
+  0b00010,
+  0b00000
+};
+static const uint8_t LETTER_a_LOW[10] = {
+  0b00000,
+  0b00000,
+  0b00000,
+  0b01110,
+  0b00001,
+  0b01111,
+  0b10001,
+  0b10011,
+  0b01101,
+  0b00000
+};
+static const uint8_t LETTER_m_LOW[10] = {
+  0b00000,
+  0b00000,
+  0b00000,
+  0b10001,
+  0b11011,
+  0b10101,
+  0b10101,
+  0b10101,
+  0b10001,
+  0b00000
+};
+static const uint8_t LETTER_p_LOW[10] = {
+  0b00000,
+  0b00000,
+  0b00000,
+  0b11110,
+  0b10001,
+  0b10001,
+  0b11110,
+  0b10000,
+  0b10000,
+  0b10000
+};
+static const uint8_t LETTER_w_LOW[10] = {
+  0b00000,
+  0b00000,
+  0b00000,
+  0b10001,
+  0b10001,
+  0b10101,
+  0b10101,
+  0b11011,
+  0b10001,
+  0b00000
+};
+static const uint8_t LETTER_SPACE[10] = {
+  0b00000,
+  0b00000,
+  0b00000,
+  0b00000,
+  0b00000,
+  0b00000,
+  0b00000,
+  0b00000,
+  0b00000,
+  0b00000
+};
 
 // Additional letters for "Game Over" and other texts
-static const uint8_t LETTER_G_CAP[10] = {0b01110, 0b10001, 0b10000, 0b10000, 0b10111, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110};
-static const uint8_t LETTER_O_CAP[10] = {0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110};
-static const uint8_t LETTER_V_CAP[10] = {0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01010, 0b00100, 0b00100};
+static const uint8_t LETTER_G_CAP[10] = {
+  0b01110,
+  0b10001,
+  0b10000,
+  0b10000,
+  0b10111,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b01110
+};
+static const uint8_t LETTER_O_CAP[10] = {
+  0b01110,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b01110
+};
+static const uint8_t LETTER_V_CAP[10] = {
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b01010,
+  0b00100,
+  0b00100
+};
 
 // Digits (10 pixels high, 5 pixels wide)
-static const uint8_t DIGIT_0[10] = {0b01110, 0b10001, 0b10011, 0b10101, 0b10101, 0b10101, 0b11001, 0b10001, 0b10001, 0b01110};
-static const uint8_t DIGIT_1[10] = {0b00100, 0b01100, 0b10100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b11111};
-static const uint8_t DIGIT_2[10] = {0b01110, 0b10001, 0b00001, 0b00001, 0b00010, 0b00100, 0b01000, 0b10000, 0b10000, 0b11111};
-static const uint8_t DIGIT_3[10] = {0b01110, 0b10001, 0b00001, 0b00001, 0b01110, 0b00001, 0b00001, 0b00001, 0b10001, 0b01110};
-static const uint8_t DIGIT_4[10] = {0b00010, 0b00110, 0b01010, 0b10010, 0b10010, 0b11111, 0b00010, 0b00010, 0b00010, 0b00010};
-static const uint8_t DIGIT_5[10] = {0b11111, 0b10000, 0b10000, 0b10000, 0b11110, 0b00001, 0b00001, 0b00001, 0b10001, 0b01110};
-static const uint8_t DIGIT_6[10] = {0b01110, 0b10001, 0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110};
-static const uint8_t DIGIT_7[10] = {0b11111, 0b00001, 0b00001, 0b00010, 0b00010, 0b00100, 0b00100, 0b01000, 0b01000, 0b01000};
-static const uint8_t DIGIT_8[10] = {0b01110, 0b10001, 0b10001, 0b10001, 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110};
-static const uint8_t DIGIT_9[10] = {0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001, 0b10001, 0b01110};
+static const uint8_t DIGIT_0[10] = {
+  0b01110,
+  0b10001,
+  0b10011,
+  0b10101,
+  0b10101,
+  0b10101,
+  0b11001,
+  0b10001,
+  0b10001,
+  0b01110
+};
+static const uint8_t DIGIT_1[10] = {
+  0b00100,
+  0b01100,
+  0b10100,
+  0b00100,
+  0b00100,
+  0b00100,
+  0b00100,
+  0b00100,
+  0b00100,
+  0b11111
+};
+static const uint8_t DIGIT_2[10] = {
+  0b01110,
+  0b10001,
+  0b00001,
+  0b00001,
+  0b00010,
+  0b00100,
+  0b01000,
+  0b10000,
+  0b10000,
+  0b11111
+};
+static const uint8_t DIGIT_3[10] = {
+  0b01110,
+  0b10001,
+  0b00001,
+  0b00001,
+  0b01110,
+  0b00001,
+  0b00001,
+  0b00001,
+  0b10001,
+  0b01110
+};
+static const uint8_t DIGIT_4[10] = {
+  0b00010,
+  0b00110,
+  0b01010,
+  0b10010,
+  0b10010,
+  0b11111,
+  0b00010,
+  0b00010,
+  0b00010,
+  0b00010
+};
+static const uint8_t DIGIT_5[10] = {
+  0b11111,
+  0b10000,
+  0b10000,
+  0b10000,
+  0b11110,
+  0b00001,
+  0b00001,
+  0b00001,
+  0b10001,
+  0b01110
+};
+static const uint8_t DIGIT_6[10] = {
+  0b01110,
+  0b10001,
+  0b10000,
+  0b10000,
+  0b11110,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b01110
+};
+static const uint8_t DIGIT_7[10] = {
+  0b11111,
+  0b00001,
+  0b00001,
+  0b00010,
+  0b00010,
+  0b00100,
+  0b00100,
+  0b01000,
+  0b01000,
+  0b01000
+};
+static const uint8_t DIGIT_8[10] = {
+  0b01110,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b01110,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b01110
+};
+static const uint8_t DIGIT_9[10] = {
+  0b01110,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b10001,
+  0b01111,
+  0b00001,
+  0b00001,
+  0b10001,
+  0b01110
+};
 
 // Colon and dash for time/score display
-static const uint8_t CHAR_COLON[10] = {0b00000, 0b00000, 0b00100, 0b00100, 0b00000, 0b00000, 0b00100, 0b00100, 0b00000, 0b00000};
-static const uint8_t CHAR_DASH[10] = {0b00000, 0b00000, 0b00000, 0b00000, 0b11111, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000};
+static const uint8_t CHAR_COLON[10] = {
+  0b00000,
+  0b00000,
+  0b00100,
+  0b00100,
+  0b00000,
+  0b00000,
+  0b00100,
+  0b00100,
+  0b00000,
+  0b00000
+};
+static const uint8_t CHAR_DASH[10] = {
+  0b00000,
+  0b00000,
+  0b00000,
+  0b00000,
+  0b11111,
+  0b00000,
+  0b00000,
+  0b00000,
+  0b00000,
+  0b00000
+};
 
 #endif
 
@@ -2182,17 +2589,17 @@ bool LEDFunctionsClass::scrollText(const char* text, int &offset, int pauseFrame
   int totalWidth = textLen * 6;
   int totalScrollLength = totalWidth + 11 + pauseFrames;
   
-  // Check if we're in the pause period
-  if (offset > totalWidth + 11)
-  {
-    return false; // Still in pause
-  }
-  
-  // Check if cycle is complete
+  // Check if cycle is complete before handling pause
   if (offset >= totalScrollLength)
   {
     offset = 0;
     return true;
+  }
+
+  // Pause after text has fully scrolled off-screen
+  if (offset >= totalWidth + 11)
+  {
+    return false; // keep screen blank during pause
   }
   
   // Render text
@@ -2245,11 +2652,13 @@ bool LEDFunctionsClass::scrollText(const char* text, int &offset, int pauseFrame
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderPong()
 {
-	// Make the game ~20x faster by reducing delay and applying a speed multiplier
-	// animspeed still influences the base rate
-	unsigned int delay = (500 - (Config.animspeed * 450 / 100)) / 20; // ~20x faster
-	if (delay < 5) delay = 5;
-	const float speedMultiplier = 2.0f; // extra boost so gameplay is snappy
+  // Make the game ~20x faster by reducing delay and applying a speed multiplier
+  // animspeed still influences the base rate; use slower delay for score/gameover scrolls
+  unsigned int playingDelay = (500 - (Config.animspeed * 450 / 100)) / 20; // ~20x faster
+  if (playingDelay < 5) playingDelay = 5;
+  const unsigned int scoreDelay = 80; // slower scroll readability
+  const float speedMultiplier = 2.0f; // extra boost so gameplay is snappy
+  unsigned int delay = (this->pongState == 0) ? playingDelay : scoreDelay;
   
   if ((unsigned long)(millis() - this->lastUpdate) > delay)
   {
@@ -2377,11 +2786,19 @@ void LEDFunctionsClass::renderPong()
         else
         {
           // Build score + date/time text
+          // NTP.month is 0-based with December wrapped to 0; adjust for human-readable date
+          int displayMonth = NTP.month;
+          int displayYear = NTP.year;
+          if (displayMonth == 0) {
+            displayMonth = 12;
+            displayYear -= 1;
+          }
+
           snprintf(this->pongScrollText, sizeof(this->pongScrollText), 
                    "%d-%d  %02d:%02d %02d-%02d-%04d", 
                    this->pongScore1, this->pongScore2,
                    NTP.h, NTP.m,
-                   NTP.day, NTP.month, NTP.year);
+                   NTP.day, displayMonth, displayYear);
           this->pongState = 1;
           this->pongScrollOffset = 0;
         }

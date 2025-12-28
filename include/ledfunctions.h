@@ -106,7 +106,7 @@ public:
   int pongScore2 = 0;
   int pongState = 0;  // 0 = playing, 1 = score display, 2 = game over
   int pongScrollOffset = 0;
-  char pongScrollText[50] = "";
+	char pongScrollText[64] = "";
   int pongPaddleSize = 3;
 
 #ifdef FASTLED
