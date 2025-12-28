@@ -16,7 +16,7 @@
 #define BLUECORRECTIONNAME "BlueCorrection"
 #define DEBUGNAME "Debug"
 #define CONNECTTIMEOUT 60000 // only try to connect once a minute
-#define PUBLISHTIMEOUT 3600000 // publish the sensors at least every hour 
+#define PUBLISHTIMEOUT 300000 // publish the sensors at least every 5 minutes 
 
 // MQTT topic strings in PROGMEM
 const char MQTT_LIGHT[] PROGMEM = "/light/";

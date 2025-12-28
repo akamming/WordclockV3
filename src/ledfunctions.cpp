@@ -4,7 +4,6 @@
 //  This module implements functions to manage the WS2812B LEDs. Two buffers contain
 //  color information with current state and fade target state and are updated by
 //  either simple set operations or integrated screensavers (matrix, stars, heart).
-//  Also contains part of the data and logic for the hourglass animation.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -63,6 +62,29 @@ static const uint8_t LETTER_p_LOW[10] = {0b00000, 0b00000, 0b00000, 0b11110, 0b1
 static const uint8_t LETTER_w_LOW[10] = {0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10101, 0b10101, 0b11011, 0b10001, 0b00000};
 static const uint8_t LETTER_SPACE[10] = {0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000};
 
+// Additional letters for "Game Over" and other texts
+static const uint8_t LETTER_G_CAP[10] = {0b01110, 0b10001, 0b10000, 0b10000, 0b10111, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110};
+static const uint8_t LETTER_O_CAP[10] = {0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110};
+static const uint8_t LETTER_V_CAP[10] = {0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01010, 0b00100, 0b00100};
+
+// Digits (10 pixels high, 5 pixels wide)
+static const uint8_t DIGIT_0[10] = {0b01110, 0b10001, 0b10011, 0b10101, 0b10101, 0b10101, 0b11001, 0b10001, 0b10001, 0b01110};
+static const uint8_t DIGIT_1[10] = {0b00100, 0b01100, 0b10100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b11111};
+static const uint8_t DIGIT_2[10] = {0b01110, 0b10001, 0b00001, 0b00001, 0b00010, 0b00100, 0b01000, 0b10000, 0b10000, 0b11111};
+static const uint8_t DIGIT_3[10] = {0b01110, 0b10001, 0b00001, 0b00001, 0b01110, 0b00001, 0b00001, 0b00001, 0b10001, 0b01110};
+static const uint8_t DIGIT_4[10] = {0b00010, 0b00110, 0b01010, 0b10010, 0b10010, 0b11111, 0b00010, 0b00010, 0b00010, 0b00010};
+static const uint8_t DIGIT_5[10] = {0b11111, 0b10000, 0b10000, 0b10000, 0b11110, 0b00001, 0b00001, 0b00001, 0b10001, 0b01110};
+static const uint8_t DIGIT_6[10] = {0b01110, 0b10001, 0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110};
+static const uint8_t DIGIT_7[10] = {0b11111, 0b00001, 0b00001, 0b00010, 0b00010, 0b00100, 0b00100, 0b01000, 0b01000, 0b01000};
+static const uint8_t DIGIT_8[10] = {0b01110, 0b10001, 0b10001, 0b10001, 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110};
+static const uint8_t DIGIT_9[10] = {0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001, 0b10001, 0b01110};
+
+// Colon and dash for time/score display
+static const uint8_t CHAR_COLON[10] = {0b00000, 0b00000, 0b00100, 0b00100, 0b00000, 0b00000, 0b00100, 0b00100, 0b00000, 0b00000};
+static const uint8_t CHAR_DASH[10] = {0b00000, 0b00000, 0b00000, 0b00000, 0b11111, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000};
+
+#endif
+
 //---------------------------------------------------------------------------------------
 // variables in PROGMEM (mapping table, images)
 //---------------------------------------------------------------------------------------
@@ -84,8 +106,8 @@ const std::vector<leds_template_t> LEDFunctionsClass::minutesTemplate =
   { 1, 30, 34,{ 33, 34, 35, 36 } },                                 // HALF
   { 1, 35, 39,{ 7, 8, 9, 10, 22, 23, 24, 25, 33, 34, 35, 36} },     // VIJF OVER HALF
   { 1, 40, 44,{ 11, 12, 13, 14, 22, 23, 24, 25, 33, 34, 35, 36} },  // TIEN OVER HALF
-  { 1, 45, 49,{ 28, 29, 30, 31, 32, 44, 45, 46, 47 } },                  // KWART VOOR
-  { 1, 50, 54,{ 11, 12, 13, 14, 44, 45, 46, 47} },                 // TIEN VOOR
+  { 1, 45, 49,{ 28, 29, 30, 31, 32, 44, 45, 46, 47 } },             // KWART VOOR
+  { 1, 50, 54,{ 11, 12, 13, 14, 44, 45, 46, 47} },                  // TIEN VOOR
   { 1, 55, 59,{ 7, 8, 9, 10, 44, 45, 46, 47 } }                     // VIJF VOOR
 };
 #endif
@@ -137,402 +159,360 @@ const uint32_t PROGMEM LEDFunctionsClass::mapping[NUM_PIXELS] = {
 
 #if 1 // code folding brightness adjust tables
 const uint32_t PROGMEM LEDFunctionsClass::brightnessCurveSelect[NUM_PIXELS] = {
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0
-		//		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		//		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		//		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		//		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		//		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		//		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		//		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		//		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		//		0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
-		//		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		//		0, 0, 0, 0
-		//		0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
-		//		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		//		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		//		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		//		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		//		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		//		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		//		0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-		//		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-		//		0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1,
-		//		0, 1, 0, 1
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0
 };
 
 const uint32_t PROGMEM LEDFunctionsClass::brightnessCurvesR[256*NUM_BRIGHTNESS_CURVES] = {
-		// LED type 1, 1:1 mapping (neutral)
-		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-		20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
-		37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,
-		54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70,
-		71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
-		88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103,
-		104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
-		117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129,
-		130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142,
-		143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155,
-		156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168,
-		169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181,
-		182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194,
-		195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207,
-		208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
-		221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233,
-		234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246,
-		247, 248, 249, 250, 251, 252, 253, 254, 255,
-
-		// LED type 2
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 5, 5, 5, 5, 5, 5, 7, 7, 7, 7,
-		7, 7, 9, 9, 9, 9, 11, 11, 11, 11, 13, 13, 13, 13, 15, 15, 15, 15,
-		17, 17, 17, 17, 19, 19, 21, 21, 23, 23, 25, 25, 27, 27, 29, 29, 31,
-		31, 33, 33, 35, 35, 37, 37, 39, 39, 41, 41, 43, 43, 45, 45, 47, 47,
-		49, 49, 50, 50, 53, 53, 53, 53, 55, 55, 57, 57, 59, 59, 61, 61, 63,
-		63, 65, 65, 67, 67, 69, 69, 71, 71, 73, 73, 75, 75, 77, 77, 79, 79,
-		81, 81, 83, 83, 83, 83, 85, 85, 87, 87, 89, 89, 91, 91, 93, 93, 95,
-		95, 97, 97, 99, 99, 101, 101, 103, 103, 105, 105, 107, 107, 109, 109,
-		111, 111, 113, 113, 115, 115, 115, 115, 117, 117, 119, 119, 121, 121,
-		123, 123, 125, 125, 127, 127, 130, 130, 132, 132, 134, 134, 136, 136,
-		138, 138, 140, 140, 142, 142, 144, 144, 144, 144, 146, 146, 148, 148,
-		150, 150, 152, 152, 153, 153, 155, 155, 156, 156, 158, 158, 160, 160,
-		162, 162, 164, 164, 166, 166, 168, 168, 170, 170, 172, 172, 174, 174,
-		176, 176, 178, 178, 180, 180, 182, 182, 184, 184, 184, 184, 186, 186,
-		188, 188, 190, 190, 192, 192, 194, 194, 196, 196, 198, 198, 200, 200,
-		202, 202, 204, 204, 206, 206, 208, 208, 210, 210, 212, 212, 214, 214,
-		216, 216, 218, 218
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+  16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+  32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+  48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+  64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+  80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
+  96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111,
+  112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127,
+  128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143,
+  144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
+  160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175,
+  176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
+  192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207,
+  208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223,
+  224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239,
+  240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+  16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+  32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+  48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+  64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+  80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
+  96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111,
+  112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127,
+  128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143,
+  144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
+  160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175,
+  176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
+  192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207,
+  208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223,
+  224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239,
+  240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255
 };
 
 const uint32_t PROGMEM LEDFunctionsClass::brightnessCurvesG[256*NUM_BRIGHTNESS_CURVES] = {
-		// LED type 1, 1:1 mapping (neutral)
-		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-		20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
-		37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,
-		54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70,
-		71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
-		88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103,
-		104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
-		117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129,
-		130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142,
-		143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155,
-		156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168,
-		169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181,
-		182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194,
-		195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207,
-		208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
-		221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233,
-		234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246,
-		247, 248, 249, 250, 251, 252, 253, 254, 255,
-
-		// LED type 2
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 5, 5, 5, 5, 5, 5, 7, 7, 7, 7, 7,
-		7, 9, 9, 9, 9, 11, 11, 11, 11, 13, 13, 13, 13, 15, 15, 15, 15, 17,
-		17, 17, 17, 19, 19, 21, 21, 23, 23, 25, 25, 27, 27, 29, 29, 31, 31,
-		33, 33, 35, 35, 37, 37, 39, 39, 41, 41, 43, 43, 45, 45, 47, 47, 49,
-		49, 51, 51, 53, 53, 54, 54, 56, 56, 57, 57, 59, 59, 61, 61, 63, 63,
-		66, 66, 68, 68, 70, 70, 72, 72, 74, 74, 76, 76, 78, 78, 80, 80, 80,
-		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
-		80, 80, 80, 80, 80, 80, 80, 80, 108, 108, 110, 110, 112, 112, 113,
-		113, 116, 116, 117, 117, 119, 119, 122, 122, 124, 124, 126, 126, 127,
-		127, 131, 131, 132, 132, 135, 135, 137, 137, 139, 139, 141, 141, 143,
-		143, 145, 145, 147, 147, 149, 149, 151, 151, 153, 153, 155, 155, 157,
-		157, 159, 159, 160, 160, 163, 163, 165, 165, 167, 167, 169, 169, 171,
-		171, 173, 173, 175, 175, 177, 177, 179, 179, 181, 181, 183, 183, 185,
-		185, 187, 187, 189, 189, 191, 191, 194, 194, 197, 197, 198, 198, 201,
-		201, 203, 203, 205, 205, 208, 208, 210, 210, 212, 212, 215, 215, 218,
-		218, 220, 220, 222, 222, 224, 224, 226, 226, 228, 228, 230, 230, 232,
-		232, 234, 234
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+  16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+  32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+  48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+  64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+  80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
+  96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111,
+  112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127,
+  128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143,
+  144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
+  160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175,
+  176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
+  192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207,
+  208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223,
+  224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239,
+  240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+  16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+  32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+  48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+  64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+  80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
+  96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111,
+  112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127,
+  128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143,
+  144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
+  160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175,
+  176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
+  192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207,
+  208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223,
+  224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239,
+  240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255
 };
 
 const uint32_t PROGMEM LEDFunctionsClass::brightnessCurvesB[256*NUM_BRIGHTNESS_CURVES] = {
-		// LED type 1, 1:1 mapping (neutral)
-		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-		20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
-		37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,
-		54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70,
-		71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
-		88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103,
-		104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
-		117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129,
-		130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142,
-		143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155,
-		156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168,
-		169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181,
-		182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194,
-		195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207,
-		208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
-		221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233,
-		234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246,
-		247, 248, 249, 250, 251, 252, 253, 254, 255,
-
-		// LED type 2
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 5, 5, 5, 5, 5, 5, 7, 7, 7, 7, 9,
-		9, 9, 9, 9, 9, 11, 11, 11, 11, 13, 13, 13, 13, 15, 15, 15, 15, 17,
-		17, 19, 19, 20, 20, 21, 21, 23, 23, 25, 25, 27, 27, 29, 29, 31, 31,
-		33, 33, 35, 35, 37, 37, 39, 39, 41, 41, 42, 42, 43, 43, 45, 45, 47,
-		47, 49, 49, 51, 51, 53, 53, 55, 55, 57, 57, 59, 59, 61, 61, 63, 63,
-		64, 64, 66, 66, 68, 68, 72, 72, 72, 72, 74, 74, 76, 76, 78, 78, 80,
-		80, 82, 82, 84, 84, 86, 86, 88, 88, 90, 90, 91, 91, 93, 93, 94, 94,
-		96, 96, 98, 98, 100, 100, 102, 102, 104, 104, 106, 106, 108, 108,
-		110, 110, 112, 112, 114, 114, 116, 116, 118, 118, 119, 119, 121, 121,
-		123, 123, 124, 124, 127, 127, 129, 129, 131, 131, 133, 133, 135, 137,
-		137, 139, 139, 141, 141, 143, 143, 145, 145, 147, 147, 149, 149, 151,
-		151, 153, 153, 155, 155, 157, 157, 160, 160, 161, 161, 163, 163, 166,
-		166, 168, 168, 170, 170, 171, 171, 174, 174, 176, 176, 178, 178, 180,
-		180, 183, 183, 184, 184, 187, 187, 188, 188, 191, 191, 194, 194, 196,
-		196, 198, 198, 200, 200, 202, 202, 204, 204, 206, 206, 209, 209, 210,
-		210, 212, 212, 215, 215, 217, 217, 219, 219, 222, 222, 224, 224, 226,
-		226, 228, 228, 230
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+  16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+  32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+  48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+  64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+  80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
+  96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111,
+  112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127,
+  128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143,
+  144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
+  160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175,
+  176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
+  192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207,
+  208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223,
+  224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239,
+  240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+  16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+  32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+  48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+  64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+  80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
+  96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111,
+  112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127,
+  128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143,
+  144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
+  160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175,
+  176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
+  192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207,
+  208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223,
+  224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239,
+  240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255
 };
 
 #endif
+  //---------------------------------------------------------------------------------------
+  #if 1 // getters, setters, data flow
+  //---------------------------------------------------------------------------------------
 
-#endif
-
-//---------------------------------------------------------------------------------------
-#if 1 // getters, setters, data flow
-//---------------------------------------------------------------------------------------
-
-//---------------------------------------------------------------------------------------
-// ~LEDFunctionsClass
-//
-// Destructor
-//
-// -> --
-// <- --
-//---------------------------------------------------------------------------------------
-LEDFunctionsClass::~LEDFunctionsClass()
-{
-//	for(MatrixObject* m : this->matrix_objects) delete m;
-}
-
-//---------------------------------------------------------------------------------------
-// LEDFunctionsClass
-//
-// Constructor, initializes data structures
-//
-// -> --
-// <- --
-//---------------------------------------------------------------------------------------
-LEDFunctionsClass::LEDFunctionsClass()
-{
-	// initialize matrix objects with random coordinates
-	for (int i = 0; i < NUM_MATRIX_OBJECTS; i++)
-	{
-		this->matrix.push_back(MatrixObject());
-	}
-
-	for (int i = 0; i < NUM_STARS; i++) this->stars.push_back(StarObject());
-
-	for (StarObject& s : this->stars) s.randomize(this->stars);
-
-	for (int i = 0; i < NUM_STARS; i++) {
-		this->stars.push_back(StarObject());
-	}
-
-	for (StarObject& s : this->stars) {
-		s.randomize(this->stars);
-	}
-}
-//---------------------------------------------------------------------------------------
-// begin
-//
-// Initializes the LED driver
-//
-// -> pin: hardware pin to use for WS2812B data output
-// <- --
-//---------------------------------------------------------------------------------------
-void LEDFunctionsClass::begin(int pin)
-{
-#ifdef ESP32
-  this->strip = new NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod>(NUM_PIXELS,pin);
-#else
-  this->strip = new NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod>(NUM_PIXELS);
-#endif
-  if(this->strip == nullptr) {
-    Serial.println(F("ERROR: Failed to allocate NeoPixelBus!"));
-    return;
+  //---------------------------------------------------------------------------------------
+  // ~LEDFunctionsClass
+  //
+  // Destructor
+  //
+  // -> --
+  // <- --
+  //---------------------------------------------------------------------------------------
+  LEDFunctionsClass::~LEDFunctionsClass()
+  {
+  //      for(MatrixObject* m : this->matrix_objects) delete m;
   }
-  this->strip->Begin();
-}
 
+  //---------------------------------------------------------------------------------------
+  // LEDFunctionsClass
+  //
+  // Constructor, initializes data structures
+  //
+  // -> --
+  // <- --
+  //---------------------------------------------------------------------------------------
+  LEDFunctionsClass::LEDFunctionsClass()
+  {
+    // initialize matrix objects with random coordinates
+    for (int i = 0; i < NUM_MATRIX_OBJECTS; i++)
+    {
+      this->matrix.push_back(MatrixObject());
+    }
 
+    for (int i = 0; i < NUM_STARS; i++) this->stars.push_back(StarObject());
 
+    for (StarObject& s : this->stars) s.randomize(this->stars);
 
-//---------------------------------------------------------------------------------------
-// process
-//
-// Drives internal data flow, should be called repeatedly from main loop()
-//
-// -> --
-// <- --
-//---------------------------------------------------------------------------------------
-void LEDFunctionsClass::process()
-{
-	if(Config.debugMode) return;
-	if (Config.debugMode) return;
+    for (int i = 0; i < NUM_STARS; i++) {
+      this->stars.push_back(StarObject());
+    }
 
-	// check time values against boundaries
-	if (NTP.h > 23 || NTP.h < 0) NTP.h = 0;
-	if (NTP.m > 59 || NTP.m < 0) NTP.m = 0;
-	if (NTP.s > 59 || NTP.s < 0) NTP.s = 0;
-	if (NTP.ms > 999 || NTP.ms < 0) NTP.ms = 0;
-
-	// load palette colors from configuration
-	palette_entry palette[3];
-  this->buildDefaultPalette(palette);
-	uint8_t buf[NUM_PIXELS];
-
-	switch(this->mode)
-	{
-	case DisplayMode::wifiManager:
-		this->renderWifiManager();
-		break;
-	case DisplayMode::yellowHourglass:
-		this->renderHourglass(false);
-		break;
-	case DisplayMode::greenHourglass:
-		this->renderHourglass(true);
-		break;
-	case DisplayMode::update:
-		this->renderUpdate();
-		break;
-	case DisplayMode::updateComplete:
-		this->renderUpdateComplete();
-		break;
-	case DisplayMode::updateError:
-		this->renderUpdateError();
-		break;
-	case DisplayMode::red:
-		this->renderRed();
-		break;
-	case DisplayMode::green:
-		this->renderGreen();
-		break;
-	case DisplayMode::blue:
-		this->renderBlue();
-		break;
-	case DisplayMode::flyingLettersVerticalUp:
-	case DisplayMode::flyingLettersVerticalDown:
-		this->renderFlyingLetters();
-		break;
-	case DisplayMode::explode:
-		this->renderExplosion();
-		break;
-	case DisplayMode::matrix:
-		this->renderMatrix();
-		break;
-	case DisplayMode::heart:
-		this->renderHeart();
-		break;
-	case DisplayMode::stars:
-		this->renderStars();
-		break;
-	case DisplayMode::fire:
-		this->renderFire();
-		break;
-	case DisplayMode::plasma:
-		this->renderPlasma();
-		break;
-	case DisplayMode::wakeup:
-		this->renderWakeup();
-		break;
-	case DisplayMode::random:
-		this->renderRandom(buf);
-		break;
-	case DisplayMode::HorizontalStripes:
-		this->renderStripes(buf, true);
-		break;
-	case DisplayMode::VerticalStripes:
-		this->renderStripes(buf, false);
-		break;
-	case DisplayMode::RandomDots:
-		this->renderRandomDots();
-		break;
-	case DisplayMode::RandomStripes:
-		this->renderRandomStripes();
-		break;
-	case DisplayMode::RotatingLine:
-		this->renderRotatingLine();
-		break;
-	case DisplayMode::christmastree:
-		this->renderChristmasTree();
-		break;
-	case DisplayMode::jinglebells:
-		this->renderJingleBells();
-		break;
-	case DisplayMode::merryChristmas:
-		// in nightmode, show rendertime instead of christmas greeting
-		if (Config.nightmode) {
-			this->renderTime(buf);
-			this->set(buf, palette, true);
-			break;
-		} else {
-			this->renderMerryChristmas();
-			break;
-		}
-	case DisplayMode::happyNewYear:
-		// in nightmode, show rendertime instead of new year greeting
-		if (Config.nightmode) {
-			this->renderTime(buf);
-			this->set(buf, palette, true);
-			break;
-		} else {
-			this->renderHappyNewYear();
-			break;
-		}
-	case DisplayMode::fade:
-		this->renderTime(buf);
-		this->set(buf, palette, false);
-		this->fade();
-		break;
-
-	case DisplayMode::plain:
-	default:
-		this->renderTime(buf);
-		this->set(buf, palette, true);
-		break;
-	}
-
-
-	// transfer this->currentValues to LEDs
-	this->show();
-
-}
-
-//---------------------------------------------------------------------------------------
-// setBrightness
-//
-// Sets the brightness for the WS2812 values. Will be multiplied with each color
-// component when sending data to WS2812.
-//
-// -> brightness: [0...256]
-// <- --
-//---------------------------------------------------------------------------------------
-void LEDFunctionsClass::setBrightness(int brightness)
-{
-  if (brightness>0) 	{
-    this->brightness = brightness;
-  }else {
-    this->brightness=1;
+    for (StarObject& s : this->stars) {
+      s.randomize(this->stars);
+    }
   }
-}
+  //---------------------------------------------------------------------------------------
+  // begin
+  //
+  // Initializes the LED driver
+  //
+  // -> pin: hardware pin to use for WS2812B data output
+  // <- --
+  //---------------------------------------------------------------------------------------
+  void LEDFunctionsClass::begin(int pin)
+  {
+  #ifdef ESP32
+    this->strip = new NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod>(NUM_PIXELS,pin);
+  #else
+    this->strip = new NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod>(NUM_PIXELS);
+  #endif
+    if(this->strip == nullptr) {
+      Serial.println(F("ERROR: Failed to allocate NeoPixelBus!"));
+      return;
+    }
+    this->strip->Begin();
+  }
+
+
+
+
+  //---------------------------------------------------------------------------------------
+  // process
+  //
+  // Drives internal data flow, should be called repeatedly from main loop()
+  //
+  // -> --
+  // <- --
+  //---------------------------------------------------------------------------------------
+  void LEDFunctionsClass::process()
+  {
+    if (Config.debugMode) return;
+
+    // check time values against boundaries
+    if (NTP.h > 23 || NTP.h < 0) NTP.h = 0;
+    if (NTP.m > 59 || NTP.m < 0) NTP.m = 0;
+    if (NTP.s > 59 || NTP.s < 0) NTP.s = 0;
+    if (NTP.ms > 999 || NTP.ms < 0) NTP.ms = 0;
+
+    // load palette colors from configuration
+    palette_entry palette[3];
+    this->buildDefaultPalette(palette);
+    uint8_t buf[NUM_PIXELS];
+
+    switch(this->mode)
+    {
+    case DisplayMode::wifiManager:
+      this->renderWifiManager();
+      break;
+    case DisplayMode::yellowHourglass:
+      this->renderHourglass(false);
+      break;
+    case DisplayMode::greenHourglass:
+      this->renderHourglass(true);
+      break;
+    case DisplayMode::update:
+      this->renderUpdate();
+      break;
+    case DisplayMode::updateComplete:
+      this->renderUpdateComplete();
+      break;
+    case DisplayMode::updateError:
+      this->renderUpdateError();
+      break;
+    case DisplayMode::red:
+      this->renderRed();
+      break;
+    case DisplayMode::green:
+      this->renderGreen();
+      break;
+    case DisplayMode::blue:
+      this->renderBlue();
+      break;
+    case DisplayMode::flyingLettersVerticalUp:
+    case DisplayMode::flyingLettersVerticalDown:
+      this->renderFlyingLetters();
+      break;
+    case DisplayMode::explode:
+      this->renderExplosion();
+      break;
+    case DisplayMode::matrix:
+      this->renderMatrix();
+      break;
+    case DisplayMode::heart:
+      this->renderHeart();
+      break;
+    case DisplayMode::stars:
+      this->renderStars();
+      break;
+    case DisplayMode::fire:
+      this->renderFire();
+      break;
+    case DisplayMode::plasma:
+      this->renderPlasma();
+      break;
+    case DisplayMode::wakeup:
+      this->renderWakeup();
+      break;
+    case DisplayMode::random:
+      this->renderRandom(buf);
+      break;
+    case DisplayMode::HorizontalStripes:
+      this->renderStripes(buf, true);
+      break;
+    case DisplayMode::VerticalStripes:
+      this->renderStripes(buf, false);
+      break;
+    case DisplayMode::RandomDots:
+      this->renderRandomDots();
+      break;
+    case DisplayMode::RandomStripes:
+      this->renderRandomStripes();
+      break;
+    case DisplayMode::RotatingLine:
+      this->renderRotatingLine();
+      break;
+    case DisplayMode::christmastree:
+      this->renderChristmasTree();
+      break;
+    case DisplayMode::jinglebells:
+      this->renderJingleBells();
+      break;
+    case DisplayMode::merryChristmas:
+      // in nightmode, show rendertime instead of christmas greeting
+      if (Config.nightmode) {
+        this->renderTime(buf);
+        this->set(buf, palette, true);
+        break;
+      } else {
+        this->renderMerryChristmas();
+        break;
+      }
+    case DisplayMode::happyNewYear:
+      // in nightmode, show rendertime instead of new year greeting
+      if (Config.nightmode) {
+        this->renderTime(buf);
+        this->set(buf, palette, true);
+        break;
+      } else {
+        this->renderHappyNewYear();
+        break;
+      }
+    case DisplayMode::pong:
+      this->renderPong();
+      break;
+    case DisplayMode::fade:
+      this->renderTime(buf);
+      this->set(buf, palette, false);
+      this->fade();
+      break;
+
+    case DisplayMode::plain:
+    default:
+      this->renderTime(buf);
+      this->set(buf, palette, true);
+      break;
+    }
+
+
+    // transfer this->currentValues to LEDs
+    this->show();
+
+  }
+
+  //---------------------------------------------------------------------------------------
+  // setBrightness
+  //
+  // Sets the brightness for the WS2812 values. Will be multiplied with each color
+  // component when sending data to WS2812.
+  //
+  // -> brightness: [0...256]
+  // <- --
+  //---------------------------------------------------------------------------------------
+  void LEDFunctionsClass::setBrightness(int brightness)
+  {
+    if (brightness>0)     {
+      this->brightness = brightness;
+    }else {
+      this->brightness=1;
+    }
+  }
 
 //---------------------------------------------------------------------------------------
 // setMode
 //
-// Sets the display mode to one of the members of the DisplayMode enum and thus changes
-// what will be shown on the display during the next calls of LEDFunctionsClass.process()
+// Sets the display mode and initializes mode-specific state where needed
 //
 // -> newMode: mode to be set
 // <- --
@@ -543,36 +523,46 @@ void LEDFunctionsClass::setMode(DisplayMode newMode)
 	DisplayMode previousMode = this->mode;
 	this->mode = newMode;
 
-	// if we changed to an animated letters mode, then start animation
-	// even if the current time did not yet change
-	if(newMode != previousMode &&
-			(newMode == DisplayMode::flyingLettersVerticalUp ||
-			newMode == DisplayMode::flyingLettersVerticalDown))
+	// Initialize flying letters animation immediately upon entering mode
+	if (newMode != previousMode &&
+		(newMode == DisplayMode::flyingLettersVerticalUp ||
+		 newMode == DisplayMode::flyingLettersVerticalDown))
 	{
 		this->renderTime(buf);
 		this->prepareFlyingLetters(buf);
 	}
 
-	// if we changed to exploding letters mode, then start animation
-	// even if the current time did not yet change
-	if(newMode != previousMode && newMode == DisplayMode::explode)
+	// Initialize explosion particles when entering explode mode
+	if (newMode != previousMode && newMode == DisplayMode::explode)
 	{
-		// cleanup any existing particles to prevent memory leaks
-		for(Particle *p : this->particles) delete p;
+		for (Particle *p : this->particles) delete p;
 		this->particles.clear();
-		
 		this->renderTime(buf);
 		this->prepareExplosion(buf);
 	}
 
-	// if we changed away from exploding letters mode, cleanup particles
-	if(previousMode == DisplayMode::explode && newMode != DisplayMode::explode)
+	// Cleanup particles when leaving explode mode
+	if (previousMode == DisplayMode::explode && newMode != DisplayMode::explode)
 	{
-		for(Particle *p : this->particles) delete p;
+		for (Particle *p : this->particles) delete p;
 		this->particles.clear();
 	}
 
-	// this->process();
+	// Seed Pong state when entering pong mode
+	if (newMode != previousMode && newMode == DisplayMode::pong)
+	{
+		this->pongScore1 = 0;
+		this->pongScore2 = 0;
+		this->pongBallX = 5.5f;
+		this->pongBallY = 5.0f;
+		this->pongBallVX = (random(2) == 0 ? 0.10f : -0.10f);
+		this->pongBallVY = (random(100) - 50) * 0.003f;
+		this->pongPaddle1Y = 4;
+		this->pongPaddle2Y = 4;
+		this->pongState = 0;
+		this->pongScrollOffset = 0;
+		this->lastUpdate = 0;
+	}
 }
 
 //---------------------------------------------------------------------------------------
@@ -894,8 +884,8 @@ void LEDFunctionsClass::show()
       uint32_t physicalLED4 = pgm_read_dword(&mapping[4]);
       uint32_t physicalLED5 = pgm_read_dword(&mapping[5]);
       
-      if (i == physicalLED0 || i == physicalLED1 || i == physicalLED2 || 
-          i == physicalLED4 || i == physicalLED5) {
+      if ((uint32_t)i == physicalLED0 || (uint32_t)i == physicalLED1 || (uint32_t)i == physicalLED2 || 
+          (uint32_t)i == physicalLED4 || (uint32_t)i == physicalLED5) {
         float factor = 1.0f + 4.0f * (static_cast<float>(Config.blueCorrection) / 100.0f);
         int boosted = static_cast<int>(static_cast<float>(b) * factor);
         if (boosted > 255) boosted = 255;
@@ -1007,6 +997,8 @@ void LEDFunctionsClass::fillTime(int h, int m, uint8_t *target)
 
 
 #endif
+
+
 
 //---------------------------------------------------------------------------------------
 #if 1 // rendering methods
@@ -2101,6 +2093,379 @@ void LEDFunctionsClass::renderHappyNewYear()
             this->currentValues[mappedIndex + 2] = b;
           }
         }
+      }
+    }
+  }
+}
+
+
+//---------------------------------------------------------------------------------------
+// getLetterPattern
+//
+// Returns the character glyph for a given character
+//
+// -> c: character to convert
+// <- pointer to letter pattern, or LETTER_SPACE if not found
+//---------------------------------------------------------------------------------------
+const uint8_t* LEDFunctionsClass::getLetterPattern(char c)
+{
+  switch(c) {
+    // Uppercase letters
+    case 'A': return LETTER_A_CAP;
+    case 'C': return LETTER_C_CAP;
+    case 'E': return LETTER_E_CAP;
+    case 'G': return LETTER_G_CAP;
+    case 'H': return LETTER_H_CAP;
+    case 'M': return LETTER_M_CAP;
+    case 'N': return LETTER_N_CAP;
+    case 'O': return LETTER_O_CAP;
+    case 'P': return LETTER_P_CAP;
+    case 'R': return LETTER_R_CAP;
+    case 'V': return LETTER_V_CAP;
+    case 'W': return LETTER_W_CAP;
+    case 'Y': return LETTER_Y_CAP;
+    
+    // Lowercase letters
+    case 'a': return LETTER_a_LOW;
+    case 'e': return LETTER_e_LOW;
+    case 'h': return LETTER_h_LOW;
+    case 'i': return LETTER_i_LOW;
+    case 'm': return LETTER_m_LOW;
+    case 'p': return LETTER_p_LOW;
+    case 'r': return LETTER_r_LOW;
+    case 's': return LETTER_s_LOW;
+    case 't': return LETTER_t_LOW;
+    case 'w': return LETTER_w_LOW;
+    case 'y': return LETTER_y_LOW;
+    
+    // Digits
+    case '0': return DIGIT_0;
+    case '1': return DIGIT_1;
+    case '2': return DIGIT_2;
+    case '3': return DIGIT_3;
+    case '4': return DIGIT_4;
+    case '5': return DIGIT_5;
+    case '6': return DIGIT_6;
+    case '7': return DIGIT_7;
+    case '8': return DIGIT_8;
+    case '9': return DIGIT_9;
+    
+    // Special characters
+    case ':': return CHAR_COLON;
+    case '-': return CHAR_DASH;
+    case ' ': return LETTER_SPACE;
+    
+    default: return LETTER_SPACE;
+  }
+}
+
+//---------------------------------------------------------------------------------------
+// scrollText
+//
+// Generic function to scroll text horizontally across the display
+// Uses foreground color from Config.fg
+//
+// -> text: String to display
+// -> offset: Scroll position (updated by caller)
+// -> pauseFrames: Number of frames to pause after text scrolls off
+// <- returns true if cycle complete (ready to restart)
+//---------------------------------------------------------------------------------------
+bool LEDFunctionsClass::scrollText(const char* text, int &offset, int pauseFrames)
+{
+  // Clear all pixels
+  memset(this->currentValues, 0, sizeof(this->currentValues));
+  
+  int textLen = strlen(text);
+  if (textLen == 0) return true;
+  
+  // Calculate widths (each character is 5 pixels + 1 gap)
+  int totalWidth = textLen * 6;
+  int totalScrollLength = totalWidth + 11 + pauseFrames;
+  
+  // Check if we're in the pause period
+  if (offset > totalWidth + 11)
+  {
+    return false; // Still in pause
+  }
+  
+  // Check if cycle is complete
+  if (offset >= totalScrollLength)
+  {
+    offset = 0;
+    return true;
+  }
+  
+  // Render text
+  palette_entry fgColor = {Config.fg.r, Config.fg.g, Config.fg.b};
+  
+  for (int y = 0; y < 10; y++)
+  {
+    for (int x = 0; x < 11; x++)
+    {
+      int scrollPos = (x + offset - 11);
+      
+      if (scrollPos < 0 || scrollPos >= totalWidth) continue;
+      
+      // Determine character index
+      int charIndex = scrollPos / 6;
+      int posInChar = scrollPos % 6;
+      
+      if (charIndex >= textLen) continue;
+      if (posInChar >= 5) continue; // Gap column
+      
+      // Get letter pattern
+      const uint8_t* pattern = this->getLetterPattern(text[charIndex]);
+      uint8_t row = pattern[y];
+      int bitPos = 4 - posInChar;
+      bool pixelOn = (row & (1 << bitPos)) != 0;
+      
+      if (pixelOn)
+      {
+        int mappedIndex = LEDFunctionsClass::mapping[y * 11 + x] * 3;
+        this->currentValues[mappedIndex] = fgColor.r;
+        this->currentValues[mappedIndex + 1] = fgColor.g;
+        this->currentValues[mappedIndex + 2] = fgColor.b;
+      }
+    }
+  }
+  
+  return false;
+}
+
+
+//---------------------------------------------------------------------------------------
+// renderPong
+//
+// Renders a Pong game simulation where the computer plays against itself
+// When a point is scored, displays score + date/time
+// When one player reaches 10 points, displays "Game Over" and restarts
+//
+// -> --
+// <- --
+//---------------------------------------------------------------------------------------
+void LEDFunctionsClass::renderPong()
+{
+	// Make the game ~20x faster by reducing delay and applying a speed multiplier
+	// animspeed still influences the base rate
+	unsigned int delay = (500 - (Config.animspeed * 450 / 100)) / 20; // ~20x faster
+	if (delay < 5) delay = 5;
+	const float speedMultiplier = 2.0f; // extra boost so gameplay is snappy
+  
+  if ((unsigned long)(millis() - this->lastUpdate) > delay)
+  {
+    this->lastUpdate = millis();
+    
+    // State machine: 0 = playing, 1 = score display, 2 = game over display
+    if (this->pongState == 0)
+    {
+      // ===== PLAYING STATE =====
+      
+	// Update ball position (apply speed multiplier)
+	this->pongBallX += this->pongBallVX * speedMultiplier;
+	this->pongBallY += this->pongBallVY * speedMultiplier;
+      
+      // Ball collision with top/bottom walls
+      if (this->pongBallY < 0.5f)
+      {
+        this->pongBallY = 0.5f;
+        this->pongBallVY = -this->pongBallVY;
+      }
+      if (this->pongBallY > 9.5f)
+      {
+        this->pongBallY = 9.5f;
+        this->pongBallVY = -this->pongBallVY;
+      }
+      
+			// AI for paddle 1 (left) and paddle 2 (right) — different strategies
+			// Left paddle: more aggressive, predicts intercept with low noise
+			{
+				int paddle1Center = this->pongPaddle1Y + this->pongPaddleSize / 2;
+				float vx = this->pongBallVX * speedMultiplier;
+				float vy = this->pongBallVY * speedMultiplier;
+				float timeToLeft = (this->pongBallX - 0.5f) / (fabs(vx) + 0.0001f);
+				float predictedYLeft = this->pongBallY + vy * timeToLeft;
+				// add small noise so it’s not perfect
+				predictedYLeft += (random(100) - 50) * 0.01f;
+				int targetYLeft = (int)(predictedYLeft + 0.5f);
+				if (targetYLeft < 0) targetYLeft = 0;
+				if (targetYLeft > 9) targetYLeft = 9;
+				if (random(100) < 85) // 85% chance to move toward predicted intercept
+				{
+					if (targetYLeft < paddle1Center && this->pongPaddle1Y > 0)
+						this->pongPaddle1Y--;
+					else if (targetYLeft > paddle1Center && this->pongPaddle1Y < (10 - this->pongPaddleSize))
+						this->pongPaddle1Y++;
+				}
+			}
+
+			// Right paddle: more cautious, reacts to current position with higher noise
+			{
+				int paddle2Center = this->pongPaddle2Y + this->pongPaddleSize / 2;
+				int ballCenterY = (int)(this->pongBallY + 0.5f);
+				// more noise so it doesn’t mirror left
+				ballCenterY += (random(100) - 50) > 0 ? 1 : -1; // slight jitter
+				if (ballCenterY < 0) ballCenterY = 0;
+				if (ballCenterY > 9) ballCenterY = 9;
+				if (random(100) < 55) // 55% chance to react
+				{
+					if (ballCenterY < paddle2Center && this->pongPaddle2Y > 0)
+						this->pongPaddle2Y--;
+					else if (ballCenterY > paddle2Center && this->pongPaddle2Y < (10 - this->pongPaddleSize))
+						this->pongPaddle2Y++;
+				}
+			}
+      
+      // Ball collision with paddles
+      bool scored = false;
+      
+      // Left paddle collision (x=0)
+      if (this->pongBallX <= 0.5f && this->pongBallVX < 0)
+      {
+        int ballY = (int)(this->pongBallY + 0.5f);
+        if (ballY >= this->pongPaddle1Y && ballY < this->pongPaddle1Y + this->pongPaddleSize)
+        {
+          // Hit paddle
+          this->pongBallX = 0.5f;
+          this->pongBallVX = -this->pongBallVX;
+		  // Add slight angle variation (scaled up for faster play)
+		  this->pongBallVY += (random(100) - 50) * 0.002f;
+        }
+        else if (this->pongBallX < 0)
+        {
+          // Missed - player 2 scores
+          this->pongScore2++;
+          scored = true;
+        }
+      }
+      
+      // Right paddle collision (x=10)
+      if (this->pongBallX >= 10.5f && this->pongBallVX > 0)
+      {
+        int ballY = (int)(this->pongBallY + 0.5f);
+        if (ballY >= this->pongPaddle2Y && ballY < this->pongPaddle2Y + this->pongPaddleSize)
+        {
+          // Hit paddle
+          this->pongBallX = 10.5f;
+          this->pongBallVX = -this->pongBallVX;
+		  // Add slight angle variation (scaled up for faster play)
+		  this->pongBallVY += (random(100) - 50) * 0.002f;
+        }
+        else if (this->pongBallX > 11)
+        {
+          // Missed - player 1 scores
+          this->pongScore1++;
+          scored = true;
+        }
+      }
+      
+      // Check if someone scored
+      if (scored)
+      {
+        // Reset ball to center
+		this->pongBallX = 5.5f;
+		this->pongBallY = 5.0f;
+		this->pongBallVX = (random(2) == 0 ? 0.10f : -0.10f);
+		this->pongBallVY = (random(100) - 50) * 0.003f; // slightly faster start
+        
+        // Check if game over
+        if (this->pongScore1 >= 10 || this->pongScore2 >= 10)
+        {
+          snprintf(this->pongScrollText, sizeof(this->pongScrollText), "Game Over");
+          this->pongState = 2;
+          this->pongScrollOffset = 0;
+        }
+        else
+        {
+          // Build score + date/time text
+          snprintf(this->pongScrollText, sizeof(this->pongScrollText), 
+                   "%d-%d  %02d:%02d %02d-%02d-%04d", 
+                   this->pongScore1, this->pongScore2,
+                   NTP.h, NTP.m,
+                   NTP.day, NTP.month, NTP.year);
+          this->pongState = 1;
+          this->pongScrollOffset = 0;
+        }
+      }
+      
+      // Render playing field
+      memset(this->currentValues, 0, sizeof(this->currentValues));
+			palette_entry fgColor = {Config.fg.r, Config.fg.g, Config.fg.b};
+			if (fgColor.r == 0 && fgColor.g == 0 && fgColor.b == 0) {
+				// Fallback to seconds color to avoid blank frames when foreground is black
+				fgColor = {Config.s.r, Config.s.g, Config.s.b};
+			}
+      
+      // Draw left paddle (x=0)
+      for (int i = 0; i < this->pongPaddleSize; i++)
+      {
+        int y = this->pongPaddle1Y + i;
+        if (y >= 0 && y < 10)
+        {
+          int mappedIndex = LEDFunctionsClass::mapping[y * 11 + 0] * 3;
+          this->currentValues[mappedIndex] = fgColor.r;
+          this->currentValues[mappedIndex + 1] = fgColor.g;
+          this->currentValues[mappedIndex + 2] = fgColor.b;
+        }
+      }
+      
+      // Draw right paddle (x=10)
+      for (int i = 0; i < this->pongPaddleSize; i++)
+      {
+        int y = this->pongPaddle2Y + i;
+        if (y >= 0 && y < 10)
+        {
+          int mappedIndex = LEDFunctionsClass::mapping[y * 11 + 10] * 3;
+          this->currentValues[mappedIndex] = fgColor.r;
+          this->currentValues[mappedIndex + 1] = fgColor.g;
+          this->currentValues[mappedIndex + 2] = fgColor.b;
+        }
+      }
+      
+      // Draw ball
+      int ballX = (int)(this->pongBallX + 0.5f);
+      int ballY = (int)(this->pongBallY + 0.5f);
+      if (ballX >= 0 && ballX < 11 && ballY >= 0 && ballY < 10)
+      {
+        int mappedIndex = LEDFunctionsClass::mapping[ballY * 11 + ballX] * 3;
+        this->currentValues[mappedIndex] = fgColor.r;
+        this->currentValues[mappedIndex + 1] = fgColor.g;
+        this->currentValues[mappedIndex + 2] = fgColor.b;
+      }
+    }
+    else if (this->pongState == 1)
+    {
+      // ===== SCORE DISPLAY STATE =====
+      
+      this->pongScrollOffset++;
+      bool done = this->scrollText(this->pongScrollText, this->pongScrollOffset, 5);
+      
+      if (done)
+      {
+        // Return to playing state
+        this->pongState = 0;
+        this->pongScrollOffset = 0;
+      }
+    }
+    else if (this->pongState == 2)
+    {
+      // ===== GAME OVER STATE =====
+      
+      this->pongScrollOffset++;
+      bool done = this->scrollText(this->pongScrollText, this->pongScrollOffset, 5);
+      
+      if (done)
+      {
+        // Reset game
+        this->pongScore1 = 0;
+        this->pongScore2 = 0;
+        this->pongBallX = 5.5f;
+        this->pongBallY = 5.0f;
+        this->pongBallVX = 0.08f;
+        this->pongBallVY = 0.06f;
+        this->pongPaddle1Y = 4;
+        this->pongPaddle2Y = 4;
+        this->pongState = 0;
+        this->pongScrollOffset = 0;
       }
     }
   }

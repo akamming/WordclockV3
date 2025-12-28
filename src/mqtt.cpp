@@ -296,6 +296,7 @@ void MqttClass::PublishMQTTModeSelect(const char* uniquename)
   options.add("JingleBells");
   options.add("MerryChristmas");
   options.add("HappyNewYear");
+  options.add("pong");
   options.add("red");
   options.add("green");
   options.add("blue");
@@ -580,6 +581,9 @@ void MqttClass::UpdateMQTTModeSelector(const char* uniquename, DisplayMode mode)
   case DisplayMode::happyNewYear:
     displaymode="happyNewYear"; 
     break;
+  case DisplayMode::pong:
+    displaymode="pong"; 
+    break;
   default:
     displaymode="unknown"; 
     break;
@@ -733,6 +737,16 @@ void MqttClass::PublishAllMQTTSensors()
     this->PublishMQTTModeSelect(MODENAME);
     this->PublishMQTTText(DEBUGNAME);
     this->PublishMQTTSwitch(DEBUGNAME);
+
+    // Immediately publish current state values after autodiscovery
+    this->UpdateMQTTDimmer(Config.hostname, !Config.nightmode, Brightness.brightnessOverride);
+    this->UpdateMQTTColorDimmer(FOREGROUNDNAME, Config.fg);
+    this->UpdateMQTTColorDimmer(BACKGROUNDNAME, Config.bg);
+    this->UpdateMQTTColorDimmer(SECONDSNAME, Config.s);
+    this->UpdateMQTTNumber(ANIMATIONSPEEDNAME, Config.animspeed);
+    this->UpdateMQTTNumber(BLUECORRECTIONNAME, Config.blueCorrection);
+    this->UpdateMQTTModeSelector(MODENAME, Config.defaultMode);
+    this->UpdateMQTTSwitch(DEBUGNAME, debugging);
 
     // Trick the program to communicate in the next run by making sure the mqtt cached values are set to the "wrong" values
     this->mqtt_brightness = Brightness.brightnessOverride==50 ? 51 : 50;
@@ -911,6 +925,8 @@ DisplayMode GetDisplayModeFromPayload(String payload)
     return DisplayMode::merryChristmas;
   } else if (payload=="HappyNewYear") {
     return DisplayMode::happyNewYear;
+  } else if (payload=="pong") {
+    return DisplayMode::pong;
   } else if (payload=="red") {
     return DisplayMode::red;
   } else if (payload=="green") {

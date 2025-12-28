@@ -95,6 +95,20 @@ public:
 	bool happyNewYearColorsInitialized = false;
   int happyNewYearState = 0;  // 0 = fireworks, 1 = text
 
+  // Pong simulation vars
+  float pongBallX = 5.0f;
+  float pongBallY = 5.0f;
+  float pongBallVX = 0.08f;
+  float pongBallVY = 0.06f;
+  int pongPaddle1Y = 4;  // Left paddle (x=0)
+  int pongPaddle2Y = 4;  // Right paddle (x=10)
+  int pongScore1 = 0;
+  int pongScore2 = 0;
+  int pongState = 0;  // 0 = playing, 1 = score display, 2 = game over
+  int pongScrollOffset = 0;
+  char pongScrollText[50] = "";
+  int pongPaddleSize = 3;
+
 #ifdef FASTLED
   CRGB leds[NUM_PIXELS]; // FastLed
   const char* UsedLedLib="Fastled";
@@ -152,6 +166,9 @@ private:
 	void renderJingleBells();
   void renderMerryChristmas();
   void renderHappyNewYear();
+  void renderPong();
+  const uint8_t* getLetterPattern(char c);
+  bool scrollText(const char* text, int &offset, int pauseFrames);
   palette_entry blendedColor(palette_entry from_color, palette_entry to_color, float progress);
   void renderWakeup();
   void renderRandom(uint8_t *target);
