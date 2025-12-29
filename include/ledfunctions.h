@@ -89,6 +89,8 @@ public:
   // Merry Christmas effect vars
 	uint8_t merryChristmasColors[20] = {0};
   bool merryChristmasColorsInitialized = false;
+	int merryChristmasState = 0;  // 0 = sprite, 1 = text
+	int merryScrollOffset = 0;
   
   // Happy New Year effect vars
 	uint8_t happyNewYearColors[14] = {0};
@@ -169,6 +171,7 @@ private:
   void renderPong();
   const uint8_t* getLetterPattern(char c);
   bool scrollText(const char* text, int &offset, int pauseFrames);
+	bool scrollText(const char* text, int &offset, int pauseFrames, const palette_entry* perCharColors);
   palette_entry blendedColor(palette_entry from_color, palette_entry to_color, float progress);
   void renderWakeup();
   void renderRandom(uint8_t *target);

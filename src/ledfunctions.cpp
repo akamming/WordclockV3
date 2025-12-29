@@ -2053,154 +2053,121 @@ palette_entry LEDFunctionsClass::blendedColor(palette_entry from_color, palette_
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderMerryChristmas()
 {
-	// Linear mapping: animspeed 0->500ms, 100->40ms, then 5x faster for rockets
-	unsigned int delay = (500 - (Config.animspeed * 460 / 100)) / 5;
-	if (delay < 10) delay = 10;
-  if ((unsigned long) (millis()-this->lastUpdate) > delay)
+  // Two-phase animation: 0 = Santa+sleigh sprite, 1 = "MERRY CHRISTMAS" colored text
+  unsigned int spriteDelay = (500 - (Config.animspeed * 460 / 100)) / 5; // a bit faster
+  if (spriteDelay < 10) spriteDelay = 10;
+  unsigned int textDelay = 160 - (Config.animspeed * 140 / 100); // influenced by animspeed
+  if (textDelay < 20) textDelay = 20;
+  unsigned int delay = (this->merryChristmasState == 0) ? spriteDelay : textDelay;
+
+  if ((unsigned long)(millis() - this->lastUpdate) > delay)
   {
     this->lastUpdate = millis();
 
     // Clear all pixels
     memset(this->currentValues, 0, sizeof(this->currentValues));
-    
-	// Per-item widths: sprite(21)+1 gap =22, letters 5+1=6
-	int letterWidths[20] = {22, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 22, 6};
-	bool isSprite[20] = {true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false};
-	int totalTextWidth = 0;
-	for (int i = 0; i < 20; i++) totalTextWidth += letterWidths[i];
 
-		// Total scroll length based on actual widths
-		// Add 11 pixels to scroll off screen + 5 pixels pause
-		int totalScrollLength = totalTextWidth + 11 + 5;
-
-		// Randomize colors at start (first entry) only once per cycle
-		if (!this->merryChristmasColorsInitialized || this->lastOffset == 0)
-		{
-			this->merryChristmasColors[0] = random(3);
-			for (int i = 1; i < 20; i++)
-			{
-				// Avoid same color as previous letter
-				this->merryChristmasColors[i] = (this->merryChristmasColors[i-1] + 1 + random(2)) % 3;
-			}
-			this->merryChristmasColorsInitialized = true;
-		}
-
-		// Update scroll offset
-		this->lastOffset++;
-
-		if (this->lastOffset > totalScrollLength)
-		{
-			this->lastOffset = 0;
-		}
-    
-	// Check if we're in the pause period (after text scrolled off)
-	if (this->lastOffset > totalTextWidth + 11)
+    if (this->merryChristmasState == 0)
     {
-      // Pause period - keep screen dark
-      return;
-    }
-    
-		// Combined Santa + sleigh + reindeer sprite (21x10), RGB per pixel
-		static const uint8_t santaSleighSprite[10][21][3] PROGMEM = {
-		  { {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {113, 57,  0}, {  0,  0,  0}, {113, 57,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {255,255,255}, {  0,  0,  0}, {  0,  0,  0}},
-		  { {  0,  0,  0}, {  0,  0,  0}, {113, 57,  0}, {  0,  0,  0}, {113, 57,  0}, {  0,  0,  0}, {113, 57,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {255,  0,  0}, {255,255,255}, {  0,  0,  0}},
-		  { {  0,  0,  0}, {  0,  0,  0}, {255,142, 71}, {  0,  0,  0}, {255,142, 71}, {  0,  0,  0}, {255,142, 71}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {255,255,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {255,  0,  0}, {255,  0,  0}, {255,255,255}},
-		  { {  0,  0,  0}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {  0,  0,  0}, {255,142, 71}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {255,255,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {255,255,213}, {255,255,213}, {255,255,255}, {255,255,255}},
-		  { {255,142, 71}, {255,142, 71}, {  0,  0,  0}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {255,255,  0}, {  0,  0,  0}, {142, 71,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {255,  0,  0}, {255,255,255}, {255,255,255}},
-		  { {  0,  0,  0}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,255,  0}, {255,255,  0}, {255,255,  0}, {255,255,  0}, {255,255,  0}, {255,255,  0}, {142, 71,  0}, {142, 71,  0}, {142, 71,  0}, {255,  0,  0}, {255,  0,  0}, {255,  0,  0}},
-		  { {  0,  0,  0}, {  0,  0,  0}, {255,142, 71}, {  0,  0,  0}, {  0,  0,  0}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {142, 71,  0}, {142, 71,  0}, {142, 71,  0}, {255,  0,  0}, {255,  0,  0}, {142, 71,  0}},
-		  { {  0,  0,  0}, {  0,  0,  0}, {255,142, 71}, {  0,  0,  0}, {  0,  0,  0}, {255,142, 71}, {  0,  0,  0}, {  0,  0,  0}, {255,142, 71}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {142, 71,  0}, {142, 71,  0}, {142, 71,  0}, {142, 71,  0}, {142, 71,  0}, {142, 71,  0}, {142, 71,  0}},
-		  { {  0,  0,  0}, {  0,  0,  0}, {113, 57,  0}, {  0,  0,  0}, {  0,  0,  0}, {113, 57,  0}, {  0,  0,  0}, {  0,  0,  0}, {113, 57,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {213,213,213}, {213,213,213}, {213,213,213}, {213,213,213}, {213,213,213}, {213,213,213}},
-		  { {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {213,213,213}, {213,213,213}, {213,213,213}, {213,213,213}, {213,213,213}, {213,213,213}}
-		};
+      // ---- SPRITE PHASE ----
+      static const uint8_t santaSleighSprite[10][21][3] PROGMEM = {
+        { {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {113, 57,  0}, {  0,  0,  0}, {113, 57,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {255,255,255}, {  0,  0,  0}, {  0,  0,  0}},
+        { {  0,  0,  0}, {  0,  0,  0}, {113, 57,  0}, {  0,  0,  0}, {113, 57,  0}, {  0,  0,  0}, {113, 57,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {255,  0,  0}, {255,255,255}, {  0,  0,  0}},
+        { {  0,  0,  0}, {  0,  0,  0}, {255,142, 71}, {  0,  0,  0}, {255,142, 71}, {  0,  0,  0}, {255,142, 71}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {255,255,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {255,  0,  0}, {255,  0,  0}, {255,255,255}},
+        { {  0,  0,  0}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {  0,  0,  0}, {255,142, 71}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {255,255,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {255,255,213}, {255,255,213}, {255,255,255}, {255,255,255}},
+        { {255,142, 71}, {255,142, 71}, {  0,  0,  0}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {255,255,  0}, {  0,  0,  0}, {142, 71,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {255,  0,  0}, {255,255,255}, {255,255,255}},
+        { {  0,  0,  0}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {255,255,  0}, {255,255,  0}, {255,255,  0}, {255,255,  0}, {255,255,  0}, {255,255,  0}, {142, 71,  0}, {142, 71,  0}, {142, 71,  0}, {255,  0,  0}, {255,  0,  0}, {255,  0,  0}},
+        { {  0,  0,  0}, {  0,  0,  0}, {255,142, 71}, {  0,  0,  0}, {  0,  0,  0}, {255,142, 71}, {255,142, 71}, {255,142, 71}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {142, 71,  0}, {142, 71,  0}, {142, 71,  0}, {255,  0,  0}, {255,  0,  0}, {142, 71,  0}},
+        { {  0,  0,  0}, {  0,  0,  0}, {255,142, 71}, {  0,  0,  0}, {  0,  0,  0}, {255,142, 71}, {  0,  0,  0}, {  0,  0,  0}, {255,142, 71}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {142, 71,  0}, {142, 71,  0}, {142, 71,  0}, {142, 71,  0}, {142, 71,  0}, {142, 71,  0}, {142, 71,  0}},
+        { {  0,  0,  0}, {  0,  0,  0}, {113, 57,  0}, {  0,  0,  0}, {  0,  0,  0}, {113, 57,  0}, {  0,  0,  0}, {  0,  0,  0}, {113, 57,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {213,213,213}, {213,213,213}, {213,213,213}, {213,213,213}, {213,213,213}, {213,213,213}},
+        { {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {  0,  0,  0}, {213,213,213}, {213,213,213}, {213,213,213}, {213,213,213}, {213,213,213}, {213,213,213}}
+      };
 
-		// Sequence: sprite + space + "MERRY CHRISTMAS" + space + sprite + trailing gap
-		const uint8_t *letters[] = {
-			nullptr, LETTER_SPACE, LETTER_M_CAP, LETTER_e_LOW, LETTER_r_LOW, LETTER_r_LOW, LETTER_y_LOW, LETTER_SPACE,
-			LETTER_C_CAP, LETTER_h_LOW, LETTER_r_LOW, LETTER_i_LOW, LETTER_s_LOW, LETTER_t_LOW, LETTER_m_LOW, LETTER_a_LOW, LETTER_s_LOW, LETTER_SPACE,
-			nullptr, LETTER_SPACE
-		};
-		int numLetters = 20;
-    
-    // For each Y row (0-9)
-    for (int y = 0; y < 10; y++)
-    {
-      // For each X position on screen (0-10)
-      for (int x = 0; x < 11; x++)
+      const int spriteWidth = 21;
+      const int spacer = 1;
+      const int totalWidth = spriteWidth + spacer;
+      const int pauseFrames = 5;
+      const int totalScrollLength = totalWidth + 11 + pauseFrames;
+
+      // Completion check
+      if (this->merryScrollOffset >= totalScrollLength)
       {
-				// Calculate position in scrolling text
-				int scrollPos = (x + this->lastOffset - 11);
-        
-				// Skip if out of bounds
-				if (scrollPos < 0 || scrollPos >= totalTextWidth) continue;
-        
-				// Determine letter index and position using variable widths
-				int accum = 0;
-				int letterIndex = -1;
-				int posInLetter = -1;
-				for (int i = 0; i < numLetters; i++)
-				{
-					int w = letterWidths[i];
-					if (scrollPos >= accum && scrollPos < accum + w)
-					{
-						letterIndex = i;
-						posInLetter = scrollPos - accum;
-						break;
-					}
-					accum += w;
-				}
-				if (letterIndex < 0) continue;
+        this->merryScrollOffset = 0;
+        this->merryChristmasState = 1; // switch to text phase
+        return;
+      }
 
-				bool pixelOn = false;
-				uint8_t r = 0, g = 0, b = 0;
+      // Pause after sprite has fully scrolled off-screen
+      if (this->merryScrollOffset >= totalWidth + 11)
+      {
+        this->merryScrollOffset++;
+        return;
+      }
 
-				int glyphWidth = isSprite[letterIndex] ? 21 : 5;
-				if (posInLetter >= glyphWidth) continue; // skip spacer column
+      // Render sprite scrolling
+      for (int y = 0; y < 10; y++)
+      {
+        for (int x = 0; x < 11; x++)
+        {
+          int scrollPos = (x + this->merryScrollOffset - 11);
+          if (scrollPos < 0 || scrollPos >= totalWidth) continue;
 
-				if (isSprite[letterIndex])
-				{
-					r = pgm_read_byte(&(santaSleighSprite[y][posInLetter][0]));
-					g = pgm_read_byte(&(santaSleighSprite[y][posInLetter][1]));
-					b = pgm_read_byte(&(santaSleighSprite[y][posInLetter][2]));
-					pixelOn = (r != 0 || g != 0 || b != 0);
-				}
-				else
-				{
-					uint8_t pattern = letters[letterIndex][y];
-					int bitPos = 4 - posInLetter;
-					pixelOn = (pattern & (1 << bitPos)) != 0;
-					if (pixelOn)
-					{
-						int colorPhase = this->merryChristmasColors[letterIndex];
-						if (colorPhase == 0)
-						{
-							r = 255; g = 0; b = 0;      // Red
-						}
-						else if (colorPhase == 1)
-						{
-							r = 0; g = 255; b = 0;      // Green
-						}
-						else
-						{
-							r = 255; g = 220; b = 0;    // Yellow
-						}
-					}
-				}
+          if (scrollPos < spriteWidth)
+          {
+            uint8_t r = pgm_read_byte(&(santaSleighSprite[y][scrollPos][0]));
+            uint8_t g = pgm_read_byte(&(santaSleighSprite[y][scrollPos][1]));
+            uint8_t b = pgm_read_byte(&(santaSleighSprite[y][scrollPos][2]));
+            if (r || g || b)
+            {
+              int mappedIndex = LEDFunctionsClass::mapping[y * 11 + x] * 3;
+              this->currentValues[mappedIndex] = r;
+              this->currentValues[mappedIndex + 1] = g;
+              this->currentValues[mappedIndex + 2] = b;
+            }
+          }
+        }
+      }
 
-				if (pixelOn)
-				{
-					int mappedIndex = LEDFunctionsClass::mapping[y * 11 + x] * 3;
-					this->currentValues[mappedIndex] = r;
-					this->currentValues[mappedIndex + 1] = g;
-					this->currentValues[mappedIndex + 2] = b;
-				}
+      this->merryScrollOffset++;
+    }
+    else
+    {
+      // ---- TEXT PHASE ----
+      const char* text = "Merry Christmas";
+      const int textLen = strlen(text);
+
+      // Randomize per-letter colors at start of cycle
+      if (!this->merryChristmasColorsInitialized || this->merryScrollOffset == 0)
+      {
+        for (int i = 0; i < textLen; i++)
+        {
+          // Assign random color to each character (including spaces)
+          this->merryChristmasColors[i] = random(3);
+        }
+        this->merryChristmasColorsInitialized = true;
+      }
+
+      palette_entry perChar[20];
+      for (int i = 0; i < textLen; i++)
+      {
+        uint8_t phase = this->merryChristmasColors[i];
+        if (phase == 0)
+          perChar[i] = {255, 0, 0}; // Red
+        else if (phase == 1)
+          perChar[i] = {0, 255, 0}; // Green
+        else
+          perChar[i] = {255, 220, 0}; // Yellow
+      }
+
+      this->merryScrollOffset++;
+      bool done = this->scrollText(text, this->merryScrollOffset, 5, perChar);
+      if (done)
+      {
+        this->merryChristmasState = 0; // back to sprite
+        this->merryScrollOffset = 0;
       }
     }
-    
-    // Keep corner LEDs (110-113) off - they are already cleared by memset
   }
-  
-  // this->fade();
 }
 
 //---------------------------------------------------------------------------------------
@@ -2636,6 +2603,71 @@ bool LEDFunctionsClass::scrollText(const char* text, int &offset, int pauseFrame
     }
   }
   
+  return false;
+}
+
+//---------------------------------------------------------------------------------------
+// scrollText (colored)
+//
+// Overload to scroll text with per-character colors. When perCharColors is null,
+// falls back to Config.fg.
+//---------------------------------------------------------------------------------------
+bool LEDFunctionsClass::scrollText(const char* text, int &offset, int pauseFrames, const palette_entry* perCharColors)
+{
+  // Clear all pixels
+  memset(this->currentValues, 0, sizeof(this->currentValues));
+
+  int textLen = strlen(text);
+  if (textLen == 0) return true;
+
+  // Calculate widths (each character is 5 pixels + 1 gap)
+  int totalWidth = textLen * 6;
+  int totalScrollLength = totalWidth + 11 + pauseFrames;
+
+  // Check if cycle is complete before handling pause
+  if (offset >= totalScrollLength)
+  {
+    offset = 0;
+    return true;
+  }
+
+  // Pause after text has fully scrolled off-screen
+  if (offset >= totalWidth + 11)
+  {
+    return false; // keep screen blank during pause
+  }
+
+  // Render text
+  palette_entry defaultColor = {Config.fg.r, Config.fg.g, Config.fg.b};
+
+  for (int y = 0; y < 10; y++)
+  {
+    for (int x = 0; x < 11; x++)
+    {
+      int scrollPos = (x + offset - 11);
+      if (scrollPos < 0 || scrollPos >= totalWidth) continue;
+
+      int charIndex = scrollPos / 6;
+      int posInChar = scrollPos % 6;
+      if (charIndex >= textLen) continue;
+      if (posInChar >= 5) continue; // gap
+
+      const uint8_t* pattern = this->getLetterPattern(text[charIndex]);
+      uint8_t row = pattern[y];
+      int bitPos = 4 - posInChar;
+      bool pixelOn = (row & (1 << bitPos)) != 0;
+
+      if (pixelOn)
+      {
+        const palette_entry &c = perCharColors ? perCharColors[charIndex] : defaultColor;
+        int mappedIndex = LEDFunctionsClass::mapping[y * 11 + x] * 3;
+        this->currentValues[mappedIndex] = c.r;
+        this->currentValues[mappedIndex + 1] = c.g;
+        this->currentValues[mappedIndex + 2] = c.b;
+      }
+    }
+  }
+
   return false;
 }
 
