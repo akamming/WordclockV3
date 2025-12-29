@@ -2193,15 +2193,21 @@ void LEDFunctionsClass::renderHappyNewYear()
 
     // Clear all pixels
     memset(this->currentValues, 0, sizeof(this->currentValues));
-    
+
     if (this->happyNewYearState == 0)
     {
       // ===== FIREWORKS PHASE =====
-      
-	// Calculate fireworks duration
-	int fireworksDuration = 90;
-    
-// Use particle system like renderExplosion
+      int fireworksDuration = 90;
+
+      // Completion check
+      if (this->lastOffset >= fireworksDuration)
+      {
+        this->lastOffset = 0;
+        this->happyNewYearState = 1; // switch to text phase
+        return;
+      }
+
+      // Use particle system like renderExplosion
       palette_entry palette[] = {
         {Config.bg.r, Config.bg.g, Config.bg.b},
         {255, 200, 0},  // Yellow/orange for fireworks
@@ -2230,25 +2236,25 @@ void LEDFunctionsClass::renderHappyNewYear()
           this->currentValues[mappedIndex + 2] = 0;
         }
       }
-			else if (this->lastOffset == rocket1Explode)
-			{
-				// Create explosion at (3, 4) with immediate particles
-				for(Particle *p : this->particles) delete p;
-				this->particles.clear();
+      else if (this->lastOffset == rocket1Explode)
+      {
+        // Create explosion at (3, 4) with immediate particles
+        for(Particle *p : this->particles) delete p;
+        this->particles.clear();
 
-				const int particleCount = 16;
-				const float particleSpeed = 0.90f;
-				float angle_increment = 2.0f * 3.141592654f / (float)(particleCount);
-				float angle = 0;
-				for(int i=0; i<particleCount; i++)
-				{
-					float vx = particleSpeed * sin(angle);
-					float vy = particleSpeed * cos(angle);
-					Particle *p = new Particle(3, 4, vx, vy, 0);
-					this->particles.push_back(p);
-					angle += angle_increment;
-				}
-			}
+        const int particleCount = 16;
+        const float particleSpeed = 0.90f;
+        float angle_increment = 2.0f * 3.141592654f / (float)(particleCount);
+        float angle = 0;
+        for(int i=0; i<particleCount; i++)
+        {
+          float vx = particleSpeed * sin(angle);
+          float vy = particleSpeed * cos(angle);
+          Particle *p = new Particle(3, 4, vx, vy, 0);
+          this->particles.push_back(p);
+          angle += angle_increment;
+        }
+      }
       else if (this->lastOffset > rocket1Explode && this->lastOffset < rocket2Start)
       {
         // Render explosion particles
@@ -2275,25 +2281,25 @@ void LEDFunctionsClass::renderHappyNewYear()
           this->currentValues[mappedIndex + 2] = 255;
         }
       }
-			else if (this->lastOffset == rocket2Explode)
-			{
-				// Create explosion at (5, 5) with immediate particles
-				for(Particle *p : this->particles) delete p;
-				this->particles.clear();
+      else if (this->lastOffset == rocket2Explode)
+      {
+        // Create explosion at (5, 5) with immediate particles
+        for(Particle *p : this->particles) delete p;
+        this->particles.clear();
 
-				const int particleCount = 16;
-				const float particleSpeed = 0.90f;
-				float angle_increment = 2.0f * 3.141592654f / (float)(particleCount);
-				float angle = 0;
-				for(int i=0; i<particleCount; i++)
-				{
-					float vx = particleSpeed * sin(angle);
-					float vy = particleSpeed * cos(angle);
-					Particle *p = new Particle(5, 5, vx, vy, 0);
-					this->particles.push_back(p);
-					angle += angle_increment;
-				}
-			}
+        const int particleCount = 16;
+        const float particleSpeed = 0.90f;
+        float angle_increment = 2.0f * 3.141592654f / (float)(particleCount);
+        float angle = 0;
+        for(int i=0; i<particleCount; i++)
+        {
+          float vx = particleSpeed * sin(angle);
+          float vy = particleSpeed * cos(angle);
+          Particle *p = new Particle(5, 5, vx, vy, 0);
+          this->particles.push_back(p);
+          angle += angle_increment;
+        }
+      }
       else if (this->lastOffset > rocket2Explode && this->lastOffset < rocket3Start)
       {
         // Render explosion particles
@@ -2320,25 +2326,25 @@ void LEDFunctionsClass::renderHappyNewYear()
           this->currentValues[mappedIndex + 2] = 200;
         }
       }
-			else if (this->lastOffset == rocket3Explode)
-			{
-				// Create explosion at (7, 4) with immediate particles
-				for(Particle *p : this->particles) delete p;
-				this->particles.clear();
+      else if (this->lastOffset == rocket3Explode)
+      {
+        // Create explosion at (7, 4) with immediate particles
+        for(Particle *p : this->particles) delete p;
+        this->particles.clear();
 
-				const int particleCount = 16;
-				const float particleSpeed = 0.90f;
-				float angle_increment = 2.0f * 3.141592654f / (float)(particleCount);
-				float angle = 0;
-				for(int i=0; i<particleCount; i++)
-				{
-					float vx = particleSpeed * sin(angle);
-					float vy = particleSpeed * cos(angle);
-					Particle *p = new Particle(7, 4, vx, vy, 0);
-					this->particles.push_back(p);
-					angle += angle_increment;
-				}
-			}
+        const int particleCount = 16;
+        const float particleSpeed = 0.90f;
+        float angle_increment = 2.0f * 3.141592654f / (float)(particleCount);
+        float angle = 0;
+        for(int i=0; i<particleCount; i++)
+        {
+          float vx = particleSpeed * sin(angle);
+          float vy = particleSpeed * cos(angle);
+          Particle *p = new Particle(7, 4, vx, vy, 0);
+          this->particles.push_back(p);
+          angle += angle_increment;
+        }
+      }
       else if (this->lastOffset > rocket3Explode && this->lastOffset < fireworksDuration)
       {
         // Render explosion particles
@@ -2350,18 +2356,12 @@ void LEDFunctionsClass::renderHappyNewYear()
         }
         this->particles.swap(particlesToKeep);
       }
-      
-      // Cleanup particles at end of fireworks
-      if (this->lastOffset == fireworksDuration - 1)
-      {
-        for(Particle *p : this->particles) delete p;
-        this->particles.clear();
-        this->happyNewYearState = 1; // switch to text phase
-      }
+
+      this->lastOffset++;
     }
-    // Text phase: "Happy New Year" using generic scrollText with per-character colors
     else
     {
+      // ===== TEXT PHASE =====" 
       // Randomize colors at start of text cycle only once
       if (!this->happyNewYearColorsInitialized || this->merryScrollOffset == 0)
       {
