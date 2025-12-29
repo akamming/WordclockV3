@@ -2181,70 +2181,40 @@ void LEDFunctionsClass::renderMerryChristmas()
 //---------------------------------------------------------------------------------------
 void LEDFunctionsClass::renderHappyNewYear()
 {
-  // Linear mapping: animspeed 0->500ms, 100->40ms
-  unsigned int delay = 500 - (Config.animspeed * 460 / 100);
-  if ((unsigned long) (millis()-this->lastUpdate) > delay)
+  // Two-phase animation: 0 = fireworks, 1 = text
+  unsigned int fireworksDelay = 50; // fast fireworks
+  unsigned int textDelay = 60 - (Config.animspeed * 50 / 100); // text influenced by speed
+  if (textDelay < 15) textDelay = 15;
+  unsigned int delay = (this->happyNewYearState == 0) ? fireworksDelay : textDelay;
+
+  if ((unsigned long)(millis() - this->lastUpdate) > delay)
   {
     this->lastUpdate = millis();
 
     // Clear all pixels
     memset(this->currentValues, 0, sizeof(this->currentValues));
     
-	// State machine: 
-	// Offset 0-120: Show fireworks (3 rockets)
-	// Offset 120+: Show text
-    
-	// Calculate cycle lengths
-	int fireworksDuration = 120;
-    
-    // Letter widths for "Happy New Year": H=6, a=6, p=6, p=6, y=6, space=6, N=6, e=6, w=6, space=6, Y=6, e=6, a=6, r=6
-    int letterWidths[14] = {6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6};
-    int totalTextWidth = 0;
-    for (int i = 0; i < 14; i++) totalTextWidth += letterWidths[i];
-    int totalScrollLength = totalTextWidth + 11 + 5; // Text + scroll off + pause
-    
-		int totalCycleLength = fireworksDuration + totalScrollLength;
-
-		// Randomize colors at start of cycle (first run) only once per cycle
-		if (!this->happyNewYearColorsInitialized || this->lastOffset == 0)
-		{
-			this->happyNewYearColors[0] = random(3);
-			for (int i = 1; i < 14; i++)
-			{
-				this->happyNewYearColors[i] = (this->happyNewYearColors[i-1] + 1 + random(2)) % 3;
-			}
-			this->happyNewYearColorsInitialized = true;
-		}
-
-		// Advance offset
-		this->lastOffset++;
-
-		if (this->lastOffset > totalCycleLength)
-		{
-			this->lastOffset = 0;
-		}
-    
-    // Fireworks phase
-    if (this->lastOffset < fireworksDuration)
+    if (this->happyNewYearState == 0)
     {
-      // Use particle system like renderExplosion
+      // ===== FIREWORKS PHASE =====
+      
+	// Calculate fireworks duration
+	int fireworksDuration = 90;
+    
+// Use particle system like renderExplosion
       palette_entry palette[] = {
         {Config.bg.r, Config.bg.g, Config.bg.b},
         {255, 200, 0},  // Yellow/orange for fireworks
         {Config.s.r, Config.s.g, Config.s.b}
       };
       
-      // Define rocket timing and positions
-      // Rocket 1: x=3, launches at frame 10, explodes at y=4
-      // Rocket 2: x=5, launches at frame 45, explodes at y=5
-      // Rocket 3: x=7, launches at frame 80, explodes at y=4
-      
-      int rocket1Start = 10;
-      int rocket1Explode = 25;
-      int rocket2Start = 45;
-      int rocket2Explode = 60;
-      int rocket3Start = 80;
-      int rocket3Explode = 95;
+      // Define rocket timing (faster than before)
+      int rocket1Start = 5;
+      int rocket1Explode = 15;
+      int rocket2Start = 30;
+      int rocket2Explode = 40;
+      int rocket3Start = 55;
+      int rocket3Explode = 65;
       
       // Rocket 1
       if (this->lastOffset >= rocket1Start && this->lastOffset < rocket1Explode)
@@ -2386,87 +2356,41 @@ void LEDFunctionsClass::renderHappyNewYear()
       {
         for(Particle *p : this->particles) delete p;
         this->particles.clear();
+        this->happyNewYearState = 1; // switch to text phase
       }
     }
-    // Text phase: "Happy New Year" with mixed case
+    // Text phase: "Happy New Year" using generic scrollText with per-character colors
     else
     {
-      int textOffset = this->lastOffset - fireworksDuration;
-      
-      // Check if we're in the pause period
-      if (textOffset > totalTextWidth + 11)
+      // Randomize colors at start of text cycle only once
+      if (!this->happyNewYearColorsInitialized || this->merryScrollOffset == 0)
       {
-        // Pause period - keep screen dark
-        return;
-      }
-      
-      // Happy New Year: H(cap) a(low) p(low) p(low) y(low) space N(cap) e(low) w(low) space Y(cap) e(low) a(low) r(low)
-      const uint8_t *letters[] = {
-        LETTER_H_CAP, LETTER_a_LOW, LETTER_p_LOW, LETTER_p_LOW, LETTER_y_LOW, LETTER_SPACE,
-        LETTER_N_CAP, LETTER_e_LOW, LETTER_w_LOW, LETTER_SPACE,
-        LETTER_Y_CAP, LETTER_e_LOW, LETTER_a_LOW, LETTER_r_LOW
-      };
-      int numLetters = 14;
-      
-      // For each Y row (0-9)
-      for (int y = 0; y < 10; y++)
-      {
-        // For each X position on screen (0-10)
-        for (int x = 0; x < 11; x++)
+        for (int i = 0; i < 14; i++)
         {
-          // Calculate position in scrolling text
-          int scrollPos = (x + textOffset - 11);
-          
-          // Skip if out of bounds
-          if (scrollPos < 0 || scrollPos >= totalTextWidth) continue;
-          
-          // Determine letter index and position
-          int accum = 0;
-          int letterIndex = -1;
-          int posInLetter = -1;
-          for (int i = 0; i < numLetters; i++)
-          {
-            int w = letterWidths[i];
-            if (scrollPos >= accum && scrollPos < accum + w)
-            {
-              letterIndex = i;
-              posInLetter = scrollPos - accum;
-              break;
-            }
-            accum += w;
-          }
-          if (letterIndex < 0) continue;
-          
-          int glyphWidth = 5;
-          if (posInLetter >= glyphWidth) continue; // skip spacer column
-          
-          uint8_t pattern = letters[letterIndex][y];
-          int bitPos = 4 - posInLetter;
-          bool pixelOn = (pattern & (1 << bitPos)) != 0;
-          
-          if (pixelOn)
-          {
-            uint8_t r, g, b;
-            int colorPhase = this->happyNewYearColors[letterIndex];
-            if (colorPhase == 0)
-            {
-              r = 255; g = 0; b = 0;      // Red
-            }
-            else if (colorPhase == 1)
-            {
-              r = 0; g = 255; b = 0;      // Green
-            }
-            else
-            {
-              r = 255; g = 220; b = 0;    // Yellow
-            }
-            
-            int mappedIndex = LEDFunctionsClass::mapping[y * 11 + x] * 3;
-            this->currentValues[mappedIndex] = r;
-            this->currentValues[mappedIndex + 1] = g;
-            this->currentValues[mappedIndex + 2] = b;
-          }
+          this->happyNewYearColors[i] = random(3);
         }
+        this->happyNewYearColorsInitialized = true;
+      }
+
+      // Build color array for scrollText
+      palette_entry perChar[14];
+      for (int i = 0; i < 14; i++)
+      {
+        uint8_t phase = this->happyNewYearColors[i];
+        if (phase == 0)
+          perChar[i] = {255, 0, 0}; // Red
+        else if (phase == 1)
+          perChar[i] = {0, 255, 0}; // Green
+        else
+          perChar[i] = {255, 220, 0}; // Yellow
+      }
+
+      this->merryScrollOffset++;
+      bool done = this->scrollText("Happy New Year", this->merryScrollOffset, 5, perChar);
+      if (done)
+      {
+        this->happyNewYearState = 0; // back to fireworks
+        this->merryScrollOffset = 0;
       }
     }
   }
@@ -2739,19 +2663,19 @@ void LEDFunctionsClass::renderPong()
 				}
 			}
 
-			// Right paddle: more cautious, reacts to current position with higher noise
+			// Right paddle: passive tracking, much less reactive to avoid nervous movement
 			{
 				int paddle2Center = this->pongPaddle2Y + this->pongPaddleSize / 2;
 				int ballCenterY = (int)(this->pongBallY + 0.5f);
-				// more noise so it doesn’t mirror left
-				ballCenterY += (random(100) - 50) > 0 ? 1 : -1; // slight jitter
+				// no jitter - just track the ball position
 				if (ballCenterY < 0) ballCenterY = 0;
 				if (ballCenterY > 9) ballCenterY = 9;
-				if (random(100) < 55) // 55% chance to react
+				if (random(100) < 40) // 40% chance to react (very passive)
 				{
-					if (ballCenterY < paddle2Center && this->pongPaddle2Y > 0)
+					// Larger deadzone: only move if ball is >2 pixels away
+					if (ballCenterY < paddle2Center - 2 && this->pongPaddle2Y > 0)
 						this->pongPaddle2Y--;
-					else if (ballCenterY > paddle2Center && this->pongPaddle2Y < (10 - this->pongPaddleSize))
+					else if (ballCenterY > paddle2Center + 2 && this->pongPaddle2Y < (10 - this->pongPaddleSize))
 						this->pongPaddle2Y++;
 				}
 			}
