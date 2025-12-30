@@ -1950,157 +1950,168 @@ void LEDFunctionsClass::renderHappyNewYear()
 //---------------------------------------------------------------------------------------
 const uint8_t* LEDFunctionsClass::getLetterPattern(char c)
 {
-  // Letter and digit patterns (10 pixels high)
+  // Letter and digit patterns (10 pixels high) - stored in PROGMEM
   // Capital letters
-  static const uint8_t LETTER_A_CAP[10] = { 0b01110, 0b10001, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001 };
-  static const uint8_t LETTER_B_CAP[10] = { 0b11110, 0b10001, 0b10001, 0b10001, 0b11110, 0b10001, 0b10001, 0b10001, 0b10001, 0b11110 };
-  static const uint8_t LETTER_C_CAP[10] = { 0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110 };
-  static const uint8_t LETTER_D_CAP[10] = { 0b11100, 0b10010, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10010, 0b11100 };
-  static const uint8_t LETTER_E_CAP[10] = { 0b11111, 0b10000, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000, 0b10000, 0b11111 };
-  static const uint8_t LETTER_F_CAP[10] = { 0b11111, 0b10000, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000 };
-  static const uint8_t LETTER_G_CAP[10] = { 0b01110, 0b10001, 0b10000, 0b10000, 0b10111, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 };
-  static const uint8_t LETTER_H_CAP[10] = { 0b10001, 0b10001, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001 };
-  static const uint8_t LETTER_I_CAP[10] = { 0b01110, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110 };
-  static const uint8_t LETTER_J_CAP[10] = { 0b00001, 0b00001, 0b00001, 0b00001, 0b00001, 0b00001, 0b10001, 0b10001, 0b10001, 0b01110 };
-  static const uint8_t LETTER_K_CAP[10] = { 0b10001, 0b10010, 0b10100, 0b11000, 0b11000, 0b10100, 0b10010, 0b10010, 0b10001, 0b10001 };
-  static const uint8_t LETTER_L_CAP[10] = { 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b11111 };
-  static const uint8_t LETTER_M_CAP[10] = { 0b10001, 0b11011, 0b10101, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001 };
-  static const uint8_t LETTER_N_CAP[10] = { 0b10001, 0b11001, 0b11001, 0b10101, 0b10101, 0b10011, 0b10011, 0b10001, 0b10001, 0b10001 };
-  static const uint8_t LETTER_O_CAP[10] = { 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 };
-  static const uint8_t LETTER_P_CAP[10] = { 0b11110, 0b10001, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000 };
-  static const uint8_t LETTER_Q_CAP[10] = { 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10101, 0b10011, 0b10010, 0b01101 };
-  static const uint8_t LETTER_R_CAP[10] = { 0b11110, 0b10001, 0b10001, 0b10001, 0b11110, 0b10100, 0b10010, 0b10001, 0b10001, 0b10001 };
-  static const uint8_t LETTER_S_CAP[10] = { 0b01110, 0b10001, 0b10000, 0b10000, 0b01110, 0b00001, 0b00001, 0b00001, 0b10001, 0b01110 };
-  static const uint8_t LETTER_T_CAP[10] = { 0b11111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100 };
-  static const uint8_t LETTER_U_CAP[10] = { 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 };
-  static const uint8_t LETTER_V_CAP[10] = { 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01010, 0b00100, 0b00100 };
-  static const uint8_t LETTER_W_CAP[10] = { 0b10001, 0b10001, 0b10001, 0b10001, 0b10101, 0b10101, 0b10101, 0b11011, 0b10001, 0b10001 };
-  static const uint8_t LETTER_X_CAP[10] = { 0b10001, 0b10001, 0b01010, 0b00100, 0b00100, 0b00100, 0b01010, 0b10001, 0b10001, 0b10001 };
-  static const uint8_t LETTER_Y_CAP[10] = { 0b10001, 0b10001, 0b10001, 0b01010, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100 };
-  static const uint8_t LETTER_Z_CAP[10] = { 0b11111, 0b00001, 0b00010, 0b00100, 0b01000, 0b01000, 0b10000, 0b10000, 0b10000, 0b11111 };
+  static const uint8_t LETTER_A_CAP[10] PROGMEM = { 0b01110, 0b10001, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001 };
+  static const uint8_t LETTER_B_CAP[10] PROGMEM = { 0b11110, 0b10001, 0b10001, 0b10001, 0b11110, 0b10001, 0b10001, 0b10001, 0b10001, 0b11110 };
+  static const uint8_t LETTER_C_CAP[10] PROGMEM = { 0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110 };
+  static const uint8_t LETTER_D_CAP[10] PROGMEM = { 0b11100, 0b10010, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10010, 0b11100 };
+  static const uint8_t LETTER_E_CAP[10] PROGMEM = { 0b11111, 0b10000, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000, 0b10000, 0b11111 };
+  static const uint8_t LETTER_F_CAP[10] PROGMEM = { 0b11111, 0b10000, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000 };
+  static const uint8_t LETTER_G_CAP[10] PROGMEM = { 0b01110, 0b10001, 0b10000, 0b10000, 0b10111, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 };
+  static const uint8_t LETTER_H_CAP[10] PROGMEM = { 0b10001, 0b10001, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001 };
+  static const uint8_t LETTER_I_CAP[10] PROGMEM = { 0b01110, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110 };
+  static const uint8_t LETTER_J_CAP[10] PROGMEM = { 0b00001, 0b00001, 0b00001, 0b00001, 0b00001, 0b00001, 0b10001, 0b10001, 0b10001, 0b01110 };
+  static const uint8_t LETTER_K_CAP[10] PROGMEM = { 0b10001, 0b10010, 0b10100, 0b11000, 0b11000, 0b10100, 0b10010, 0b10010, 0b10001, 0b10001 };
+  static const uint8_t LETTER_L_CAP[10] PROGMEM = { 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b11111 };
+  static const uint8_t LETTER_M_CAP[10] PROGMEM = { 0b10001, 0b11011, 0b10101, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001 };
+  static const uint8_t LETTER_N_CAP[10] PROGMEM = { 0b10001, 0b11001, 0b11001, 0b10101, 0b10101, 0b10011, 0b10011, 0b10001, 0b10001, 0b10001 };
+  static const uint8_t LETTER_O_CAP[10] PROGMEM = { 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 };
+  static const uint8_t LETTER_P_CAP[10] PROGMEM = { 0b11110, 0b10001, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000 };
+  static const uint8_t LETTER_Q_CAP[10] PROGMEM = { 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10101, 0b10011, 0b10010, 0b01101 };
+  static const uint8_t LETTER_R_CAP[10] PROGMEM = { 0b11110, 0b10001, 0b10001, 0b10001, 0b11110, 0b10100, 0b10010, 0b10001, 0b10001, 0b10001 };
+  static const uint8_t LETTER_S_CAP[10] PROGMEM = { 0b01110, 0b10001, 0b10000, 0b10000, 0b01110, 0b00001, 0b00001, 0b00001, 0b10001, 0b01110 };
+  static const uint8_t LETTER_T_CAP[10] PROGMEM = { 0b11111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100 };
+  static const uint8_t LETTER_U_CAP[10] PROGMEM = { 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 };
+  static const uint8_t LETTER_V_CAP[10] PROGMEM = { 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01010, 0b00100, 0b00100 };
+  static const uint8_t LETTER_W_CAP[10] PROGMEM = { 0b10001, 0b10001, 0b10001, 0b10001, 0b10101, 0b10101, 0b10101, 0b11011, 0b10001, 0b10001 };
+  static const uint8_t LETTER_X_CAP[10] PROGMEM = { 0b10001, 0b10001, 0b01010, 0b00100, 0b00100, 0b00100, 0b01010, 0b10001, 0b10001, 0b10001 };
+  static const uint8_t LETTER_Y_CAP[10] PROGMEM = { 0b10001, 0b10001, 0b10001, 0b01010, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100 };
+  static const uint8_t LETTER_Z_CAP[10] PROGMEM = { 0b11111, 0b00001, 0b00010, 0b00100, 0b01000, 0b01000, 0b10000, 0b10000, 0b10000, 0b11111 };
   
   // Lowercase letters
-  static const uint8_t LETTER_a_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b01110, 0b00001, 0b01111, 0b10001, 0b10011, 0b01101, 0b00000 };
-  static const uint8_t LETTER_b_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b11110, 0b00000 };
-  static const uint8_t LETTER_c_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110 };
-  static const uint8_t LETTER_d_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b00001, 0b00001, 0b01111, 0b10001, 0b10001, 0b01111, 0b00000 };
-  static const uint8_t LETTER_e_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b01110, 0b10001, 0b11111, 0b10000, 0b10001, 0b01110, 0b00000 };
-  static const uint8_t LETTER_f_LOW[10] = { 0b00000, 0b00110, 0b01001, 0b01000, 0b11110, 0b01000, 0b01000, 0b01000, 0b01000, 0b00000 };
-  static const uint8_t LETTER_g_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b01111, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001, 0b01110 };
-  static const uint8_t LETTER_h_LOW[10] = { 0b10000, 0b10000, 0b10000, 0b10110, 0b11001, 0b10001, 0b10001, 0b10001, 0b10001, 0b00000 };
-  static const uint8_t LETTER_i_LOW[10] = { 0b00000, 0b00100, 0b00000, 0b01100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000 };
-  static const uint8_t LETTER_j_LOW[10] = { 0b00000, 0b00010, 0b00000, 0b00110, 0b00010, 0b00010, 0b00010, 0b00010, 0b10010, 0b01100 };
-  static const uint8_t LETTER_k_LOW[10] = { 0b10000, 0b10000, 0b10000, 0b10010, 0b10100, 0b11000, 0b10100, 0b10010, 0b10001, 0b00000 };
-  static const uint8_t LETTER_l_LOW[10] = { 0b00000, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00000 };
-  static const uint8_t LETTER_m_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b10001, 0b11011, 0b10101, 0b10101, 0b10101, 0b10001, 0b00000 };
-  static const uint8_t LETTER_n_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b10110, 0b11001, 0b10001, 0b10001, 0b10001, 0b10001, 0b00000 };
-  static const uint8_t LETTER_o_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 };
-  static const uint8_t LETTER_p_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b11110, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000 };
-  static const uint8_t LETTER_q_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b01111, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001, 0b00001 };
-  static const uint8_t LETTER_r_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b10110, 0b11001, 0b10000, 0b10000, 0b10000, 0b10000, 0b00000 };
-  static const uint8_t LETTER_s_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b01110, 0b10000, 0b01110, 0b00001, 0b10001, 0b01110, 0b00000 };
-  static const uint8_t LETTER_t_LOW[10] = { 0b00000, 0b00100, 0b00100, 0b11111, 0b00100, 0b00100, 0b00100, 0b00101, 0b00010, 0b00000 };
-  static const uint8_t LETTER_u_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01111 };
-  static const uint8_t LETTER_v_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10001, 0b10001, 0b01010, 0b00100, 0b00100 };
-  static const uint8_t LETTER_w_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10101, 0b10101, 0b11011, 0b10001, 0b00000 };
-  static const uint8_t LETTER_x_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b10001, 0b01010, 0b00100, 0b00100, 0b01010, 0b10001, 0b00000 };
-  static const uint8_t LETTER_y_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10011, 0b01101, 0b00001, 0b00010, 0b01100 };
-  static const uint8_t LETTER_z_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b11111, 0b00001, 0b00010, 0b00100, 0b01000, 0b10000, 0b11111 };
-  static const uint8_t LETTER_SPACE[10] = { 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000 };
+  static const uint8_t LETTER_a_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b01110, 0b00001, 0b01111, 0b10001, 0b10011, 0b01101, 0b00000 };
+  static const uint8_t LETTER_b_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b11110, 0b00000 };
+  static const uint8_t LETTER_c_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110 };
+  static const uint8_t LETTER_d_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b00001, 0b00001, 0b01111, 0b10001, 0b10001, 0b01111, 0b00000 };
+  static const uint8_t LETTER_e_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b01110, 0b10001, 0b11111, 0b10000, 0b10001, 0b01110, 0b00000 };
+  static const uint8_t LETTER_f_LOW[10] PROGMEM = { 0b00000, 0b00110, 0b01001, 0b01000, 0b11110, 0b01000, 0b01000, 0b01000, 0b01000, 0b00000 };
+  static const uint8_t LETTER_g_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b01111, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001, 0b01110 };
+  static const uint8_t LETTER_h_LOW[10] PROGMEM = { 0b10000, 0b10000, 0b10000, 0b10110, 0b11001, 0b10001, 0b10001, 0b10001, 0b10001, 0b00000 };
+  static const uint8_t LETTER_i_LOW[10] PROGMEM = { 0b00000, 0b00100, 0b00000, 0b01100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000 };
+  static const uint8_t LETTER_j_LOW[10] PROGMEM = { 0b00000, 0b00010, 0b00000, 0b00110, 0b00010, 0b00010, 0b00010, 0b00010, 0b10010, 0b01100 };
+  static const uint8_t LETTER_k_LOW[10] PROGMEM = { 0b10000, 0b10000, 0b10000, 0b10010, 0b10100, 0b11000, 0b10100, 0b10010, 0b10001, 0b00000 };
+  static const uint8_t LETTER_l_LOW[10] PROGMEM = { 0b00000, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00000 };
+  static const uint8_t LETTER_m_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b10001, 0b11011, 0b10101, 0b10101, 0b10101, 0b10001, 0b00000 };
+  static const uint8_t LETTER_n_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b10110, 0b11001, 0b10001, 0b10001, 0b10001, 0b10001, 0b00000 };
+  static const uint8_t LETTER_o_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 };
+  static const uint8_t LETTER_p_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b11110, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000 };
+  static const uint8_t LETTER_q_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b01111, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001, 0b00001 };
+  static const uint8_t LETTER_r_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b10110, 0b11001, 0b10000, 0b10000, 0b10000, 0b10000, 0b00000 };
+  static const uint8_t LETTER_s_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b01110, 0b10000, 0b01110, 0b00001, 0b10001, 0b01110, 0b00000 };
+  static const uint8_t LETTER_t_LOW[10] PROGMEM = { 0b00000, 0b00100, 0b00100, 0b11111, 0b00100, 0b00100, 0b00100, 0b00101, 0b00010, 0b00000 };
+  static const uint8_t LETTER_u_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01111 };
+  static const uint8_t LETTER_v_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10001, 0b10001, 0b01010, 0b00100, 0b00100 };
+  static const uint8_t LETTER_w_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10101, 0b10101, 0b11011, 0b10001, 0b00000 };
+  static const uint8_t LETTER_x_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b10001, 0b01010, 0b00100, 0b00100, 0b01010, 0b10001, 0b00000 };
+  static const uint8_t LETTER_y_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10011, 0b01101, 0b00001, 0b00010, 0b01100 };
+  static const uint8_t LETTER_z_LOW[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b11111, 0b00001, 0b00010, 0b00100, 0b01000, 0b10000, 0b11111 };
+  static const uint8_t LETTER_SPACE[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000 };
   
   // Digits
-  static const uint8_t DIGIT_0[10] = { 0b01110, 0b10001, 0b10011, 0b10101, 0b10101, 0b10101, 0b11001, 0b10001, 0b10001, 0b01110 };
-  static const uint8_t DIGIT_1[10] = { 0b00100, 0b01100, 0b10100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b11111 };
-  static const uint8_t DIGIT_2[10] = { 0b01110, 0b10001, 0b00001, 0b00001, 0b00010, 0b00100, 0b01000, 0b10000, 0b10000, 0b11111 };
-  static const uint8_t DIGIT_3[10] = { 0b01110, 0b10001, 0b00001, 0b00001, 0b01110, 0b00001, 0b00001, 0b00001, 0b10001, 0b01110 };
-  static const uint8_t DIGIT_4[10] = { 0b00010, 0b00110, 0b01010, 0b10010, 0b10010, 0b11111, 0b00010, 0b00010, 0b00010, 0b00010 };
-  static const uint8_t DIGIT_5[10] = { 0b11111, 0b10000, 0b10000, 0b10000, 0b11110, 0b00001, 0b00001, 0b00001, 0b10001, 0b01110 };
-  static const uint8_t DIGIT_6[10] = { 0b01110, 0b10001, 0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 };
-  static const uint8_t DIGIT_7[10] = { 0b11111, 0b00001, 0b00001, 0b00010, 0b00010, 0b00100, 0b00100, 0b01000, 0b01000, 0b01000 };
-  static const uint8_t DIGIT_8[10] = { 0b01110, 0b10001, 0b10001, 0b10001, 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 };
-  static const uint8_t DIGIT_9[10] = { 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001, 0b10001, 0b01110 };
+  static const uint8_t DIGIT_0[10] PROGMEM = { 0b01110, 0b10001, 0b10011, 0b10101, 0b10101, 0b10101, 0b11001, 0b10001, 0b10001, 0b01110 };
+  static const uint8_t DIGIT_1[10] PROGMEM = { 0b00100, 0b01100, 0b10100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b11111 };
+  static const uint8_t DIGIT_2[10] PROGMEM = { 0b01110, 0b10001, 0b00001, 0b00001, 0b00010, 0b00100, 0b01000, 0b10000, 0b10000, 0b11111 };
+  static const uint8_t DIGIT_3[10] PROGMEM = { 0b01110, 0b10001, 0b00001, 0b00001, 0b01110, 0b00001, 0b00001, 0b00001, 0b10001, 0b01110 };
+  static const uint8_t DIGIT_4[10] PROGMEM = { 0b00010, 0b00110, 0b01010, 0b10010, 0b10010, 0b11111, 0b00010, 0b00010, 0b00010, 0b00010 };
+  static const uint8_t DIGIT_5[10] PROGMEM = { 0b11111, 0b10000, 0b10000, 0b10000, 0b11110, 0b00001, 0b00001, 0b00001, 0b10001, 0b01110 };
+  static const uint8_t DIGIT_6[10] PROGMEM = { 0b01110, 0b10001, 0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 };
+  static const uint8_t DIGIT_7[10] PROGMEM = { 0b11111, 0b00001, 0b00001, 0b00010, 0b00010, 0b00100, 0b00100, 0b01000, 0b01000, 0b01000 };
+  static const uint8_t DIGIT_8[10] PROGMEM = { 0b01110, 0b10001, 0b10001, 0b10001, 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 };
+  static const uint8_t DIGIT_9[10] PROGMEM = { 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001, 0b10001, 0b01110 };
   
   // Special characters
-  static const uint8_t CHAR_COLON[10] = { 0b00000, 0b00000, 0b00100, 0b00100, 0b00000, 0b00000, 0b00100, 0b00100, 0b00000, 0b00000 };
-  static const uint8_t CHAR_DASH[10] = { 0b00000, 0b00000, 0b00000, 0b00000, 0b11111, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000 };
+  static const uint8_t CHAR_COLON[10] PROGMEM = { 0b00000, 0b00000, 0b00100, 0b00100, 0b00000, 0b00000, 0b00100, 0b00100, 0b00000, 0b00000 };
+  static const uint8_t CHAR_DASH[10] PROGMEM = { 0b00000, 0b00000, 0b00000, 0b00000, 0b11111, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000 };
+  
+  // Static buffer to hold the pattern data (not in PROGMEM)
+  static uint8_t buffer[10];
+  
+  // Pointer to the PROGMEM pattern
+  const uint8_t* progmemPattern = nullptr;
   
   switch (c)
   {
     // Uppercase letters
-    case 'A': return LETTER_A_CAP;
-    case 'B': return LETTER_B_CAP;
-    case 'C': return LETTER_C_CAP;
-    case 'D': return LETTER_D_CAP;
-    case 'E': return LETTER_E_CAP;
-    case 'F': return LETTER_F_CAP;
-    case 'G': return LETTER_G_CAP;
-    case 'H': return LETTER_H_CAP;
-    case 'I': return LETTER_I_CAP;
-    case 'J': return LETTER_J_CAP;
-    case 'K': return LETTER_K_CAP;
-    case 'L': return LETTER_L_CAP;
-    case 'M': return LETTER_M_CAP;
-    case 'N': return LETTER_N_CAP;
-    case 'O': return LETTER_O_CAP;
-    case 'P': return LETTER_P_CAP;
-    case 'Q': return LETTER_Q_CAP;
-    case 'R': return LETTER_R_CAP;
-    case 'S': return LETTER_S_CAP;
-    case 'T': return LETTER_T_CAP;
-    case 'U': return LETTER_U_CAP;
-    case 'V': return LETTER_V_CAP;
-    case 'W': return LETTER_W_CAP;
-    case 'X': return LETTER_X_CAP;
-    case 'Y': return LETTER_Y_CAP;
-    case 'Z': return LETTER_Z_CAP;
+    case 'A': progmemPattern = LETTER_A_CAP; break;
+    case 'B': progmemPattern = LETTER_B_CAP; break;
+    case 'C': progmemPattern = LETTER_C_CAP; break;
+    case 'D': progmemPattern = LETTER_D_CAP; break;
+    case 'E': progmemPattern = LETTER_E_CAP; break;
+    case 'F': progmemPattern = LETTER_F_CAP; break;
+    case 'G': progmemPattern = LETTER_G_CAP; break;
+    case 'H': progmemPattern = LETTER_H_CAP; break;
+    case 'I': progmemPattern = LETTER_I_CAP; break;
+    case 'J': progmemPattern = LETTER_J_CAP; break;
+    case 'K': progmemPattern = LETTER_K_CAP; break;
+    case 'L': progmemPattern = LETTER_L_CAP; break;
+    case 'M': progmemPattern = LETTER_M_CAP; break;
+    case 'N': progmemPattern = LETTER_N_CAP; break;
+    case 'O': progmemPattern = LETTER_O_CAP; break;
+    case 'P': progmemPattern = LETTER_P_CAP; break;
+    case 'Q': progmemPattern = LETTER_Q_CAP; break;
+    case 'R': progmemPattern = LETTER_R_CAP; break;
+    case 'S': progmemPattern = LETTER_S_CAP; break;
+    case 'T': progmemPattern = LETTER_T_CAP; break;
+    case 'U': progmemPattern = LETTER_U_CAP; break;
+    case 'V': progmemPattern = LETTER_V_CAP; break;
+    case 'W': progmemPattern = LETTER_W_CAP; break;
+    case 'X': progmemPattern = LETTER_X_CAP; break;
+    case 'Y': progmemPattern = LETTER_Y_CAP; break;
+    case 'Z': progmemPattern = LETTER_Z_CAP; break;
     
     // Lowercase letters
-    case 'a': return LETTER_a_LOW;
-    case 'b': return LETTER_b_LOW;
-    case 'c': return LETTER_c_LOW;
-    case 'd': return LETTER_d_LOW;
-    case 'e': return LETTER_e_LOW;
-    case 'f': return LETTER_f_LOW;
-    case 'g': return LETTER_g_LOW;
-    case 'h': return LETTER_h_LOW;
-    case 'i': return LETTER_i_LOW;
-    case 'j': return LETTER_j_LOW;
-    case 'k': return LETTER_k_LOW;
-    case 'l': return LETTER_l_LOW;
-    case 'm': return LETTER_m_LOW;
-    case 'n': return LETTER_n_LOW;
-    case 'o': return LETTER_o_LOW;
-    case 'p': return LETTER_p_LOW;
-    case 'q': return LETTER_q_LOW;
-    case 'r': return LETTER_r_LOW;
-    case 's': return LETTER_s_LOW;
-    case 't': return LETTER_t_LOW;
-    case 'u': return LETTER_u_LOW;
-    case 'v': return LETTER_v_LOW;
-    case 'w': return LETTER_w_LOW;
-    case 'x': return LETTER_x_LOW;
-    case 'y': return LETTER_y_LOW;
-    case 'z': return LETTER_z_LOW;
+    case 'a': progmemPattern = LETTER_a_LOW; break;
+    case 'b': progmemPattern = LETTER_b_LOW; break;
+    case 'c': progmemPattern = LETTER_c_LOW; break;
+    case 'd': progmemPattern = LETTER_d_LOW; break;
+    case 'e': progmemPattern = LETTER_e_LOW; break;
+    case 'f': progmemPattern = LETTER_f_LOW; break;
+    case 'g': progmemPattern = LETTER_g_LOW; break;
+    case 'h': progmemPattern = LETTER_h_LOW; break;
+    case 'i': progmemPattern = LETTER_i_LOW; break;
+    case 'j': progmemPattern = LETTER_j_LOW; break;
+    case 'k': progmemPattern = LETTER_k_LOW; break;
+    case 'l': progmemPattern = LETTER_l_LOW; break;
+    case 'm': progmemPattern = LETTER_m_LOW; break;
+    case 'n': progmemPattern = LETTER_n_LOW; break;
+    case 'o': progmemPattern = LETTER_o_LOW; break;
+    case 'p': progmemPattern = LETTER_p_LOW; break;
+    case 'q': progmemPattern = LETTER_q_LOW; break;
+    case 'r': progmemPattern = LETTER_r_LOW; break;
+    case 's': progmemPattern = LETTER_s_LOW; break;
+    case 't': progmemPattern = LETTER_t_LOW; break;
+    case 'u': progmemPattern = LETTER_u_LOW; break;
+    case 'v': progmemPattern = LETTER_v_LOW; break;
+    case 'w': progmemPattern = LETTER_w_LOW; break;
+    case 'x': progmemPattern = LETTER_x_LOW; break;
+    case 'y': progmemPattern = LETTER_y_LOW; break;
+    case 'z': progmemPattern = LETTER_z_LOW; break;
     
     // Digits
-    case '0': return DIGIT_0;
-    case '1': return DIGIT_1;
-    case '2': return DIGIT_2;
-    case '3': return DIGIT_3;
-    case '4': return DIGIT_4;
-    case '5': return DIGIT_5;
-    case '6': return DIGIT_6;
-    case '7': return DIGIT_7;
-    case '8': return DIGIT_8;
-    case '9': return DIGIT_9;
+    case '0': progmemPattern = DIGIT_0; break;
+    case '1': progmemPattern = DIGIT_1; break;
+    case '2': progmemPattern = DIGIT_2; break;
+    case '3': progmemPattern = DIGIT_3; break;
+    case '4': progmemPattern = DIGIT_4; break;
+    case '5': progmemPattern = DIGIT_5; break;
+    case '6': progmemPattern = DIGIT_6; break;
+    case '7': progmemPattern = DIGIT_7; break;
+    case '8': progmemPattern = DIGIT_8; break;
+    case '9': progmemPattern = DIGIT_9; break;
     
     // Special characters
-    case ':': return CHAR_COLON;
-    case '-': return CHAR_DASH;
-    case ' ': return LETTER_SPACE;
+    case ':': progmemPattern = CHAR_COLON; break;
+    case '-': progmemPattern = CHAR_DASH; break;
+    case ' ': progmemPattern = LETTER_SPACE; break;
     
-    default: return LETTER_SPACE;
+    default: progmemPattern = LETTER_SPACE; break;
   }
+  
+  // Copy from PROGMEM to RAM buffer
+  memcpy_P(buffer, progmemPattern, 10);
+  
+  return buffer;
 }
 
 //---------------------------------------------------------------------------------------
