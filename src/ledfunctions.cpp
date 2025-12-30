@@ -31,464 +31,7 @@ LEDFunctionsClass LED = LEDFunctionsClass();
 uint8_t __attribute__((aligned(4))) fireBuf[NUM_PIXELS];
 uint8_t plasmaBuf[NUM_PIXELS];
 
-//---------------------------------------------------------------------------------------
-// Shared letter patterns for text animations
-// Capital letters are 10 pixels high (rows 0-9)
-// Lowercase letters are 7 pixels high (rows 3-9)
-//---------------------------------------------------------------------------------------
-// Capital letters (10 pixels high)
-static const uint8_t LETTER_M_CAP[10] = {
-  0b10001,
-  0b11011,
-  0b10101,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001
-};
-static const uint8_t LETTER_C_CAP[10] = {
-  0b01110,
-  0b10001,
-  0b10000,
-  0b10000,
-  0b10000,
-  0b10000,
-  0b10000,
-  0b10000,
-  0b10001,
-  0b01110
-};
-static const uint8_t LETTER_H_CAP[10] = {
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b11111,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001
-};
-static const uint8_t LETTER_A_CAP[10] = {
-  0b01110,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b11111,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001
-};
-static const uint8_t LETTER_P_CAP[10] = {
-  0b11110,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b11110,
-  0b10000,
-  0b10000,
-  0b10000,
-  0b10000,
-  0b10000
-};
-static const uint8_t LETTER_Y_CAP[10] = {
-  0b10001,
-  0b10001,
-  0b10001,
-  0b01010,
-  0b00100,
-  0b00100,
-  0b00100,
-  0b00100,
-  0b00100,
-  0b00100
-};
-static const uint8_t LETTER_N_CAP[10] = {
-  0b10001,
-  0b11001,
-  0b11001,
-  0b10101,
-  0b10101,
-  0b10011,
-  0b10011,
-  0b10001,
-  0b10001,
-  0b10001
-};
-static const uint8_t LETTER_E_CAP[10] = {
-  0b11111,
-  0b10000,
-  0b10000,
-  0b10000,
-  0b11110,
-  0b10000,
-  0b10000,
-  0b10000,
-  0b10000,
-  0b11111
-};
-static const uint8_t LETTER_W_CAP[10] = {
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10101,
-  0b10101,
-  0b10101,
-  0b11011,
-  0b10001,
-  0b10001
-};
-static const uint8_t LETTER_R_CAP[10] = {
-  0b11110,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b11110,
-  0b10100,
-  0b10010,
-  0b10001,
-  0b10001,
-  0b10001
-};
 
-// Lowercase letters (7 pixels high, rows 3-9)
-static const uint8_t LETTER_e_LOW[10] = {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b01110,
-  0b10001,
-  0b11111,
-  0b10000,
-  0b10001,
-  0b01110,
-  0b00000
-};
-static const uint8_t LETTER_r_LOW[10] = {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b10110,
-  0b11001,
-  0b10000,
-  0b10000,
-  0b10000,
-  0b10000,
-  0b00000
-};
-static const uint8_t LETTER_y_LOW[10] = {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b10001,
-  0b10001,
-  0b10011,
-  0b01101,
-  0b00001,
-  0b00010,
-  0b01100
-};
-static const uint8_t LETTER_h_LOW[10] = {
-  0b10000,
-  0b10000,
-  0b10000,
-  0b10110,
-  0b11001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b00000
-};
-static const uint8_t LETTER_i_LOW[10] = {
-  0b00000,
-  0b00100,
-  0b00000,
-  0b01100,
-  0b00100,
-  0b00100,
-  0b00100,
-  0b00100,
-  0b01110,
-  0b00000
-};
-static const uint8_t LETTER_s_LOW[10] = {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b01110,
-  0b10000,
-  0b01110,
-  0b00001,
-  0b10001,
-  0b01110,
-  0b00000
-};
-static const uint8_t LETTER_t_LOW[10] = {
-  0b00000,
-  0b00100,
-  0b00100,
-  0b11111,
-  0b00100,
-  0b00100,
-  0b00100,
-  0b00101,
-  0b00010,
-  0b00000
-};
-static const uint8_t LETTER_a_LOW[10] = {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b01110,
-  0b00001,
-  0b01111,
-  0b10001,
-  0b10011,
-  0b01101,
-  0b00000
-};
-static const uint8_t LETTER_m_LOW[10] = {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b10001,
-  0b11011,
-  0b10101,
-  0b10101,
-  0b10101,
-  0b10001,
-  0b00000
-};
-static const uint8_t LETTER_p_LOW[10] = {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b11110,
-  0b10001,
-  0b10001,
-  0b11110,
-  0b10000,
-  0b10000,
-  0b10000
-};
-static const uint8_t LETTER_w_LOW[10] = {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b10001,
-  0b10001,
-  0b10101,
-  0b10101,
-  0b11011,
-  0b10001,
-  0b00000
-};
-static const uint8_t LETTER_SPACE[10] = {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000
-};
-
-// Additional letters for "Game Over" and other texts
-static const uint8_t LETTER_G_CAP[10] = {
-  0b01110,
-  0b10001,
-  0b10000,
-  0b10000,
-  0b10111,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b01110
-};
-static const uint8_t LETTER_O_CAP[10] = {
-  0b01110,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b01110
-};
-static const uint8_t LETTER_V_CAP[10] = {
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b01010,
-  0b00100,
-  0b00100
-};
-
-// Digits (10 pixels high, 5 pixels wide)
-static const uint8_t DIGIT_0[10] = {
-  0b01110,
-  0b10001,
-  0b10011,
-  0b10101,
-  0b10101,
-  0b10101,
-  0b11001,
-  0b10001,
-  0b10001,
-  0b01110
-};
-static const uint8_t DIGIT_1[10] = {
-  0b00100,
-  0b01100,
-  0b10100,
-  0b00100,
-  0b00100,
-  0b00100,
-  0b00100,
-  0b00100,
-  0b00100,
-  0b11111
-};
-static const uint8_t DIGIT_2[10] = {
-  0b01110,
-  0b10001,
-  0b00001,
-  0b00001,
-  0b00010,
-  0b00100,
-  0b01000,
-  0b10000,
-  0b10000,
-  0b11111
-};
-static const uint8_t DIGIT_3[10] = {
-  0b01110,
-  0b10001,
-  0b00001,
-  0b00001,
-  0b01110,
-  0b00001,
-  0b00001,
-  0b00001,
-  0b10001,
-  0b01110
-};
-static const uint8_t DIGIT_4[10] = {
-  0b00010,
-  0b00110,
-  0b01010,
-  0b10010,
-  0b10010,
-  0b11111,
-  0b00010,
-  0b00010,
-  0b00010,
-  0b00010
-};
-static const uint8_t DIGIT_5[10] = {
-  0b11111,
-  0b10000,
-  0b10000,
-  0b10000,
-  0b11110,
-  0b00001,
-  0b00001,
-  0b00001,
-  0b10001,
-  0b01110
-};
-static const uint8_t DIGIT_6[10] = {
-  0b01110,
-  0b10001,
-  0b10000,
-  0b10000,
-  0b11110,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b01110
-};
-static const uint8_t DIGIT_7[10] = {
-  0b11111,
-  0b00001,
-  0b00001,
-  0b00010,
-  0b00010,
-  0b00100,
-  0b00100,
-  0b01000,
-  0b01000,
-  0b01000
-};
-static const uint8_t DIGIT_8[10] = {
-  0b01110,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b01110,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b01110
-};
-static const uint8_t DIGIT_9[10] = {
-  0b01110,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b10001,
-  0b01111,
-  0b00001,
-  0b00001,
-  0b10001,
-  0b01110
-};
-
-// Colon and dash for time/score display
-static const uint8_t CHAR_COLON[10] = {
-  0b00000,
-  0b00000,
-  0b00100,
-  0b00100,
-  0b00000,
-  0b00000,
-  0b00100,
-  0b00100,
-  0b00000,
-  0b00000
-};
-static const uint8_t CHAR_DASH[10] = {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b11111,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000
-};
 
 #endif
 
@@ -2407,7 +1950,54 @@ void LEDFunctionsClass::renderHappyNewYear()
 //---------------------------------------------------------------------------------------
 const uint8_t* LEDFunctionsClass::getLetterPattern(char c)
 {
-  switch(c) {
+  // Letter and digit patterns (10 pixels high)
+  // Capital letters
+  static const uint8_t LETTER_M_CAP[10] = { 0b10001, 0b11011, 0b10101, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001 };
+  static const uint8_t LETTER_C_CAP[10] = { 0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110 };
+  static const uint8_t LETTER_H_CAP[10] = { 0b10001, 0b10001, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001 };
+  static const uint8_t LETTER_A_CAP[10] = { 0b01110, 0b10001, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001 };
+  static const uint8_t LETTER_P_CAP[10] = { 0b11110, 0b10001, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000 };
+  static const uint8_t LETTER_Y_CAP[10] = { 0b10001, 0b10001, 0b10001, 0b01010, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100 };
+  static const uint8_t LETTER_N_CAP[10] = { 0b10001, 0b11001, 0b11001, 0b10101, 0b10101, 0b10011, 0b10011, 0b10001, 0b10001, 0b10001 };
+  static const uint8_t LETTER_E_CAP[10] = { 0b11111, 0b10000, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000, 0b10000, 0b11111 };
+  static const uint8_t LETTER_W_CAP[10] = { 0b10001, 0b10001, 0b10001, 0b10001, 0b10101, 0b10101, 0b10101, 0b11011, 0b10001, 0b10001 };
+  static const uint8_t LETTER_R_CAP[10] = { 0b11110, 0b10001, 0b10001, 0b10001, 0b11110, 0b10100, 0b10010, 0b10001, 0b10001, 0b10001 };
+  static const uint8_t LETTER_G_CAP[10] = { 0b01110, 0b10001, 0b10000, 0b10000, 0b10111, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 };
+  static const uint8_t LETTER_O_CAP[10] = { 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 };
+  static const uint8_t LETTER_V_CAP[10] = { 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01010, 0b00100, 0b00100 };
+  
+  // Lowercase letters
+  static const uint8_t LETTER_e_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b01110, 0b10001, 0b11111, 0b10000, 0b10001, 0b01110, 0b00000 };
+  static const uint8_t LETTER_r_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b10110, 0b11001, 0b10000, 0b10000, 0b10000, 0b10000, 0b00000 };
+  static const uint8_t LETTER_y_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10011, 0b01101, 0b00001, 0b00010, 0b01100 };
+  static const uint8_t LETTER_h_LOW[10] = { 0b10000, 0b10000, 0b10000, 0b10110, 0b11001, 0b10001, 0b10001, 0b10001, 0b10001, 0b00000 };
+  static const uint8_t LETTER_i_LOW[10] = { 0b00000, 0b00100, 0b00000, 0b01100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110, 0b00000 };
+  static const uint8_t LETTER_s_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b01110, 0b10000, 0b01110, 0b00001, 0b10001, 0b01110, 0b00000 };
+  static const uint8_t LETTER_t_LOW[10] = { 0b00000, 0b00100, 0b00100, 0b11111, 0b00100, 0b00100, 0b00100, 0b00101, 0b00010, 0b00000 };
+  static const uint8_t LETTER_a_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b01110, 0b00001, 0b01111, 0b10001, 0b10011, 0b01101, 0b00000 };
+  static const uint8_t LETTER_m_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b10001, 0b11011, 0b10101, 0b10101, 0b10101, 0b10001, 0b00000 };
+  static const uint8_t LETTER_p_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b11110, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000 };
+  static const uint8_t LETTER_w_LOW[10] = { 0b00000, 0b00000, 0b00000, 0b10001, 0b10001, 0b10101, 0b10101, 0b11011, 0b10001, 0b00000 };
+  static const uint8_t LETTER_SPACE[10] = { 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000 };
+  
+  // Digits
+  static const uint8_t DIGIT_0[10] = { 0b01110, 0b10001, 0b10011, 0b10101, 0b10101, 0b10101, 0b11001, 0b10001, 0b10001, 0b01110 };
+  static const uint8_t DIGIT_1[10] = { 0b00100, 0b01100, 0b10100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b11111 };
+  static const uint8_t DIGIT_2[10] = { 0b01110, 0b10001, 0b00001, 0b00001, 0b00010, 0b00100, 0b01000, 0b10000, 0b10000, 0b11111 };
+  static const uint8_t DIGIT_3[10] = { 0b01110, 0b10001, 0b00001, 0b00001, 0b01110, 0b00001, 0b00001, 0b00001, 0b10001, 0b01110 };
+  static const uint8_t DIGIT_4[10] = { 0b00010, 0b00110, 0b01010, 0b10010, 0b10010, 0b11111, 0b00010, 0b00010, 0b00010, 0b00010 };
+  static const uint8_t DIGIT_5[10] = { 0b11111, 0b10000, 0b10000, 0b10000, 0b11110, 0b00001, 0b00001, 0b00001, 0b10001, 0b01110 };
+  static const uint8_t DIGIT_6[10] = { 0b01110, 0b10001, 0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 };
+  static const uint8_t DIGIT_7[10] = { 0b11111, 0b00001, 0b00001, 0b00010, 0b00010, 0b00100, 0b00100, 0b01000, 0b01000, 0b01000 };
+  static const uint8_t DIGIT_8[10] = { 0b01110, 0b10001, 0b10001, 0b10001, 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110 };
+  static const uint8_t DIGIT_9[10] = { 0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001, 0b10001, 0b01110 };
+  
+  // Special characters
+  static const uint8_t CHAR_COLON[10] = { 0b00000, 0b00000, 0b00100, 0b00100, 0b00000, 0b00000, 0b00100, 0b00100, 0b00000, 0b00000 };
+  static const uint8_t CHAR_DASH[10] = { 0b00000, 0b00000, 0b00000, 0b00000, 0b11111, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000 };
+  
+  switch (c)
+  {
     // Uppercase letters
     case 'A': return LETTER_A_CAP;
     case 'C': return LETTER_C_CAP;
