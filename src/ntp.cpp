@@ -379,7 +379,7 @@ void NtpClass::decodeTime(long long t)
 	int qc_cycles, c_cycles, q_cycles;
 	int years, months;
 	int wday, yday, leap;
-	static const char days_in_month[] = {31,30,31,30,31,31,30,31,30,31,31,29};
+	static const char PROGMEM days_in_month[] = {31,30,31,30,31,31,30,31,30,31,31,29};
 
 	secs = t - LEAPOCH;
 	days = secs / 86400;
@@ -419,8 +419,8 @@ void NtpClass::decodeTime(long long t)
 
 	years = remyears + 4*q_cycles + 100*c_cycles + 400*qc_cycles;
 
-	for(months=0; days_in_month[months] <= remdays; months++)
-		remdays -= days_in_month[months];
+	for(months=0; pgm_read_byte(&days_in_month[months]) <= remdays; months++)
+		remdays -= pgm_read_byte(&days_in_month[months]);
 
 	this->year = years + 2000;
 	this->month = months + 3;

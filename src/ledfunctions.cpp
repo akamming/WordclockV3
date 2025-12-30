@@ -606,9 +606,12 @@ void LEDFunctionsClass::setBuffer(uint8_t *target, const uint8_t *source,
 		curveOffset = LEDFunctionsClass::brightnessCurveSelect[i] << 8;
 
 		// select color value using palette and brightness correction curves
-		target[mapping + 0] = brightnessCurvesR[curveOffset + palette[palette_index].r];
-		target[mapping + 1] = brightnessCurvesG[curveOffset + palette[palette_index].g];
-		target[mapping + 2] = brightnessCurvesB[curveOffset + palette[palette_index].b];
+		// Read from PROGMEM if palette is in PROGMEM
+		palette_entry color;
+		memcpy_P(&color, &palette[palette_index], sizeof(palette_entry));
+		target[mapping + 0] = brightnessCurvesR[curveOffset + color.r];
+		target[mapping + 1] = brightnessCurvesG[curveOffset + color.g];
+		target[mapping + 2] = brightnessCurvesB[curveOffset + color.b];
 
 		byteCounter = (byteCounter + 1) & 0x03;
 	}
@@ -1202,7 +1205,7 @@ void LEDFunctionsClass::renderMatrix()
   }
 }
 
-const palette_entry LEDFunctionsClass::firePalette[256] = {
+const palette_entry PROGMEM LEDFunctionsClass::firePalette[256] = {
 	{0, 0, 0}, {4, 0, 0}, {8, 0, 0}, {12, 0, 0}, {16, 0, 0}, {20, 0, 0}, {24, 0, 0}, {28, 0, 0},
 	{32, 0, 0}, {36, 0, 0}, {40, 0, 0}, {44, 0, 0}, {48, 0, 0}, {52, 0, 0}, {56, 0, 0}, {60, 0, 0},
 	{64, 0, 0}, {68, 0, 0}, {72, 0, 0}, {76, 0, 0}, {80, 0, 0}, {85, 0, 0}, {89, 0, 0}, {93, 0, 0},
@@ -1236,7 +1239,7 @@ const palette_entry LEDFunctionsClass::firePalette[256] = {
 	{255, 255, 230}, {255, 255, 232}, {255, 255, 234}, {255, 255, 235}, {255, 255, 237}, {255, 255, 238}, {255, 255, 240}, {255, 255, 242},
 	{255, 255, 243}, {255, 255, 245}, {255, 255, 246}, {255, 255, 248}, {255, 255, 250}, {255, 255, 251}, {255, 255, 253}, {255, 255, 255}
 };
-const palette_entry LEDFunctionsClass::plasmaPalette[256] = {
+const palette_entry PROGMEM LEDFunctionsClass::plasmaPalette[256] = {
 	{255, 0, 0}, {255, 6, 0}, {255, 12, 0}, {255, 18, 0}, {255, 24, 0}, {255, 30, 0}, {255, 36, 0}, {255, 42, 0},
 	{255, 48, 0}, {255, 54, 0}, {255, 60, 0}, {255, 66, 0}, {255, 72, 0}, {255, 78, 0}, {255, 84, 0}, {255, 90, 0},
 	{255, 96, 0}, {255, 102, 0}, {255, 108, 0}, {255, 114, 0}, {255, 120, 0}, {255, 126, 0}, {255, 131, 0}, {255, 137, 0},

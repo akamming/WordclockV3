@@ -22,7 +22,7 @@
 //---------------------------------------------------------------------------------------
 // brightness gradient for moving particle
 //---------------------------------------------------------------------------------------
-const float Particle::ParticleGradient[MAX_PARTICLE_DISTANCE] = {
+const float PROGMEM Particle::ParticleGradient[MAX_PARTICLE_DISTANCE] = {
 	1, 0.75, 0.5, 0.25, 0.125, 0.06, 0.03, 0.01 };
 
 //---------------------------------------------------------------------------------------
@@ -147,9 +147,10 @@ void Particle::render(uint8_t *target, palette_entry palette[])
 
 	// calculate fading color depending on distance from starting point and add it
 	// to the previous value of the pixel corresponding to the particle
-	float r = (float)target[ofs + 0] + pr * ParticleGradient[d];
-	float g = (float)target[ofs + 1] + pg * ParticleGradient[d];
-	float b = (float)target[ofs + 2] + pb * ParticleGradient[d];
+	float gradient = pgm_read_float(&ParticleGradient[d]);
+	float r = (float)target[ofs + 0] + pr * gradient;
+	float g = (float)target[ofs + 1] + pg * gradient;
+	float b = (float)target[ofs + 2] + pb * gradient;
 
 	// limit brightness value of each component to foreground color values
 	if(r > pr) r = pr;
