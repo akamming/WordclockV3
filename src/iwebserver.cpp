@@ -668,6 +668,7 @@ void WebServerClass::handleSetMode()
     if(this->server->arg("value") == "17") mode = DisplayMode::jinglebells;
     if(this->server->arg("value") == "18") mode = DisplayMode::merryChristmas;
     if(this->server->arg("value") == "19") mode = DisplayMode::happyNewYear;
+    if(this->server->arg("value") == "20") mode = DisplayMode::pong;
 	}
 
 	if(mode == DisplayMode::invalid)
