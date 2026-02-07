@@ -81,6 +81,9 @@ typedef struct _config_struct
   bool usemqttauthentication = false;
   char mqttuser[CONFIGSTRINGSIZE];
   char mqttpass[CONFIGSTRINGSIZE];
+  bool bg_enabled = true;
+  bool fg_enabled = true;
+  bool s_enabled = true;
 } config_struct;
 
 class ConfigClass
@@ -102,6 +105,9 @@ public:
 	palette_entry fg;
 	palette_entry bg;
 	palette_entry s;
+	bool bg_enabled = true;
+	bool fg_enabled = true;
+	bool s_enabled = true;
 	IPAddress ntpserver = IPAddress(0, 0, 0, 0);
 	bool heartbeat = true;
 	bool debugMode = false;

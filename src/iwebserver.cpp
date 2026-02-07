@@ -861,8 +861,17 @@ void WebServerClass::extractColor(char argName[], palette_entry& result)
 void WebServerClass::handleSetColor()
 {
   this->extractColor((char *)"fg", Config.fg);
+  // Update enabled state: ON if color is not 0,0,0, OFF if it is 0,0,0
+  Config.fg_enabled = (Config.fg.r != 0 || Config.fg.g != 0 || Config.fg.b != 0);
+  
 	this->extractColor((char *)"bg", Config.bg);
+  // Update enabled state: ON if color is not 0,0,0, OFF if it is 0,0,0
+  Config.bg_enabled = (Config.bg.r != 0 || Config.bg.g != 0 || Config.bg.b != 0);
+  
 	this->extractColor((char *)"s", Config.s);
+  // Update enabled state: ON if color is not 0,0,0, OFF if it is 0,0,0
+  Config.s_enabled = (Config.s.r != 0 || Config.s.g != 0 || Config.s.b != 0);
+  
 	this->server->send(200, FPSTR(CT_TEXT_PLAIN), FPSTR(HTTP_OK));
 	Config.saveDelayed();
 }

@@ -293,6 +293,9 @@ void ConfigClass::save()
 	this->config->bg = this->bg;
 	this->config->fg = this->fg;
 	this->config->s = this->s;
+	this->config->bg_enabled = this->bg_enabled;
+	this->config->fg_enabled = this->fg_enabled;
+	this->config->s_enabled = this->s_enabled;
 	this->config->timeZone = this->timeZone;
 	this->config->heartbeat = this->heartbeat;
   this->config->nightmode = this->nightmode;
@@ -430,6 +433,9 @@ void ConfigClass::load()
 	this->bg = this->config->bg;
 	this->fg = this->config->fg;
 	this->s = this->config->s;
+	this->bg_enabled = this->config->bg_enabled;
+	this->fg_enabled = this->config->fg_enabled;
+	this->s_enabled = this->config->s_enabled;
 	this->defaultMode = (DisplayMode) this->config->mode;
   this->heartbeat = this->config->heartbeat;
   this->nightmode = this->config->nightmode;

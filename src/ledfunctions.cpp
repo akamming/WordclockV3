@@ -550,24 +550,10 @@ void LEDFunctionsClass::set(const uint8_t *buf, palette_entry palette[])
 void LEDFunctionsClass::set(const uint8_t *buf, palette_entry palette[],
 		bool immediately)
 {
-  if (Config.nightmode) {
-    palette_entry nightpalette[] = {
-      {0, 0, 0},
-      {0, 0, (uint8_t)(2*(255/this->brightness))},
-      {0, 0, 0}
-    };
-    this->setBuffer(this->targetValues, buf, nightpalette);
-    if (immediately)
-    {
-      this->setBuffer(this->currentValues, buf, nightpalette);
-    }
-    
-  } else {
-  	this->setBuffer(this->targetValues, buf, palette);
-    if (immediately)
-    {
-  	  this->setBuffer(this->currentValues, buf, palette);
-    }
+	this->setBuffer(this->targetValues, buf, palette);
+  if (immediately)
+  {
+	  this->setBuffer(this->currentValues, buf, palette);
   }
 }
 
@@ -619,9 +605,17 @@ void LEDFunctionsClass::setBuffer(uint8_t *target, const uint8_t *source,
 
 void LEDFunctionsClass::buildDefaultPalette(palette_entry palette[3])
 {
-  palette[0] = {Config.bg.r, Config.bg.g, Config.bg.b};
-  palette[1] = {Config.fg.r, Config.fg.g, Config.fg.b};
-  palette[2] = {Config.s.r,  Config.s.g,  Config.s.b};
+  // In nightmode, always show light blue color for time
+  if (Config.nightmode) {
+    palette[0] = {0, 0, 0};                      // background: always off in nightmode
+    palette[1] = {0, 0, (uint8_t)(2*(255/this->brightness))};  // foreground: light blue for nightmode
+    palette[2] = {0, 0, 0};                      // seconds: off in nightmode
+  } else {
+    // Normal mode: use enabled state to determine if colors are shown
+    palette[0] = Config.bg_enabled ? palette_entry{Config.bg.r, Config.bg.g, Config.bg.b} : palette_entry{0, 0, 0};
+    palette[1] = Config.fg_enabled ? palette_entry{Config.fg.r, Config.fg.g, Config.fg.b} : palette_entry{0, 0, 0};
+    palette[2] = Config.s_enabled ? palette_entry{Config.s.r,  Config.s.g,  Config.s.b} : palette_entry{0, 0, 0};
+  }
 }
 
 //---------------------------------------------------------------------------------------

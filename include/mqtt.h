@@ -50,7 +50,8 @@ private:
   void PublishMQTTSwitch(const char* uniquename);
   void PublishMQTTText(const char* uniquename);
   void UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t brightness);
-  void UpdateMQTTColorDimmer(const char* uniquename, palette_entry Color);
+  void UpdateMQTTColorDimmer(const char* uniquename, bool enabled);
+  void UpdateMQTTColorRGB(const char* uniquename, palette_entry Color);
   void UpdateMQTTModeSelector(const char* uniquename, DisplayMode mode);
   void UpdateMQTTNumber(const char* uniquename, uint8_t Mod);
   void UpdateMQTTText(const char* uniquename, const char* text);
@@ -62,9 +63,12 @@ private:
   bool mqtt_debugging=false;
   bool mqtt_nightmode = false;
   uint32_t mqtt_brightness = 0;
-  palette_entry bg;
-	palette_entry fg;
-	palette_entry s;
+  bool mqtt_bg_enabled = true;
+  bool mqtt_fg_enabled = true;
+  bool mqtt_s_enabled = true;
+  palette_entry mqtt_bg_color = {0, 0, 0};
+  palette_entry mqtt_fg_color = {0, 0, 0};
+  palette_entry mqtt_s_color = {0, 0, 0};
   DisplayMode mqttDisplayMode;
   uint8_t mqtt_animspeed;
   uint8_t mqtt_bluecorrection;
