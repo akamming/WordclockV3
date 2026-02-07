@@ -51,7 +51,6 @@ private:
   void PublishMQTTText(const char* uniquename);
   void UpdateMQTTDimmer(const char* uniquename, bool Value, uint8_t brightness);
   void UpdateMQTTColorDimmer(const char* uniquename, bool enabled);
-  void UpdateMQTTColorRGB(const char* uniquename, palette_entry Color);
   void UpdateMQTTModeSelector(const char* uniquename, DisplayMode mode);
   void UpdateMQTTNumber(const char* uniquename, uint8_t Mod);
   void UpdateMQTTText(const char* uniquename, const char* text);

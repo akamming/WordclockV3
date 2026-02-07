@@ -118,28 +118,28 @@ void MqttClass::process()
       this->mqtt_fg_enabled=Config.fg_enabled;
       this->UpdateMQTTColorDimmer(FOREGROUNDNAME, this->mqtt_fg_enabled);
     }
-    // Always check and publish RGB values if they changed (from GUI, webinterface, or external sources)
+    // Always check and publish color RGB values if they changed (from GUI, webinterface, or external sources)
     if (!isSameColor(Config.fg, this->mqtt_fg_color)) {
       this->mqtt_fg_color=Config.fg;
-      this->UpdateMQTTColorRGB(FOREGROUNDNAME, this->mqtt_fg_color);
+      this->UpdateMQTTColorDimmer(FOREGROUNDNAME, this->mqtt_fg_enabled);
     }
     if (this->mqtt_bg_enabled!=Config.bg_enabled) {
       this->mqtt_bg_enabled=Config.bg_enabled;
       this->UpdateMQTTColorDimmer(BACKGROUNDNAME, this->mqtt_bg_enabled);
     }
-    // Always check and publish RGB values if they changed (from GUI, webinterface, or external sources)
+    // Always check and publish color RGB values if they changed (from GUI, webinterface, or external sources)
     if (!isSameColor(Config.bg, this->mqtt_bg_color)) {
       this->mqtt_bg_color=Config.bg;
-      this->UpdateMQTTColorRGB(BACKGROUNDNAME, this->mqtt_bg_color);
+      this->UpdateMQTTColorDimmer(BACKGROUNDNAME, this->mqtt_bg_enabled);
     }
     if (this->mqtt_s_enabled!=Config.s_enabled) {
       this->mqtt_s_enabled=Config.s_enabled;
       this->UpdateMQTTColorDimmer(SECONDSNAME, this->mqtt_s_enabled);
     }
-    // Always check and publish RGB values if they changed (from GUI, webinterface, or external sources)
+    // Always check and publish color RGB values if they changed (from GUI, webinterface, or external sources)
     if (!isSameColor(Config.s, this->mqtt_s_color)) {
       this->mqtt_s_color=Config.s;
-      this->UpdateMQTTColorRGB(SECONDSNAME, this->mqtt_s_color);
+      this->UpdateMQTTColorDimmer(SECONDSNAME, this->mqtt_s_enabled);
     }
     if (this->mqttDisplayMode!=Config.defaultMode) {
       this->mqttDisplayMode=Config.defaultMode;
@@ -690,7 +690,7 @@ void MqttClass::UpdateMQTTText(const char* uniquename, const char* text)
 //---------------------------------------------------------------------------------------
 // UpdateMQTTColorDimmer
 //
-// Update an MQTT Color Dimmer with on/off state
+// Update an MQTT Color Dimmer with on/off state and brightness (for slider control)
 //
 // -> --
 // <- --
@@ -700,8 +700,23 @@ void MqttClass::UpdateMQTTColorDimmer(const char* uniquename, bool enabled)
   Serial.println(F("UpdateMQTTColorDimmer"));
   JsonDocument json;
 
-  // Construct JSON config message
+  // Get the current color value to determine brightness for the slider
+  palette_entry color;
+  if (String(uniquename).equals(FOREGROUNDNAME)) {
+    color = Config.fg;
+  } else if (String(uniquename).equals(BACKGROUNDNAME)) {
+    color = Config.bg;
+  } else if (String(uniquename).equals(SECONDSNAME)) {
+    color = Config.s;
+  } else {
+    color = {0, 0, 0};
+  }
+  
+  uint8_t brightness = MaxColor(color);
+
+  // Construct JSON config message with brightness for slider
   json["state"] = enabled ? "ON" : "OFF";
+  json["brightness"] = brightness;
   
   char state[512];
   serializeJson(json, state);  // state now contains the json
@@ -710,42 +725,6 @@ void MqttClass::UpdateMQTTColorDimmer(const char* uniquename, bool enabled)
   MQ.publish((String(Config.hostname)+"/light/"+String(uniquename)+"/state").c_str(),state,Config.mqttpersistence);
 }
 
-//---------------------------------------------------------------------------------------
-// UpdateMQTTColorRGB
-//
-// Update an MQTT Color Dimmer with RGB values (for information display only, not for commands)
-//
-// -> --
-// <- --
-//---------------------------------------------------------------------------------------
-void MqttClass::UpdateMQTTColorRGB(const char* uniquename, palette_entry Color)
-{
-  Serial.println(F("UpdateMQTTColorRGB"));
-  JsonDocument json;
-  uint8_t brightness = MaxColor(Color);
-
-  // Construct JSON config message
-  json["color_mode"] = "rgb";
-  json["brightness"]=brightness;
-  JsonObject color = json["color"].to<JsonObject>();
-  if (brightness==0) {
-    json["state"] = "OFF";  
-    color["r"] = 0;
-    color["g"] = 0;
-    color["b"] = 0;
-  } else {
-    json["state"]="ON";
-    color["r"] = Color.r * 255 / brightness;
-    color["g"] = Color.g * 255 / brightness;
-    color["b"] = Color.b * 255 / brightness;
-  }
-
-  char state[512];
-  serializeJson(json, state);  // state now contains the json
-
-  // publish state message to a separate topic for read-only RGB info
-  MQ.publish((String(Config.hostname)+"/light/"+String(uniquename)+"/rgb_state").c_str(),state,Config.mqttpersistence);
-}
 
 
 //---------------------------------------------------------------------------------------
@@ -779,11 +758,8 @@ void MqttClass::PublishAllMQTTSensors()
     // Immediately publish current state values after autodiscovery
     this->UpdateMQTTDimmer(Config.hostname, !Config.nightmode, Brightness.brightnessOverride);
     this->UpdateMQTTColorDimmer(FOREGROUNDNAME, Config.fg_enabled);
-    this->UpdateMQTTColorRGB(FOREGROUNDNAME, Config.fg);
     this->UpdateMQTTColorDimmer(BACKGROUNDNAME, Config.bg_enabled);
-    this->UpdateMQTTColorRGB(BACKGROUNDNAME, Config.bg);
     this->UpdateMQTTColorDimmer(SECONDSNAME, Config.s_enabled);
-    this->UpdateMQTTColorRGB(SECONDSNAME, Config.s);
     this->UpdateMQTTNumber(ANIMATIONSPEEDNAME, Config.animspeed);
     this->UpdateMQTTNumber(BLUECORRECTIONNAME, Config.blueCorrection);
     this->UpdateMQTTModeSelector(MODENAME, Config.defaultMode);
@@ -855,14 +831,15 @@ void MqttClass::reconnect()
 //---------------------------------------------------------------------------------------
 // ProcessColorCommand
 //
-// Calculate new value based on old value and command
+// Calculate new value based on old value and command, also returns enabled state
 //
 // -> --
 // <- --
 //---------------------------------------------------------------------------------------
-palette_entry ProcessColorCommand(palette_entry OldColor, char* payloadstr)
+palette_entry ProcessColorCommand(palette_entry OldColor, char* payloadstr, bool& enabled_out)
 {
-  palette_entry NewColor;
+  palette_entry NewColor = OldColor;  // Default: keep old color
+  enabled_out = true;  // default to enabled
 
   // decode payload
   JsonDocument doc;
@@ -873,32 +850,54 @@ palette_entry ProcessColorCommand(palette_entry OldColor, char* payloadstr)
     MQ.publish("log/error","Deserialisation failed");
   } else {
     if (doc["state"].is<const char*>() && String(doc["state"]).equals("OFF")) {
-      NewColor = {0,0,0}; // switch off if we have an off command     
+      // Just disable, don't change the color
+      enabled_out = false;
     } else {
-      // see if we have to process the color, at least remember old brightness and maxcolor
+      // State is ON or not specified - keep enabled
+      enabled_out = true;
+      
+      // Only modify color if brightness or RGB values are provided
       uint8_t brightness = MaxColor(OldColor);
       uint8_t maxcolor = brightness;
-
-      // overrule brightness if specified
-      if (doc["brightness"].is<unsigned int>()) brightness=doc["brightness"];
-
-      // check if we have to update the color and maxcolor
-      if (doc["color"].is<JsonObject>()) {
-        JsonObject color = doc["color"];
-        NewColor={color["r"],color["g"],color["b"]};
-        maxcolor=MaxColor(NewColor); // reset maxcolor to new value
-      } else {
-        NewColor=OldColor;
+      
+      // Check if new brightness is specified
+      if (doc["brightness"].is<unsigned int>()) {
+        brightness = doc["brightness"];
+        
+        // If brightness is 0, just disable but keep the color
+        if (brightness == 0) {
+          enabled_out = false;
+          return OldColor;  // Return old color unchanged
+        }
       }
 
-      // do the final colorcorrection based on brightness
-      if (maxcolor==0) { 
-        // prevent division by zero
-        NewColor={brightness,brightness,brightness};
-      } else {
-        //update the brightness if we received a new one
-        // apply the new brightness
-        NewColor={(uint8_t)(NewColor.r*brightness/maxcolor),(uint8_t)(NewColor.g*brightness/maxcolor),(uint8_t)(NewColor.b*brightness/maxcolor)};
+      // Check if new RGB values are provided
+      if (doc["color"].is<JsonObject>()) {
+        JsonObject color = doc["color"];
+        NewColor = {color["r"], color["g"], color["b"]};
+        maxcolor = MaxColor(NewColor);
+        
+        // If new color is 0,0,0 disable it
+        if (maxcolor == 0) {
+          enabled_out = false;
+          return NewColor;
+        }
+      }
+
+      // Apply brightness scaling if we have a new color or brightness change
+      if (doc["brightness"].is<unsigned int>() || doc["color"].is<JsonObject>()) {
+        if (maxcolor == 0) {
+          // New color is 0,0,0 - disable
+          enabled_out = false;
+          NewColor = {0, 0, 0};
+        } else if (doc["brightness"].is<unsigned int>()) {
+          // Apply new brightness to existing color
+          NewColor = {
+            (uint8_t)(NewColor.r * brightness / maxcolor),
+            (uint8_t)(NewColor.g * brightness / maxcolor),
+            (uint8_t)(NewColor.b * brightness / maxcolor)
+          };
+        }
       }
     }
   }
@@ -1034,56 +1033,20 @@ void MqttClass::MQTTcallback(char* topic, byte* payload, unsigned int length)
     if (value > 100) value = 100;
     Config.blueCorrection = value;
   } else if (topicstr.equals(DimmerCommandTopic(FOREGROUNDNAME) ) ) {
-    // Handle foreground on/off state AND RGB updates
-    JsonDocument doc;
-    DeserializationError error = deserializeJson(doc, payloadstr);
-    if (!error) {
-      // Handle on/off state
-      if (doc["state"].is<const char*>()) {
-        Config.fg_enabled = String(doc["state"]).equals("ON");
-      }
-      // Handle RGB color updates
-      if (doc["color"].is<JsonObject>()) {
-        JsonObject color = doc["color"];
-        if (color["r"].is<unsigned int>() && color["g"].is<unsigned int>() && color["b"].is<unsigned int>()) {
-          Config.fg = {color["r"], color["g"], color["b"]};
-        }
-      }
-    }
+    // Handle foreground color and enabled state via ProcessColorCommand
+    bool new_enabled;
+    Config.fg = ProcessColorCommand(Config.fg, payloadstr, new_enabled);
+    Config.fg_enabled = new_enabled;
   } else if (topicstr.equals(DimmerCommandTopic(BACKGROUNDNAME) ) ) {
-    // Handle background on/off state AND RGB updates
-    JsonDocument doc;
-    DeserializationError error = deserializeJson(doc, payloadstr);
-    if (!error) {
-      // Handle on/off state
-      if (doc["state"].is<const char*>()) {
-        Config.bg_enabled = String(doc["state"]).equals("ON");
-      }
-      // Handle RGB color updates
-      if (doc["color"].is<JsonObject>()) {
-        JsonObject color = doc["color"];
-        if (color["r"].is<unsigned int>() && color["g"].is<unsigned int>() && color["b"].is<unsigned int>()) {
-          Config.bg = {color["r"], color["g"], color["b"]};
-        }
-      }
-    }
+    // Handle background color and enabled state via ProcessColorCommand
+    bool new_enabled;
+    Config.bg = ProcessColorCommand(Config.bg, payloadstr, new_enabled);
+    Config.bg_enabled = new_enabled;
   } else if (topicstr.equals(DimmerCommandTopic(SECONDSNAME) ) ) {
-    // Handle seconds on/off state AND RGB updates
-    JsonDocument doc;
-    DeserializationError error = deserializeJson(doc, payloadstr);
-    if (!error) {
-      // Handle on/off state
-      if (doc["state"].is<const char*>()) {
-        Config.s_enabled = String(doc["state"]).equals("ON");
-      }
-      // Handle RGB color updates
-      if (doc["color"].is<JsonObject>()) {
-        JsonObject color = doc["color"];
-        if (color["r"].is<unsigned int>() && color["g"].is<unsigned int>() && color["b"].is<unsigned int>()) {
-          Config.s = {color["r"], color["g"], color["b"]};
-        }
-      }
-    }
+    // Handle seconds color and enabled state via ProcessColorCommand
+    bool new_enabled;
+    Config.s = ProcessColorCommand(Config.s, payloadstr, new_enabled);
+    Config.s_enabled = new_enabled;
   } else if (topicstr.equals(SelectorCommandTopic(MODENAME) ) ) {
     Config.defaultMode = GetDisplayModeFromPayload(payloadstr);
   } else if (topicstr.equals(SwitchCommandTopic(DEBUGNAME) ) ) {
