@@ -332,8 +332,8 @@ void MqttClass::PublishMQTTModeSelect(const char* uniquename)
   }
   serializeJson(json, conf);  // conf now contains the json
 
-  // Publish config message
-  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+FPSTR(MQTT_SELECT)+String(Config.hostname)+"/"+String(uniquename)+FPSTR(MQTT_CONFIG)).c_str(),conf,Config.mqttpersistence);
+  // Discovery/config topics must always be retained so Home Assistant keeps the registration.
+  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+FPSTR(MQTT_SELECT)+String(Config.hostname)+"/"+String(uniquename)+FPSTR(MQTT_CONFIG)).c_str(),conf,true);
 
   // Make sure we receive commands
   MQ.subscribe(SelectorCommandTopic(uniquename).c_str());
@@ -373,8 +373,8 @@ void MqttClass::PublishMQTTDimmer(const char* uniquename, bool SupportRGB)
   char conf[512];
   serializeJson(json, conf);  // conf now contains the json
 
-  // Publish config message
-  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+FPSTR(MQTT_LIGHT)+String(Config.hostname)+"/"+String(uniquename)+FPSTR(MQTT_CONFIG)).c_str(),conf,Config.mqttpersistence);
+  // Discovery/config topics must always be retained so Home Assistant keeps the registration.
+  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+FPSTR(MQTT_LIGHT)+String(Config.hostname)+"/"+String(uniquename)+FPSTR(MQTT_CONFIG)).c_str(),conf,true);
 
   // Make sure we receive commands
   MQ.subscribe(DimmerCommandTopic(uniquename).c_str());
@@ -414,8 +414,8 @@ void MqttClass::PublishMQTTNumber(const char* uniquename, int min, int max, floa
   char conf[512];
   serializeJson(json, conf);  // conf now contains the json
 
-  // Publish config message
-  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+FPSTR(MQTT_NUMBER)+String(Config.hostname)+"/"+String(uniquename)+FPSTR(MQTT_CONFIG)).c_str(),conf,Config.mqttpersistence);
+  // Discovery/config topics must always be retained so Home Assistant keeps the registration.
+  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+FPSTR(MQTT_NUMBER)+String(Config.hostname)+"/"+String(uniquename)+FPSTR(MQTT_CONFIG)).c_str(),conf,true);
 
   // Make sure we receive commands
   MQ.subscribe(NumberCommandTopic(uniquename).c_str());
@@ -447,8 +447,8 @@ void MqttClass::PublishMQTTText(const char* uniquename)
   char conf[512];
   serializeJson(json, conf);  // conf now contains the json
 
-  // Publish config message
-  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+FPSTR(MQTT_TEXT)+String(Config.hostname)+"/"+String(uniquename)+FPSTR(MQTT_CONFIG)).c_str(),conf,Config.mqttpersistence);
+  // Discovery/config topics must always be retained so Home Assistant keeps the registration.
+  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+FPSTR(MQTT_TEXT)+String(Config.hostname)+"/"+String(uniquename)+FPSTR(MQTT_CONFIG)).c_str(),conf,true);
 
   // Make sure we receive commands
   MQ.subscribe(TextCommandTopic(uniquename).c_str());
@@ -482,8 +482,8 @@ void MqttClass::PublishMQTTSwitch(const char* uniquename)
   char conf[512];
   serializeJson(json, conf);  // conf now contains the json
 
-  // Publish config message
-  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+FPSTR(MQTT_SWITCH)+String(Config.hostname)+"/"+String(uniquename)+FPSTR(MQTT_CONFIG)).c_str(),conf,Config.mqttpersistence);
+  // Discovery/config topics must always be retained so Home Assistant keeps the registration.
+  MQ.publish((String(MQTTAUTODISCOVERYTOPIC)+FPSTR(MQTT_SWITCH)+String(Config.hostname)+"/"+String(uniquename)+FPSTR(MQTT_CONFIG)).c_str(),conf,true);
 
   // subscribe if need to listen to commands
   MQ.subscribe(SwitchCommandTopic(uniquename).c_str());
