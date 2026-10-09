@@ -810,14 +810,32 @@ void MqttClass::reconnect()
     this->lastconnectcheck=millis();
     if (!MQ.connected()) {
       Serial.print(F("Attempting MQTT connection..."));
+
+      const String willTopic = String(Config.hostname) + FPSTR(MQTT_STATUS);
+      const char* willMessage = "offline";
       bool mqttconnected;
       if (Config.usemqttauthentication) {
-        mqttconnected = MQ.connect(Config.hostname, Config.mqttuser, Config.mqttpass);
+        mqttconnected = MQ.connect(
+          Config.hostname,
+          Config.mqttuser,
+          Config.mqttpass,
+          willTopic.c_str(),
+          1,
+          true,
+          willMessage
+        );
       } else {
-        mqttconnected = MQ.connect(Config.hostname);
+        mqttconnected = MQ.connect(
+          Config.hostname,
+          willTopic.c_str(),
+          1,
+          true,
+          willMessage
+        );
       }
       if (mqttconnected) {
         this->Debug("Connect succeeded");
+        this->PublishStatus("online");
         this->PublishAllMQTTSensors();
 
       } else {
