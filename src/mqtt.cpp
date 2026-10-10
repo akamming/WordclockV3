@@ -80,6 +80,8 @@ void MqttClass::begin()
   MQ.setServer(Config.mqttserver, Config.mqttport); // server details
   MQ.setBufferSize(2048); // discovery messages are longer than default max buffersize(!)
   MQ.setCallback(MQTTcallback); // listen to callbacks
+  MQ.setKeepAlive(10); // detect broken sessions quickly so the broker can publish the LWT
+  MQ.setSocketTimeout(10); // avoid hanging TCP sockets when WiFi/MQTT is interrupted
   this->lastconnectcheck = millis()-CONNECTTIMEOUT-10; // force try to connect immediately
   this->reconnect();
 }
@@ -94,12 +96,21 @@ void MqttClass::begin()
 //---------------------------------------------------------------------------------------
 void MqttClass::process()
 {
+  // Do not retry MQTT while WiFi is down: the broker must detect the broken TCP link and
+  // publish the configured Last Will and Testament, otherwise the device stays "online".
+  if (WiFi.status() != WL_CONNECTED) {
+    return;
+  }
+
   MQ.loop();
   this->reconnect();
   if ((millis()-this->lastmqttpublication)>PUBLISHTIMEOUT) {
     this->PublishAllMQTTSensors();
   }
   if (MQ.connected()) {
+    // Keep the retained availability state in sync with the broker. A stale retained "offline"
+    // message can otherwise remain last in Home Assistant even after the device reconnects.
+    this->PublishStatus("online");
     // Check if values changed, and if yes: communicate
     if (this->mqtt_brightness!=Brightness.brightnessOverride or this->mqtt_nightmode != Config.nightmode) {
       this->mqtt_brightness=Brightness.brightnessOverride;
@@ -176,7 +187,9 @@ void MqttClass::Debug(const char* status)
 //---------------------------------------------------------------------------------------
 void MqttClass::PublishStatus(const char* status)
 {
-  if (MQ.connected()) MQ.publish((String(Config.hostname)+FPSTR(MQTT_STATUS)).c_str(),status,Config.mqttpersistence);
+  // Availability/status messages must be retained so a stale offline LWT is cleared
+  // when the device reconnects. Otherwise Home Assistant keeps the entity offline forever.
+  if (MQ.connected()) MQ.publish((String(Config.hostname)+FPSTR(MQTT_STATUS)).c_str(),status,true);
 }
 
 
@@ -263,6 +276,10 @@ void addDeviceToJson(JsonDocument *json) {
   dev["sw"] = String(Config.hostname)+"_"+String(__DATE__)+"_"+String(__TIME__);
   dev["mdl"] = "d1_mini";
   dev["mf"] = "espressif";
+
+  (*json)["avty_t"] = String(Config.hostname)+FPSTR(MQTT_STATUS);
+  (*json)["pl_avail"] = "online";
+  (*json)["pl_not_avail"] = "offline";
 }
 
 //---------------------------------------------------------------------------------------
@@ -805,6 +822,10 @@ bool MqttClass::connected()
 //---------------------------------------------------------------------------------------
 void MqttClass::reconnect()
 {
+  if (WiFi.status() != WL_CONNECTED) {
+    return;
+  }
+
   if (Config.usemqtt && (this->lastconnectcheck<millis()-CONNECTTIMEOUT)) 
   {
     this->lastconnectcheck=millis();
